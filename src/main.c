@@ -79,6 +79,9 @@ void handle_events(void)
 	while(SDL_PollEvent(&event))
 	{
 		switch(event.type) {
+			case SDL_QUIT:
+				close_window = true;
+				break;
 			case SDL_KEYDOWN:
 				handle_key_down(&event.key.keysym);
 				break;
