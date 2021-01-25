@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.17)
 
 # Project name
-project(GB_Emu C)
+project(GB_Emulator C)
 
 # C standard
 set(CMAKE_C_STANDARD 11)
@@ -20,3 +20,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE include)
 # Add SDL2 library
 find_package(SDL2 REQUIRED)
 target_link_libraries(${PROJECT_NAME} SDL2::Main)
+
+# Add tests directory - Remove in MAIN branch
+add_subdirectory(tests)
