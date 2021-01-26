@@ -7,6 +7,9 @@ project(GB_Emulator C)
 # C standard
 set(CMAKE_C_STANDARD 11)
 
+# Debug compiler flags
+set(CMAKE_C_FLAGS_DEBUG "-mconsole")
+
 # Add SDL2 CMake modules
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/sdl2)
 

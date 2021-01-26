@@ -22,27 +22,37 @@
  *
  *****************************************************************************/
 
-#include <stdbool.h>	// Required for: bool type
-#include <SDL2/SDL.h>	// Required for: SDL functions
+#include <SDL2/SDL.h>	// SDL stuff
+#include <stdio.h>	// printf
+#include <string.h>	// strrchr
+#include <stdbool.h>
+//#include <stdint.h>
+
+#include <rom.h>	// loadROM
 
 // Window dimensions
 #define WINDOW_WIDTH 	160
 #define WINDOW_LENGTH 	144
 
 // Event handling
-void handle_events(void);
-void handle_key_down(SDL_Keysym *keysym);
+static void handle_events(void);
+static void handle_key_down(SDL_Keysym *keysym);
 
 // Program state
 static bool close_window = false;
+
+// Emulator related
+static int read_cartridge(int argc, char *argv[]);
 
 int main(int argc, char *argv[])
 {
 	SDL_Window *window = NULL;
 	SDL_Renderer *renderer = NULL;
 
+	read_cartridge(argc - 1, argv + 1);
+
 	if(SDL_Init(SDL_INIT_VIDEO) != 0) {
-		SDL_Log("Unable to initialize SDL: %s", SDL_GetError());
+		printf("main: Unable to initialize SDL: %s\n", SDL_GetError());
 		return 1;
 	}
 
@@ -54,13 +64,12 @@ int main(int argc, char *argv[])
 				       0);
 
 	if(window == NULL) {
-		SDL_Log("Unable to initialize window: %s", SDL_GetError());
+		printf("main: Unable to initialize window: %s\n", SDL_GetError());
 		SDL_Quit();
 		return 1;
 	}
 
-	while(!close_window)
-	{
+	while(!close_window) {
 		handle_events();
 	}
 
@@ -73,11 +82,10 @@ int main(int argc, char *argv[])
 //region: Event handling
 
 // handle_events: Handle all SDL events
-void handle_events(void)
+static void handle_events(void)
 {
 	SDL_Event event;
-	while(SDL_PollEvent(&event))
-	{
+	while(SDL_PollEvent(&event)) {
 		switch(event.type) {
 			case SDL_QUIT:
 				close_window = true;
@@ -92,7 +100,7 @@ void handle_events(void)
 }
 
 // handle_key_down: Handle all SDL_KEYDOWN events
-void handle_key_down(SDL_Keysym *keysym)
+static void handle_key_down(SDL_Keysym *keysym)
 {
 	switch(keysym->sym) {
 		case SDLK_ESCAPE:
@@ -104,3 +112,29 @@ void handle_key_down(SDL_Keysym *keysym)
 }
 
 //endregion
+
+static int read_cartridge(int argc, char *argv[])
+{
+	char *rom_path;
+
+	if(argc != 1) {
+		if(argc < 1)
+			printf("main: No file provided\n");
+		if(argc > 1)
+			printf("main: More than one file was provided\n");
+		return 1;
+	}
+
+	rom_path = *argv;
+
+	if(strcmp(strrchr(rom_path, '.'), ".gb") != 0) {
+		printf("main: The file provided is not a Game Boy ROM: %s\n", rom_path);
+		return 1;
+	}
+
+	printf("main: Loading \"%s\"\n", strrchr(rom_path, '\\') + 1);
+
+	loadROM(rom_path);
+
+	return 0;
+}
