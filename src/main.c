@@ -28,11 +28,14 @@
 #include <stdbool.h>
 //#include <stdint.h>
 
-#include <rom.h>	// loadROM
+#include "rom.h"	// loadROM
+#include "cpu.h"	// init_registers
+#include "memory.h"	// init_memory
 
-// Window dimensions
+// Window related
 #define WINDOW_WIDTH 	160
 #define WINDOW_LENGTH 	144
+static SDL_Window *init_SDL_window(void);
 
 // Event handling
 static void handle_events(void);
@@ -42,28 +45,27 @@ static void handle_key_down(SDL_Keysym *keysym);
 static bool close_window = false;
 
 // Emulator related
-static int read_cartridge(int argc, char *argv[]);
+static int read_cartridge(int argc, char *path);
 
 int main(int argc, char *argv[])
 {
 	SDL_Window *window = NULL;
 	SDL_Renderer *renderer = NULL;
 
-	read_cartridge(argc - 1, argv + 1);
+	if(read_cartridge(argc - 1, *(argv + 1)) != 0) {
+		printf("main: ROM couldn't loaded");
+		//return 1;	//Enable when not debugging. If enabled, the console will disappear
+	}
+
+	init_registers();
+	init_memory();
 
 	if(SDL_Init(SDL_INIT_VIDEO) != 0) {
 		printf("main: Unable to initialize SDL: %s\n", SDL_GetError());
 		return 1;
 	}
 
-	window = SDL_CreateWindow("GB Emulator",
-				       SDL_WINDOWPOS_CENTERED,
-				       SDL_WINDOWPOS_CENTERED,
-				       WINDOW_WIDTH,
-				       WINDOW_LENGTH,
-				       0);
-
-	if(window == NULL) {
+	if((window = init_SDL_window()) == NULL) {
 		printf("main: Unable to initialize window: %s\n", SDL_GetError());
 		SDL_Quit();
 		return 1;
@@ -79,7 +81,21 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-//region: Event handling
+static SDL_Window *init_SDL_window(void)
+{
+	SDL_Window *window = NULL;
+
+	window = SDL_CreateWindow("GB Emulator",
+				  SDL_WINDOWPOS_CENTERED,
+				  SDL_WINDOWPOS_CENTERED,
+				  WINDOW_WIDTH,
+				  WINDOW_LENGTH,
+				  0);
+
+	return window;
+}
+
+//region Event handling
 
 // handle_events: Handle all SDL events
 static void handle_events(void)
@@ -113,10 +129,8 @@ static void handle_key_down(SDL_Keysym *keysym)
 
 //endregion
 
-static int read_cartridge(int argc, char *argv[])
+static int read_cartridge(int argc, char *path)
 {
-	char *rom_path;
-
 	if(argc != 1) {
 		if(argc < 1)
 			printf("main: No file provided\n");
@@ -125,16 +139,12 @@ static int read_cartridge(int argc, char *argv[])
 		return 1;
 	}
 
-	rom_path = *argv;
-
-	if(strcmp(strrchr(rom_path, '.'), ".gb") != 0) {
-		printf("main: The file provided is not a Game Boy ROM: %s\n", rom_path);
+	if(strcmp(strrchr(path, '.'), ".gb") != 0) {
+		printf("main: The file provided is not a Game Boy ROM: %s\n", path);
 		return 1;
 	}
 
-	printf("main: Loading \"%s\"\n", strrchr(rom_path, '\\') + 1);
+	printf("main: Loading \"%s\"\n", strrchr(path, '\\') + 1);
 
-	loadROM(rom_path);
-
-	return 0;
+	return loadROM(path);
 }
