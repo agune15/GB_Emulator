@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.17)
 
 # Project name
-project(GB_Emulator C)
+project(GB_Emulator)
 
 # C standard
 set(CMAKE_C_STANDARD 11)
@@ -14,8 +14,8 @@ set(CMAKE_C_FLAGS_DEBUG "-mconsole")
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/sdl2)
 
 # Add all c source files under the src directory
-file(GLOB SOURCES "src/*.c")
-add_executable(${PROJECT_NAME} ${SOURCES})
+file(GLOB sources "src/*.c")
+add_executable(${PROJECT_NAME} ${sources})
 
 # Add all headers files under the include directory
 target_include_directories(${PROJECT_NAME} PRIVATE include)

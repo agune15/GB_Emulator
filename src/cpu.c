@@ -3,10 +3,11 @@
  */
 
 #include "cpu.h"
+#include "cpu_p.h"
 
 struct registers registers;
 
-// Assign the desired initial value of each register
+// Assign the required initial value for each register
 void init_registers()
 {
 	registers.AF = 0x01B0;

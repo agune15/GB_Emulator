@@ -1,10 +1,14 @@
 # Show CMake commands
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-project(tests_run)
+# List src files
+file(GLOB sources "${PROJECT_SOURCE_DIR}/src/*.c")
+list(REMOVE_ITEM sources ${PROJECT_SOURCE_DIR}/src/main.c)
 
-add_executable(tests_run test_main.cpp)
+# List test files
+file(GLOB tests "${PROJECT_SOURCE_DIR}/tests/*.cpp")
 
-#target_include_directories(tests_run PRIVATE "C:/Users/alex.nebot/Desktop/GB_Emulator/src")
-# target_link_libraries(tests_run "C:/Users/alex.nebot/Desktop/GB_Emulator/src")
-# target_link_libraries(tests_run include)
+add_executable(tests_run ${tests} ${sources})
+
+# Include headers
+target_include_directories(tests_run PRIVATE ${PROJECT_SOURCE_DIR}/include)
