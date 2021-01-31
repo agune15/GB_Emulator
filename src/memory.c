@@ -50,7 +50,7 @@ void init_memory(void)
 	interrupt_enable_reg = 0x00;
 }
 
-// Read the byte of an address
+// Read byte of address
 unsigned char read_byte(unsigned short address)
 {
 	if(address <= 0x7FFF)
@@ -59,7 +59,7 @@ unsigned char read_byte(unsigned short address)
 		return VRAM[address - 0x8000];
 	else if(address >= 0xA000 && address <= 0xBFFF)
 		return exRAM[address - 0xA000];
-	else if(address >= 0xC000 && address <= 0xDFFF) {
+	else if(address >= 0xC000 && address <= 0xFDFF) {
 		if(address < 0xE000)
 			return WRAM[address - 0xC000];
 		else
@@ -68,14 +68,13 @@ unsigned char read_byte(unsigned short address)
 	else if(address >= 0xFE00 && address <= 0xFE9F)
 		return OAM[address - 0xFE00];
 	else if(address >= 0xFF00 && address <= 0xFF7F)
-		return IO[address - 0xFE00];
+		return IO[address - 0xFF00];
 	else if(address >= 0xFF80 && address <= 0xFFFE)
 		return HRAM[address - 0xFF80];
 	else if(address == 0xFFFF)
 		return interrupt_enable_reg;
-	else {
-		printf("memory: Address unreachable: %#x", address);
-	}
+	else
+		printf("memory: Address unreachable > 0xFFFF");
 
 	return 0;
 }
@@ -84,17 +83,17 @@ unsigned char read_byte(unsigned short address)
 void write_byte(unsigned short address, unsigned char byte)
 {
 	if(address >= 0xFEA0 && address <= 0xFEFF) {
-		printf("memory: Restricted memory area: %#x", address);
+		printf("memory: Restricted memory area: %#x\n", address);
 		return;
 	}
 
 	if(address >= 0x0000 && address <= 0x7FFF)
-		printf("memory: Read-only memory area: %#x", address);
+		printf("memory: Read-only memory area: %#x\n", address);
 	else if(address >= 0x8000 && address <= 0x9FFF)
 		VRAM[address - 0x8000] = byte;
 	else if(address >= 0xA000 && address <= 0xBFFF)
 		exRAM[address - 0xA000] = byte;
-	else if(address >= 0xC000 && address <= 0xDFFF) {
+	else if(address >= 0xC000 && address <= 0xFDFF) {
 		if(address < 0xE000)
 			WRAM[address - 0xC000] = byte;
 		else
@@ -103,12 +102,11 @@ void write_byte(unsigned short address, unsigned char byte)
 	else if(address >= 0xFE00 && address <= 0xFE9F)
 		OAM[address - 0xFE00] = byte;
 	else if(address >= 0xFF00 && address <= 0xFF7F)
-		IO[address - 0xFE00] = byte;
+		IO[address - 0xFF00] = byte;
 	else if(address >= 0xFF80 && address <= 0xFFFE)
 		HRAM[address - 0xFF80] = byte;
 	else if(address == 0xFFFF)
 		interrupt_enable_reg = byte;
 	else
 		printf("memory: Address unreachable: %#x", address);
-
 }

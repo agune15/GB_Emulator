@@ -31,6 +31,7 @@
 #include "rom.h"	// loadROM
 #include "cpu.h"	// init_registers
 #include "memory.h"	// init_memory
+#include "timer.h"	// update_timer
 
 // Window related
 #define WINDOW_WIDTH 	160
@@ -73,6 +74,8 @@ int main(int argc, char *argv[])
 
 	while(!close_window) {
 		handle_events();
+
+		//TODO: udpate_timer(instruction_cycles)
 	}
 
 	SDL_DestroyWindow(window);
