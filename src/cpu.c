@@ -3,9 +3,9 @@
  */
 
 #include "cpu.h"
-#include "cpu_p.h"
 
 struct registers registers;
+bool interrupt_master_enable = true;	//TODO: Include in init() method in the future
 
 // Assign the required initial value for each register
 void init_registers()

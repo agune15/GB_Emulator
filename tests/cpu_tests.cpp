@@ -1,10 +1,6 @@
 #define	 CATCH_CONFIG_MAIN
 #include "catch.hpp"
 
-extern "C" {
-	#include "cpu_p.h"
-}
-
 /* Unnecessary
 TEST_CASE("Registers initialization", "[CPU tests]")
 {

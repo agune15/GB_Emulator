@@ -26,7 +26,6 @@
 #include <stdio.h>	// printf
 #include <string.h>	// strrchr
 #include <stdbool.h>
-//#include <stdint.h>
 
 #include "rom.h"	// loadROM
 #include "cpu.h"	// init_registers
@@ -75,7 +74,8 @@ int main(int argc, char *argv[])
 	while(!close_window) {
 		handle_events();
 
-		//TODO: udpate_timer(instruction_cycles)
+		//TODO: udpate_timer(instruction_cycles) <- Better add it in the execute_instruction routine of the CPU
+		//TODO: check_interrupts_state
 	}
 
 	SDL_DestroyWindow(window);
@@ -100,7 +100,7 @@ static SDL_Window *init_SDL_window(void)
 
 //region Event handling
 
-// handle_events: Handle all SDL events
+// Handle all SDL events
 static void handle_events(void)
 {
 	SDL_Event event;
@@ -118,7 +118,7 @@ static void handle_events(void)
 	}
 }
 
-// handle_key_down: Handle all SDL_KEYDOWN events
+// Handle all SDL_KEYDOWN events
 static void handle_key_down(SDL_Keysym *keysym)
 {
 	switch(keysym->sym) {

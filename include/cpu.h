@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <stdbool.h>
+
 #define CLOCK_SPEED  4194304
 #define CYCLES_FRAME 69905
 
@@ -12,9 +14,11 @@
 #define FLAG_H 5
 #define FLAG_C 4
 
+extern bool interrupt_master_enable;
+
 void init_registers();
 
-struct registers {
+extern struct registers {
 	union {
 		unsigned short AF;
 		struct {
@@ -45,4 +49,4 @@ struct registers {
 	};
 	unsigned short SP;
 	unsigned short PC;
-};
+} registers;

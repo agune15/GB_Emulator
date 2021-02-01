@@ -8,14 +8,15 @@
 #include "timer_p.h"
 #include "memory.h"
 #include "cpu.h"
+#include "interrupts.h"
 
 int timer_counter = 0;
 
 static bool is_clock_enabled(void);
 static void reset_timer_counter(void);
 
-//TODO: Dissect function into a few smaller ones
-void update_timer(int cycles)
+// Update timer with current intruction cycles
+void update_timer(int cycles)	//TODO: Dissect function into a few smaller ones
 {
 	if(!is_clock_enabled())
 		return;
@@ -25,18 +26,20 @@ void update_timer(int cycles)
 
 		if(read_byte(TIMA_ADDRESS) == 0xFF) {
 			write_byte(TIMA_ADDRESS, read_byte(TMA_ADDRESS));
-			//TODO: Request interrupt (2)
+			request_interrupt(INTERRUPT_TIMER_BIT);
 		}
 		else
 			write_byte(TIMA_ADDRESS, read_byte(TIMA_ADDRESS) + 1);
 	}
 }
 
+// Check state of timer's clock (third bit of TAC)
 static bool is_clock_enabled(void)
 {
 	return (read_byte(TAC_ADDRESS) & 0x04) ? true : false;
 }
 
+// Reset timer_counter with desired frequency
 static void reset_timer_counter(void)
 {
 	int current_freq = read_byte(TAC_ADDRESS) & 0x03;
@@ -61,11 +64,13 @@ static void reset_timer_counter(void)
 
 //region Internal helpers
 
+// (For testing only) Check state of timer's clock (third bit of TAC)
 bool is_clock_enabled_internal(void)
 {
 	return is_clock_enabled();
 }
 
+// (For testing only) Reset timer_counter with desired frequency
 void reset_timer_counter_internal(void)
 {
 	reset_timer_counter();

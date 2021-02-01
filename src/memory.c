@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include "memory.h"
+#include "cpu.h"
 
 unsigned char ROM_banks[0x8000];	//0000-7FFF
 unsigned char VRAM[0x2000];		//8000-9FFF
@@ -50,7 +51,7 @@ void init_memory(void)
 	interrupt_enable_reg = 0x00;
 }
 
-// Read byte of address
+// Read byte from address
 unsigned char read_byte(unsigned short address)
 {
 	if(address <= 0x7FFF)
@@ -74,12 +75,24 @@ unsigned char read_byte(unsigned short address)
 	else if(address == 0xFFFF)
 		return interrupt_enable_reg;
 	else
-		printf("memory: Address unreachable > 0xFFFF");
+		printf("memory: Address unreachable %#x\n", address);
 
 	return 0;
 }
 
-// Override byte value of address
+// Read short (2 bytes) from address
+unsigned short read_short(unsigned short address) {
+	return read_byte(address) + (read_byte(address + 1) << 8);
+}
+
+// Pull short (2 bytes) from stack and change SP accordingly
+unsigned short pull_short_stack(void) {
+	unsigned short word = read_short(registers.SP);
+	registers.SP += 2;
+	return word;
+}
+
+// Override byte value from address
 void write_byte(unsigned short address, unsigned char byte)
 {
 	if(address >= 0xFEA0 && address <= 0xFEFF) {
@@ -109,4 +122,16 @@ void write_byte(unsigned short address, unsigned char byte)
 		interrupt_enable_reg = byte;
 	else
 		printf("memory: Address unreachable: %#x", address);
+}
+
+// Override byte value from address and subsequent address (address + 1)
+void write_short(unsigned short address, unsigned short word) {
+	write_byte(address, word & 0x00FF);
+	write_byte(address + 1, (word & 0xFF00) >> 8);
+}
+
+// Push short (2 bytes) to stack and change SP accordingly
+void push_short_stack(unsigned short word) {
+	registers.SP -= 2;
+	write_short(registers.SP, word);
 }

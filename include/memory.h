@@ -14,5 +14,11 @@ extern unsigned char HRAM[0x7F];
 extern unsigned char interrupt_enable_reg;
 
 void init_memory();
+
 unsigned char read_byte(unsigned short address);
+unsigned short read_short(unsigned short address);
+unsigned short pull_short_stack(void);
+
 void write_byte(unsigned short address, unsigned char byte);
+void write_short(unsigned short address, unsigned short word);
+void push_short_stack(unsigned short word);

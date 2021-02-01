@@ -12,6 +12,7 @@
 #include "rom.h"
 #include "memory.h"
 
+// Load a ROM from rom_path
 int loadROM(char *rom_path)
 {
 	FILE *pfile;
