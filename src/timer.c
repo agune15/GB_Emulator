@@ -15,7 +15,7 @@ int timer_counter = 0;
 static bool is_clock_enabled(void);
 static void reset_timer_counter(void);
 
-// Update timer with current intruction cycles
+// Update timer with current instruction cycles
 void update_timer(int cycles)	//TODO: Dissect function into a few smaller ones
 {
 	if(!is_clock_enabled())
@@ -64,13 +64,13 @@ static void reset_timer_counter(void)
 
 //region Internal helpers
 
-// (For testing only) Check state of timer's clock (third bit of TAC)
+// (Testing only) Check state of timer's clock (third bit of TAC)
 bool is_clock_enabled_internal(void)
 {
 	return is_clock_enabled();
 }
 
-// (For testing only) Reset timer_counter with desired frequency
+// (Testing only) Reset timer_counter with desired frequency
 void reset_timer_counter_internal(void)
 {
 	reset_timer_counter();
