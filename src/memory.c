@@ -81,12 +81,14 @@ unsigned char read_byte(unsigned short address)
 }
 
 // Read short (2 bytes) from address
-unsigned short read_short(unsigned short address) {
+unsigned short read_short(unsigned short address)
+{
 	return read_byte(address) + (read_byte(address + 1) << 8);
 }
 
 // Pull short (2 bytes) from stack and change SP accordingly
-unsigned short pull_short_stack(void) {
+unsigned short pull_short_stack(void)
+{
 	unsigned short word = read_short(registers.SP);
 	registers.SP += 2;
 	return word;
@@ -115,7 +117,10 @@ void write_byte(unsigned short address, unsigned char byte)
 	else if(address >= 0xFE00 && address <= 0xFE9F)
 		OAM[address - 0xFE00] = byte;
 	else if(address >= 0xFF00 && address <= 0xFF7F)
-		IO[address - 0xFF00] = byte;
+		if(address == 0xFF44)
+			IO[address - 0xFF00] = 0;
+		else
+			IO[address - 0xFF00] = byte;
 	else if(address >= 0xFF80 && address <= 0xFFFE)
 		HRAM[address - 0xFF80] = byte;
 	else if(address == 0xFFFF)
@@ -125,13 +130,15 @@ void write_byte(unsigned short address, unsigned char byte)
 }
 
 // Override byte value from address and subsequent address (address + 1)
-void write_short(unsigned short address, unsigned short word) {
+void write_short(unsigned short address, unsigned short word)
+{
 	write_byte(address, word & 0x00FF);
 	write_byte(address + 1, (word & 0xFF00) >> 8);
 }
 
 // Push short (2 bytes) to stack and change SP accordingly
-void push_short_stack(unsigned short word) {
+void push_short_stack(unsigned short word)
+{
 	registers.SP -= 2;
 	write_short(registers.SP, word);
 }

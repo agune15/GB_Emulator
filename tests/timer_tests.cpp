@@ -5,11 +5,18 @@ extern "C" {
 	#include "memory.h"
 }
 
-TEST_CASE("Clock state", "[timer]") {
+TEST_CASE("Clock state - enabled", "[timer]") {
 	unsigned char value = GENERATE(take(10, random(0x00, 0xFF)));
+	value |= (1 << 2);
 	write_byte(TAC_ADDRESS, value);
-	bool clock_state = read_byte(TAC_ADDRESS) & 0x04;
-	CHECK(is_clock_enabled_internal() == clock_state);
+	CHECK(is_clock_enabled_internal());
+}
+
+TEST_CASE("Clock state - disabled", "[timer]") {
+	unsigned char value = GENERATE(take(10, random(0x00, 0xFF)));
+	value &= ~(1 << 2);
+	write_byte(TAC_ADDRESS, value);
+	CHECK(!is_clock_enabled_internal());
 }
 
 TEST_CASE("Reset timer counter", "[timer]") {

@@ -33,7 +33,7 @@ void update_timer(int cycles)	//TODO: Dissect function into a few smaller ones
 	}
 }
 
-// Check state of timer's clock (third bit of TAC)
+// Check state of timer's clock (3rd bit of TAC)
 static bool is_clock_enabled(void)
 {
 	return (read_byte(TAC_ADDRESS) & 0x04) ? true : false;
