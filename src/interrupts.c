@@ -9,11 +9,11 @@
 #include "memory.h"
 #include "cpu.h"
 
-unsigned short interrupt_addresses[5] = {INTERRUPT_VBLANK_ADDRESS,
-					INTERRUPT_LCD_ADDRESS,
-					INTERRUPT_TIMER_ADDRESS,
-					0x58,
-					INTERRUPT_JOYPAD_ADDRESS };
+unsigned short interrupt_addresses[5] = { 0x0040,
+					  0x0048,
+					  0x0050,
+					  0x0058,
+					  0x0060 };
 
 // Set desired interrupt flag in IF
 void request_interrupt(unsigned char interrupt_flag_bit)

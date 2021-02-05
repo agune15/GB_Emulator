@@ -64,7 +64,7 @@ static void reset_timer_counter(void)
 
 //region Internal helpers
 
-// (Testing only) Check state of timer's clock (third bit of TAC)
+// (Testing only) Check state of timer's clock (3rd bit of TAC)
 bool is_clock_enabled_internal(void)
 {
 	return is_clock_enabled();
