@@ -7,35 +7,55 @@
 #include "memory.h"
 #include "interrupts.h"
 
-#define LCDC_R_ADDRESS  (LCDC_ADDRESS - 0xFF00)
-#define STAT_R_ADDRESS  (STAT_ADDRESS - 0xFF00)
-#define LY_R_ADDRESS    (LY_ADDRESS - 0xFF00)
-#define LYC_R_ADDRESS   (LYC_ADDRESS - 0xFF00)
+#define LY_R_ADDRESS  (LY_ADDRESS - 0xFF00)
 
+//TODO: Make them static?
 int scanline_counter = SCANLINE_CYCLES;
+unsigned char status;
+unsigned char *pcurrent_line;
 
+static void update_LCD_disabled(void);
+static void update_LCD_mode(void);
+static void update_coincidence_flag(void);
+static void update_scanline(int cycles);
+
+// Helpers
 static bool is_LCD_enabled(void);
-static bool is_mode_interrupt_enabled(unsigned char display_status, unsigned char mode);
-static void set_LCD_mode(unsigned char *status, unsigned char mode);
-static void set_coincidence_flag(unsigned char *status);
-static void clear_coincidence_flag(unsigned char *status);
+static bool is_mode_interrupt_enabled(unsigned char mode);
+static void set_LCD_mode(unsigned char mode);
+static void set_coincidence_flag(void);
+static void clear_coincidence_flag(void);
 static bool is_coincidence_interrupt_enabled(void);
 
 // Update display with current instruction cycles
-void update_display(int cycles)		//TODO: Dissect in smaller functions
+void update_display(int cycles)
 {
-	unsigned char status = read_byte(STAT_ADDRESS);
-	unsigned char *pcurrent_line = &IO[LY_R_ADDRESS];	// This in every update??
+	status = read_byte(STAT_ADDRESS);
+	pcurrent_line = &IO[LY_R_ADDRESS];	//TODO: Call this once, not in every udpate
 
-	// Update disabled LCD
 	if(!is_LCD_enabled()) {
-		scanline_counter = SCANLINE_CYCLES;
-		*pcurrent_line = 0;
-		set_LCD_mode(&status, 1);
-		write_byte(STAT_ADDRESS, status);
+		update_LCD_disabled();
 		return;
 	}
 
+	update_LCD_mode();
+	update_coincidence_flag();
+
+	write_byte(STAT_ADDRESS, status);
+
+	update_scanline(cycles);
+}
+
+static void update_LCD_disabled(void)
+{
+	scanline_counter = SCANLINE_CYCLES;
+	*pcurrent_line = 0;
+	set_LCD_mode(1);
+	write_byte(STAT_ADDRESS, status);
+}
+
+static void update_LCD_mode(void)
+{
 	unsigned char last_mode = read_byte(STAT_ADDRESS) & 0x03;
 	unsigned char new_mode;
 
@@ -55,24 +75,25 @@ void update_display(int cycles)		//TODO: Dissect in smaller functions
 			new_mode = 0;
 		}
 	}
-	set_LCD_mode(&status, new_mode);
+	set_LCD_mode(new_mode);
 
-	// Mode interrupt request
-	if(last_mode != new_mode && is_mode_interrupt_enabled(status, new_mode))
+	if(last_mode != new_mode && is_mode_interrupt_enabled(new_mode))
 		request_interrupt(INTERRUPT_LCD_BIT);
+}
 
-	// Coincidence flag
+static void update_coincidence_flag(void)
+{
 	if(*pcurrent_line == read_byte(LYC_ADDRESS)) {
-		set_coincidence_flag(&status);
+		set_coincidence_flag();
 		if(is_coincidence_interrupt_enabled())
 			request_interrupt(INTERRUPT_LCD_BIT);
 	}
 	else
-		clear_coincidence_flag(&status);
+		clear_coincidence_flag();
+}
 
-	write_byte(STAT_ADDRESS, status);
-
-	// Scanline update
+static void update_scanline(int cycles)
+{
 	scanline_counter -= cycles;
 
 	if(scanline_counter <= 0) {
@@ -86,6 +107,8 @@ void update_display(int cycles)		//TODO: Dissect in smaller functions
 	}
 }
 
+//region Helpers
+
 // Check display status (8th bit of LCD Control)
 static bool is_LCD_enabled(void)
 {
@@ -93,36 +116,36 @@ static bool is_LCD_enabled(void)
 }
 
 // Check state of desired mode interrupt
-static bool is_mode_interrupt_enabled(unsigned char display_status, unsigned char mode)
+static bool is_mode_interrupt_enabled(unsigned char mode)
 {
 	switch (mode) {
 		case 0:
-			return ((display_status >> 3) & 1);
+			return ((status >> 3) & 1);
 		case 1:
-			return ((display_status >> 4) & 1);
+			return ((status >> 4) & 1);
 		case 2:
-			return ((display_status >> 5) & 1);
+			return ((status >> 5) & 1);
 		default:
 			return false;
 	}
 }
 
-// Set LCD mode in *status
-static void set_LCD_mode(unsigned char *status, unsigned char mode)
+// Set LCD mode in status
+static void set_LCD_mode(unsigned char mode)
 {
-	*status = (*status & ~0x03) | (mode & 0x03);
+	status = (status & ~0x03) | (mode & 0x03);
 }
 
-// Set coincidence flag in *status
-static void set_coincidence_flag(unsigned char *status)
+// Set coincidence flag in status
+static void set_coincidence_flag(void)
 {
-	*status |= (1 << 2);
+	status |= (1 << 2);
 }
 
-// Clear coincidence flag in *status
-static void clear_coincidence_flag(unsigned char *status)
+// Clear coincidence flag in status
+static void clear_coincidence_flag(void)
 {
-	*status &= ~(1 << 2);
+	status &= ~(1 << 2);
 }
 
 // Check state of coincidence interrupt enabling flag (7th bit of STAT)
@@ -130,3 +153,5 @@ static bool is_coincidence_interrupt_enabled(void)
 {
 	return (read_byte(STAT_ADDRESS) >> 6) & 1;
 }
+
+//endregion

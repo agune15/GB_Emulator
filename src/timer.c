@@ -3,7 +3,6 @@
  */
 
 #include <stdbool.h>
-
 #include "timer.h"
 #include "timer_p.h"
 #include "memory.h"
