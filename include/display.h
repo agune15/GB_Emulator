@@ -11,3 +11,7 @@
 #define STAT_ADDRESS  0xFF41	//LCD Status
 #define LY_ADDRESS    0xFF44	//LCD Current vertical scanline (0 - 153)
 #define LYC_ADDRESS   0xFF45	//LCD Compare
+
+#define LY_R_ADDRESS  (LY_ADDRESS - 0xFF00)
+
+void update_display(int cycles);
