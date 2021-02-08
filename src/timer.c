@@ -4,7 +4,6 @@
 
 #include <stdbool.h>
 #include "timer.h"
-#include "timer_p.h"
 #include "memory.h"
 #include "cpu.h"
 #include "interrupts.h"
@@ -60,20 +59,4 @@ static void reset_timer_counter(void)
 			break;
 	}
 }
-
-//region Internal helpers
-
-// (Testing only) Check state of timer's clock (3rd bit of TAC)
-bool is_clock_enabled_internal(void)
-{
-	return is_clock_enabled();
-}
-
-// (Testing only) Reset timer_counter with desired frequency
-void reset_timer_counter_internal(void)
-{
-	reset_timer_counter();
-}
-
-//endregion
 

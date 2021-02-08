@@ -1,15 +1,14 @@
 # Show CMake commands
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-# Compile flags
-#set(CMAKE_CXX_FLAGS_DEBUG "--unresolved-symbols=ignore-all")
-
 # List src files
 file(GLOB sources "${PROJECT_SOURCE_DIR}/src/*.c")
 list(REMOVE_ITEM sources "${PROJECT_SOURCE_DIR}/src/main.c")
 
 # Removed src files included in tests
 list(REMOVE_ITEM sources "${PROJECT_SOURCE_DIR}/src/display.c")
+list(REMOVE_ITEM sources "${PROJECT_SOURCE_DIR}/src/interrupts.c")
+list(REMOVE_ITEM sources "${PROJECT_SOURCE_DIR}/src/timer.c")
 
 # List test files
 file(GLOB tests "${PROJECT_SOURCE_DIR}/tests/*.cpp")

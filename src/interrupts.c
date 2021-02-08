@@ -5,7 +5,6 @@
 #include <stdbool.h>
 
 #include "interrupts.h"
-#include "interrupts_p.h"
 #include "memory.h"
 #include "cpu.h"
 

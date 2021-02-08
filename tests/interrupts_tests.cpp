@@ -1,8 +1,7 @@
 #include "catch.hpp"
 
 extern "C" {
-	#include "interrupts.h"
-	#include "interrupts_p.h"
+	#include "../src/interrupts.c"
 	#include "memory.h"
 	#include "cpu.h"
 }
