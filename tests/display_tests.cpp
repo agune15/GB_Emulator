@@ -57,6 +57,7 @@ TEST_CASE("Update LCD mode - 3", "[display]") {
 }
 
 TEST_CASE("Update coincidence flag - Set", "[display]") {
+	update_globals();
 	*pcurrent_line = GENERATE(take(10, random(0, TOTAL_SCANLINES)));
 	write_byte(LYC_ADDRESS, *pcurrent_line);
 	update_coincidence_flag();
@@ -65,6 +66,7 @@ TEST_CASE("Update coincidence flag - Set", "[display]") {
 }
 
 TEST_CASE("Update coincidence flag - Clear", "[display]") {
+	update_globals();
 	*pcurrent_line = GENERATE(take(10, random(0, TOTAL_SCANLINES)));
 	write_byte(LYC_ADDRESS, *pcurrent_line+1);
 	update_coincidence_flag();
@@ -73,7 +75,18 @@ TEST_CASE("Update coincidence flag - Clear", "[display]") {
 }
 
 TEST_CASE("Update scanline", "[display]") {
-	//int cycles = GENERATE(take(100,
-
+	update_globals();
+	*pcurrent_line = GENERATE(take(10, random(0, TOTAL_SCANLINES - 1)));
+	int last_line = *pcurrent_line;
+	update_scanline(SCANLINE_CYCLES);
+	CHECK(cycles_counter == SCANLINE_CYCLES);
+	CHECK(*pcurrent_line == last_line+1);
 }
 
+TEST_CASE("Update scanline - overflow", "[display]") {
+	update_globals();
+	*pcurrent_line = TOTAL_SCANLINES;
+	update_scanline(SCANLINE_CYCLES);
+	CHECK(cycles_counter == SCANLINE_CYCLES);
+	CHECK(*pcurrent_line == 0);
+}
