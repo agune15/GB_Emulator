@@ -9,11 +9,13 @@
 unsigned char ROM_banks[0x8000];	//0000-7FFF
 unsigned char VRAM[0x2000];		//8000-9FFF
 unsigned char exRAM[0x2000];		//A000-BFFF
-unsigned char WRAM[0x2000];		//C000-DFFF (& E000-FDFF (same as C000-DDFF)
-unsigned char OAM[0x100];		//FE00-FE9F
+unsigned char WRAM[0x2000];		//C000-DFFF (& E000-FDFF, same as C000-DDFF)
+unsigned char OAM[0xA0];		//FE00-FE9F
 unsigned char IO[0x80];			//FF00-FF7F
 unsigned char HRAM[0x7F];		//FF80-FFFE
 unsigned char interrupt_enable_reg;	//FFFF
+
+static void perform_DMA_transfer(unsigned short address);
 
 // Assign the required initial value for a set of specific memory addresses (GB requirement)
 void init_memory(void)
@@ -119,6 +121,8 @@ void write_byte(unsigned short address, unsigned char byte)
 	else if(address >= 0xFF00 && address <= 0xFF7F)
 		if(address == 0xFF44)
 			IO[address - 0xFF00] = 0;
+		else if(address == 0xFF46)
+			perform_DMA_transfer(byte);
 		else
 			IO[address - 0xFF00] = byte;
 	else if(address >= 0xFF80 && address <= 0xFFFE)
@@ -141,4 +145,12 @@ void push_short_stack(unsigned short word)
 {
 	registers.SP -= 2;
 	write_short(registers.SP, word);
+}
+
+// Perform DMA transfer from address to OAM
+static void perform_DMA_transfer(unsigned short address)
+{
+	address <<= 8;
+	for(int i = 0; i < 0xA0; i++)
+		write_byte(0xFE00+i, read_byte(address + i));
 }

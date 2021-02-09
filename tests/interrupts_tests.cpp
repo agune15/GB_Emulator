@@ -8,7 +8,7 @@ extern "C" {
 
 TEST_CASE("Request interrupt", "[interrupts]") {
 	int interrupt_flag = GENERATE(0, 1, 2, 3, 4);
-	request_interrupt(interrupt_flag);
+	request_interrupt((interrupt_t)interrupt_flag);
 	int bit_state = (read_byte(IF_ADDRESS) >> interrupt_flag) & 1;
 	CHECK(bit_state == 1);
 }
@@ -16,8 +16,8 @@ TEST_CASE("Request interrupt", "[interrupts]") {
 TEST_CASE("Perform interrupt", "[interrupts]") {
 	int interrupt_flag = GENERATE(0, 1, 2, 3, 4);
 	interrupt_master_enable = true;
-	request_interrupt(interrupt_flag);
-	perform_interrupt(interrupt_flag);
+	request_interrupt((interrupt_t)interrupt_flag);
+	perform_interrupt((interrupt_t)interrupt_flag);
 	int bit_state = (read_byte(IF_ADDRESS) >> interrupt_flag) & 1;
 	CHECK(bit_state == 0);
 	CHECK(registers.PC == interrupt_addresses[interrupt_flag]);

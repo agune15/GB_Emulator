@@ -1,7 +1,7 @@
 #include "catch.hpp"
 
 extern "C" {
-	#include "memory.h"
+	#include "../src/memory.c"
 	#include "cpu.h"
 }
 
@@ -179,6 +179,14 @@ TEST_CASE("Push to stack", "[memory][write][stack]") {
 	push_short_stack(word);
 	CHECK(word == read_short(address-2));
 	CHECK(registers.SP == address-2);
+}
+
+TEST_CASE("Perform DMA transfer", "[memory][write][DMA]") {
+	for(int i = 0; i < 0xA0; i++)
+		ROM_banks[i] = GENERATE(take(1, random(0, 0xFF)));
+	write_byte(0xFF46, 0x00);
+	for(int i = 0; i < 0xA0; i++)
+		CHECK(read_byte(i) == read_byte(0xFE00+i));
 }
 
 //endregion

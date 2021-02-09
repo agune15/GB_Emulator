@@ -9,6 +9,7 @@ list(REMOVE_ITEM sources "${PROJECT_SOURCE_DIR}/src/main.c")
 list(REMOVE_ITEM sources "${PROJECT_SOURCE_DIR}/src/display.c")
 list(REMOVE_ITEM sources "${PROJECT_SOURCE_DIR}/src/interrupts.c")
 list(REMOVE_ITEM sources "${PROJECT_SOURCE_DIR}/src/timer.c")
+list(REMOVE_ITEM sources "${PROJECT_SOURCE_DIR}/src/memory.c")
 
 # List test files
 file(GLOB tests "${PROJECT_SOURCE_DIR}/tests/*.cpp")

@@ -24,7 +24,7 @@ void update_timer(int cycles)	//TODO: Dissect function into a few smaller ones
 
 		if(read_byte(TIMA_ADDRESS) == 0xFF) {
 			write_byte(TIMA_ADDRESS, read_byte(TMA_ADDRESS));
-			request_interrupt(INTERRUPT_TIMER_BIT);
+			request_interrupt(TIMER);
 		}
 		else
 			write_byte(TIMA_ADDRESS, read_byte(TIMA_ADDRESS) + 1);

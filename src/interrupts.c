@@ -15,10 +15,10 @@ unsigned short interrupt_addresses[5] = { 0x0040,
 					  0x0060 };
 
 // Set desired interrupt flag in IF
-void request_interrupt(unsigned char interrupt_flag_bit)
+void request_interrupt(interrupt_t interrupt)
 {
 	unsigned char interrupt_flags = read_byte(IF_ADDRESS);
-	interrupt_flags |= (1 << interrupt_flag_bit);
+	interrupt_flags |= (1 << interrupt);
 	write_byte(IF_ADDRESS, interrupt_flags);
 }
 
@@ -31,10 +31,10 @@ void check_interrupts_state(void)
 	unsigned char current_IE = read_byte(IE_ADDRESS);
 	unsigned char current_IF = read_byte(IF_ADDRESS);
 
-	for(int i = 0; i <= INTERRUPT_JOYPAD_BIT; i++) {
+	for(int i = 0; i <= JOYPAD; i++) {
 		if(current_IF & 0x01) {
 			if(current_IE & 0x01) {
-				perform_interrupt(i);
+				perform_interrupt((interrupt_t)i);
 			}
 		}
 		current_IE = current_IE >> 1;
@@ -43,12 +43,12 @@ void check_interrupts_state(void)
 }
 
 // Jump to instruction routine of desired interrupt
-void perform_interrupt(unsigned char interrupt_flag_bit)
+void perform_interrupt(interrupt_t interrupt)
 {
 	interrupt_master_enable = false;
 	unsigned char current_IF = read_byte(IF_ADDRESS);
-	current_IF &= ~(1 << interrupt_flag_bit);
+	current_IF &= ~(1 << interrupt);
 	write_byte(IF_ADDRESS, current_IF);
 	push_short_stack(registers.PC);
-	registers.PC = interrupt_addresses[interrupt_flag_bit];
+	registers.PC = interrupt_addresses[interrupt];
 }

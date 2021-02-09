@@ -84,7 +84,7 @@ static void update_LCD_mode(void)
 	set_LCD_mode(new_mode);
 
 	if(last_mode != new_mode && is_mode_interrupt_enabled(new_mode))
-		request_interrupt(INTERRUPT_LCD_BIT);
+		request_interrupt(LCD);
 }
 
 // Update display's coincidence flag
@@ -93,7 +93,7 @@ void update_coincidence_flag(void)
 	if(*pcurrent_line == read_byte(LYC_ADDRESS)) {
 		set_coincidence_flag();
 		if(is_coincidence_interrupt_enabled())
-			request_interrupt(INTERRUPT_LCD_BIT);
+			request_interrupt(LCD);
 	}
 	else
 		clear_coincidence_flag();
@@ -109,7 +109,7 @@ static void update_scanline(int cycles)
 		cycles_counter = SCANLINE_CYCLES;
 
 		if (*pcurrent_line == VISIBLE_SCANLINES)
-			request_interrupt(INTERRUPT_VBLANK_BIT);
+			request_interrupt(VBLANK);
 		if (*pcurrent_line > TOTAL_SCANLINES)
 			*pcurrent_line = 0;
 	}
