@@ -50,6 +50,8 @@ TEST_CASE("Read OAM", "[memory][read][byte]") {
 TEST_CASE("Read IO", "[memory][read][byte]") {
 	unsigned short address = GENERATE(take(100, random(0xFF00, 0xFF7F)));
 	unsigned char value = IO[address - 0xFF00] = GENERATE(take(1, random(0x00, 0xFF)));
+	if(address == 0xFF00)
+		value = get_joypad_state(IO[0]);
 	DYNAMIC_SECTION("Read 0x" << std::hex << address) {
 		CHECK(value == read_byte(address));
 	}

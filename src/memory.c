@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include "memory.h"
 #include "cpu.h"
+#include "input.h"
 
 unsigned char ROM_banks[0x8000];	//0000-7FFF
 unsigned char VRAM[0x2000];		//8000-9FFF
@@ -70,8 +71,12 @@ unsigned char read_byte(unsigned short address)
 	}
 	else if(address >= 0xFE00 && address <= 0xFE9F)
 		return OAM[address - 0xFE00];
-	else if(address >= 0xFF00 && address <= 0xFF7F)
-		return IO[address - 0xFF00];
+	else if(address >= 0xFF00 && address <= 0xFF7F) {
+		if(address == 0xFF00)
+			return get_joypad_state(IO[0]);
+		else
+			return IO[address - 0xFF00];
+	}
 	else if(address >= 0xFF80 && address <= 0xFFFE)
 		return HRAM[address - 0xFF80];
 	else if(address == 0xFFFF)
@@ -118,13 +123,14 @@ void write_byte(unsigned short address, unsigned char byte)
 	}
 	else if(address >= 0xFE00 && address <= 0xFE9F)
 		OAM[address - 0xFE00] = byte;
-	else if(address >= 0xFF00 && address <= 0xFF7F)
+	else if(address >= 0xFF00 && address <= 0xFF7F) {
 		if(address == 0xFF44)
 			IO[address - 0xFF00] = 0;
 		else if(address == 0xFF46)
 			perform_DMA_transfer(byte);
 		else
 			IO[address - 0xFF00] = byte;
+	}
 	else if(address >= 0xFF80 && address <= 0xFFFE)
 		HRAM[address - 0xFF80] = byte;
 	else if(address == 0xFFFF)

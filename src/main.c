@@ -31,6 +31,7 @@
 #include "cpu.h"	// init_registers
 #include "memory.h"	// init_memory
 #include "timer.h"	// update_timer
+#include "input.h"	// joypad functions
 
 // Window related
 #define WINDOW_WIDTH 	160
@@ -40,6 +41,7 @@ static SDL_Window *init_SDL_window(void);
 // Event handling
 static void handle_events(void);
 static void handle_key_down(SDL_Keysym *keysym);
+static void handle_key_up(SDL_Keysym *keysym);
 
 // Program state
 static bool close_window = false;
@@ -84,6 +86,7 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
+// Initialize an SDL_Window
 static SDL_Window *init_SDL_window(void)
 {
 	SDL_Window *window = NULL;
@@ -112,6 +115,9 @@ static void handle_events(void)
 			case SDL_KEYDOWN:
 				handle_key_down(&event.key.keysym);
 				break;
+			case SDL_KEYUP:
+				handle_key_up(&event.key.keysym);
+				break;
 			default:
 				break;
 		}
@@ -121,9 +127,66 @@ static void handle_events(void)
 // Handle all SDL_KEYDOWN events
 static void handle_key_down(SDL_Keysym *keysym)
 {
-	switch(keysym->sym) {
+	switch (keysym->sym) {
 		case SDLK_ESCAPE:
 			close_window = true;
+			break;
+		case SDLK_a:
+			joypad_button_down(A);
+			break;
+		case SDLK_s:
+			joypad_button_down(B);
+			break;
+		case SDLK_BACKSPACE:
+			joypad_button_down(SELECT);
+			break;
+		case SDLK_RETURN:
+			joypad_button_down(START);
+			break;
+		case SDLK_RIGHT:
+			joypad_button_down(RIGHT);
+			break;
+		case SDLK_LEFT:
+			joypad_button_down(LEFT);
+			break;
+		case SDLK_UP:
+			joypad_button_down(UP);
+			break;
+		case SDLK_DOWN:
+			joypad_button_down(DOWN);
+			break;
+		default:
+			break;
+	}
+}
+
+// Handle all SDL_KEYUP events
+static void handle_key_up(SDL_Keysym *keysym)
+{
+	switch (keysym->sym) {
+		case SDLK_a:
+			joypad_button_up(A);
+			break;
+		case SDLK_s:
+			joypad_button_up(B);
+			break;
+		case SDLK_BACKSPACE:
+			joypad_button_up(SELECT);
+			break;
+		case SDLK_RETURN:
+			joypad_button_up(START);
+			break;
+		case SDLK_RIGHT:
+			joypad_button_up(RIGHT);
+			break;
+		case SDLK_LEFT:
+			joypad_button_up(LEFT);
+			break;
+		case SDLK_UP:
+			joypad_button_up(UP);
+			break;
+		case SDLK_DOWN:
+			joypad_button_up(DOWN);
 			break;
 		default:
 			break;
@@ -132,6 +195,7 @@ static void handle_key_down(SDL_Keysym *keysym)
 
 //endregion
 
+//TODO: Function description
 static int read_cartridge(int argc, char *path)
 {
 	if(argc != 1) {
