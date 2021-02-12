@@ -7,8 +7,6 @@
 #include "interrupts.h"
 #include "memory.h"
 
-#define JOYPAD_ADDRESS  0xFF00
-
 unsigned char buttons_state = 0xFF;
 
 static bool is_button_pressed(button_t button);
@@ -17,6 +15,7 @@ static void clear_button_flag(button_t button);
 static bool is_standard_selected(void);
 static bool is_direction_selected(void);
 
+// Set button state as pressed
 void joypad_button_down(button_t button)
 {
 	bool already_pressed = is_button_pressed(button);
@@ -33,11 +32,13 @@ void joypad_button_down(button_t button)
 		request_interrupt(JOYPAD);
 }
 
+// Set button state as unpressed
 void joypad_button_up(button_t button)
 {
 	set_button_flag(button);
 }
 
+// Return joypad state depending on buttons state and selected buttons type
 unsigned char get_joypad_state(unsigned char joypad_state)
 {
 	joypad_state &= 0xF0;
@@ -54,26 +55,32 @@ unsigned char get_joypad_state(unsigned char joypad_state)
 
 //region Helpers
 
+// Return the state of the desired button flag
 static bool is_button_pressed(button_t button)
 {
 	return ((buttons_state >> button) & 1) ? false : true;
 }
 
+// Set button flag in buttons_state
 static void set_button_flag(button_t button)
 {
 	buttons_state |= (1 << button);
 }
 
+// Clear button flag in buttons_state
 static void clear_button_flag(button_t button)
 {
 	buttons_state &= ~(1 << button);
 }
 
+
+// Check if standard buttons are selected
 static bool is_standard_selected(void)
 {
 	return ((IO[0] >> 5) & 1) ? false : true;
 }
 
+// Check if direction buttons are selected
 static bool is_direction_selected(void)
 {
 	return ((IO[0] >> 4) & 1) ? false : true;
