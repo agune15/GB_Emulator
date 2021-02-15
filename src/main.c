@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 	while(!close_window) {
 		handle_events();
 
-		//TODO: udpate_timer(instruction_cycles) <- Better add it in the execute_instruction routine of the CPU
+		//TODO: udpate_timer(instruction_cycles) <- Better add it in the execute_next_instruction routine of the CPU
 		//TODO: check_interrupts_state
 	}
 

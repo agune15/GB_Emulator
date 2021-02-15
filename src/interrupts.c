@@ -6,13 +6,15 @@
 
 #include "interrupts.h"
 #include "memory.h"
-#include "cpu.h"
+#include "registers.h"
 
 unsigned short interrupt_addresses[5] = { 0x0040,
-					  0x0048,
-					  0x0050,
-					  0x0058,
-					  0x0060 };
+	0x0048,
+	0x0050,
+	0x0058,
+	0x0060 };
+
+bool interrupt_master_enable = true;	//TODO: Include in init() method in the future
 
 // Set desired interrupt flag in IF
 void request_interrupt(interrupt_t interrupt)

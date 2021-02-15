@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdbool.h>
+
 #define IE_ADDRESS  0xFFFF	// Interrupt Enable register address
 #define IF_ADDRESS  0xFF0F	// Interrupt Flag register address
 

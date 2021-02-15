@@ -4,8 +4,8 @@
 
 #include <stdio.h>
 #include "memory.h"
-#include "cpu.h"
 #include "input.h"
+#include "registers.h"
 
 unsigned char ROM_banks[0x8000];	//0000-7FFF
 unsigned char VRAM[0x2000];		//8000-9FFF

@@ -2,8 +2,6 @@
 
 extern "C" {
 	#include "../src/interrupts.c"
-	#include "memory.h"
-	#include "cpu.h"
 }
 
 TEST_CASE("Request interrupt", "[interrupts]") {

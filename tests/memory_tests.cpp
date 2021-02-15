@@ -2,7 +2,6 @@
 
 extern "C" {
 	#include "../src/memory.c"
-	#include "cpu.h"
 }
 
 //region Read from memory
@@ -159,6 +158,8 @@ TEST_CASE("Write short - memory", "[memory][write][short]") {
 	unsigned short address = GENERATE(take(95, random(0x8000, 0xFE9F)),
 					  take(5, random(0xFF00, 0xFFFF)));
 	unsigned short word = GENERATE(take(1, random(0x0000, 0xFFFF)));
+	if(address == 0xFF44)
+		word &= 0xFF00;
 	write_short(address, word);
 	DYNAMIC_SECTION("Write to 0x"<<std::hex<<address<<" & 0x"<<std::hex<<address+1) {
 		CHECK(read_short(address) == word);
