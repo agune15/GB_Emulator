@@ -2,7 +2,7 @@
 
 extern int (*instructions[256])(void);
 
-// Base methods
+// Helpers
 int load_8bit_vp(unsigned char value, unsigned char *storage, int cycles);
 int load_8bit_va(unsigned char value, unsigned short address, int cycles);
 
@@ -13,6 +13,7 @@ int ld_d_n(void);
 int ld_e_n(void);
 int ld_h_n(void);
 int ld_l_n(void);
+int ld_hl_n(void);
 int ld_b_b(void);
 int ld_b_c(void);
 int ld_b_d(void);
@@ -34,6 +35,33 @@ int ld_d_e(void);
 int ld_d_h(void);
 int ld_d_l(void);
 int ld_d_hl(void);
+int ld_e_b(void);
+int ld_e_c(void);
+int ld_e_d(void);
+int ld_e_e(void);
+int ld_e_h(void);
+int ld_e_l(void);
+int ld_e_hl(void);
+int ld_h_b(void);
+int ld_h_c(void);
+int ld_h_d(void);
+int ld_h_e(void);
+int ld_h_h(void);
+int ld_h_l(void);
+int ld_h_hl(void);
+int ld_l_b(void);
+int ld_l_c(void);
+int ld_l_d(void);
+int ld_l_e(void);
+int ld_l_h(void);
+int ld_l_l(void);
+int ld_l_hl(void);
+int ld_hl_b(void);
+int ld_hl_c(void);
+int ld_hl_d(void);
+int ld_hl_e(void);
+int ld_hl_h(void);
+int ld_hl_l(void);
 int ld_a_b(void);
 int ld_a_c(void);
 int ld_a_d(void);
