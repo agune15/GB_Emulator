@@ -2,18 +2,17 @@
 
 extern int (*instructions[256])(void);
 
-// Helpers
-int load_8bit_vp(unsigned char value, unsigned char *storage, int cycles);
-int load_8bit_va(unsigned char value, unsigned short address, int cycles);
-
 // Instructions
 int ld_b_n(void);
+int ld_a_bc(void);
 int ld_c_n(void);
 int ld_d_n(void);
+int ld_a_de(void);
 int ld_e_n(void);
 int ld_h_n(void);
 int ld_l_n(void);
 int ld_hl_n(void);
+int ld_a_n(void);
 int ld_b_b(void);
 int ld_b_c(void);
 int ld_b_d(void);
@@ -70,3 +69,4 @@ int ld_a_h(void);
 int ld_a_l(void);
 int ld_a_hl(void);
 int ld_a_a(void);
+int ld_a_nn(void);
