@@ -9,21 +9,21 @@
 #include "memory.h"
 
 int (*instructions[256])(void) = {
-/*0x0*/	NULL, NULL, NULL, NULL, NULL, NULL, ld_b_n, NULL, NULL, NULL, ld_a_bc, NULL, NULL, NULL, ld_c_n, NULL,
-/*0x1*/	NULL, NULL, NULL, NULL, NULL, NULL, ld_d_n, NULL, NULL, NULL, ld_a_de, NULL, NULL, NULL, ld_e_n, NULL,
+/*0x0*/	NULL, NULL, ld_bc_a, NULL, NULL, NULL, ld_b_n, NULL, NULL, NULL, ld_a_bc, NULL, NULL, NULL, ld_c_n, NULL,
+/*0x1*/	NULL, NULL, ld_de_a, NULL, NULL, NULL, ld_d_n, NULL, NULL, NULL, ld_a_de, NULL, NULL, NULL, ld_e_n, NULL,
 /*0x2*/	NULL, NULL, NULL, NULL, NULL, NULL, ld_h_n, NULL, NULL, NULL, NULL, NULL, NULL, NULL, ld_l_n, NULL,
 /*0x3*/	NULL, NULL, NULL, NULL, NULL, NULL, ld_hl_n, NULL, NULL, NULL, NULL, NULL, NULL, NULL, ld_a_n, NULL,
-/*0x4*/	ld_b_b, ld_b_c, ld_b_d, ld_b_e, ld_b_h, ld_b_l, ld_b_hl, NULL, ld_c_b, ld_c_c, ld_c_d, ld_c_e, ld_c_h, ld_c_l, ld_c_hl, NULL,
-/*0x5*/	ld_d_b, ld_d_c, ld_d_d, ld_d_e, ld_d_h, ld_d_l, ld_d_hl, NULL, ld_e_b, ld_e_c, ld_e_d, ld_e_e, ld_e_h, ld_e_l, ld_e_hl, NULL,
-/*0x6*/	ld_h_b, ld_h_c, ld_h_d, ld_h_e, ld_h_h, ld_h_l, ld_h_hl, NULL, ld_l_b, ld_l_c, ld_l_d, ld_l_e, ld_l_h, ld_l_l, ld_l_hl, NULL,
-/*0x7*/	ld_hl_b, ld_hl_c, ld_hl_d, ld_hl_e, ld_hl_h, ld_hl_l, NULL, NULL, ld_a_b, ld_a_c, ld_a_d, ld_a_e, ld_a_h, ld_a_l, ld_a_hl, ld_a_a,
+/*0x4*/	ld_b_b, ld_b_c, ld_b_d, ld_b_e, ld_b_h, ld_b_l, ld_b_hl, ld_b_a, ld_c_b, ld_c_c, ld_c_d, ld_c_e, ld_c_h, ld_c_l, ld_c_hl, ld_c_a,
+/*0x5*/	ld_d_b, ld_d_c, ld_d_d, ld_d_e, ld_d_h, ld_d_l, ld_d_hl, ld_d_a, ld_e_b, ld_e_c, ld_e_d, ld_e_e, ld_e_h, ld_e_l, ld_e_hl, ld_e_a,
+/*0x6*/	ld_h_b, ld_h_c, ld_h_d, ld_h_e, ld_h_h, ld_h_l, ld_h_hl, ld_h_a, ld_l_b, ld_l_c, ld_l_d, ld_l_e, ld_l_h, ld_l_l, ld_l_hl, ld_l_a,
+/*0x7*/	ld_hl_b, ld_hl_c, ld_hl_d, ld_hl_e, ld_hl_h, ld_hl_l, NULL, ld_hl_a, ld_a_b, ld_a_c, ld_a_d, ld_a_e, ld_a_h, ld_a_l, ld_a_hl, ld_a_a,
 /*0x8*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0x9*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0xA*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0xB*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0xC*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0xD*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-/*0xE*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+/*0xE*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, ld_nn_a, NULL, NULL, NULL, NULL, NULL,
 /*0xF*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, ld_a_nn, NULL, NULL, NULL, NULL, NULL,
 };
 
@@ -65,18 +65,22 @@ int load_8bit_va(unsigned char value, unsigned short address, int cycles)
 }
 
 // Load value from address in program memory to pointer
-int load_8bit_vpmp(unsigned char *storage, int cycles)
+int load_8bit_vpmp(unsigned char *storage, int cycles)		//TODO: Remove if not used in the future
 {
 	*storage = read_byte(read_short(registers.PC));
 	registers.PC += 2;
 	return cycles;
 }
 
+
 //endregion
 
 //endregion
 
 //region Instructions
+
+// 0x02: Load from reg-A to memory(BC)
+int ld_bc_a(void) { return load_8bit_va(registers.A, registers.BC, 8); }
 
 // 0x06: Load from memory(n) to reg-B
 int ld_b_n(void) { return load_8bit_vp(read_byte(registers.PC++), &registers.B, 8); }
@@ -86,6 +90,9 @@ int ld_a_bc(void) { return load_8bit_vp(read_byte(registers.BC), &registers.A, 8
 
 // 0x0E: Load from memory(n) to reg-C
 int ld_c_n(void) { return load_8bit_vp(read_byte(registers.PC++), &registers.C, 8); }
+
+// 0x12: Load from reg-A to memory(DE)
+int ld_de_a(void) { return load_8bit_va(registers.A, registers.DE, 8); }
 
 // 0x16: Load from memory(n) to reg-D
 int ld_d_n(void) { return load_8bit_vp(read_byte(registers.PC++), &registers.D, 8); }
@@ -129,6 +136,9 @@ int ld_b_l(void) { return load_8bit_vp(registers.L, &registers.B, 4); }
 // 0x46: Load from memory(HL) to reg-B
 int ld_b_hl(void) { return load_8bit_vp(read_byte(registers.HL), &registers.B, 8); }
 
+// 0x47: Load from reg-A to reg-B
+int ld_b_a(void) { return load_8bit_vp(registers.A, &registers.B, 4); }
+
 // 0x48: Load from reg-B to reg-C
 int ld_c_b(void) { return load_8bit_vp(registers.B, &registers.C, 4); }
 
@@ -149,6 +159,9 @@ int ld_c_l(void) { return load_8bit_vp(registers.L, &registers.C, 4); }
 
 // 0x4E: Load from memory(HL) to reg-C
 int ld_c_hl(void) { return load_8bit_vp(read_byte(registers.HL), &registers.C, 8); }
+
+// 0x4F: Load from reg-A to reg-C
+int ld_c_a(void) { return load_8bit_vp(registers.A, &registers.C, 4); }
 
 // 0x50: Load from reg-B to reg-D
 int ld_d_b(void) { return load_8bit_vp(registers.B, &registers.D, 4); }
@@ -171,6 +184,9 @@ int ld_d_l(void) { return load_8bit_vp(registers.L, &registers.D, 4); }
 // 0x56: Load from memory(HL) to reg-D
 int ld_d_hl(void) { return load_8bit_vp(read_byte(registers.HL), &registers.D, 8); }
 
+// 0x57: Load from reg-A to reg-D
+int ld_d_a(void) { return load_8bit_vp(registers.A, &registers.D, 4); }
+
 // 0x58: Load from reg-B to reg-E
 int ld_e_b(void) { return load_8bit_vp(registers.B, &registers.E, 4); }
 
@@ -191,6 +207,9 @@ int ld_e_l(void) { return load_8bit_vp(registers.L, &registers.E, 4); }
 
 // 0x5E: Load from memory(HL) to reg-E
 int ld_e_hl(void) { return load_8bit_vp(read_byte(registers.HL), &registers.E, 8); }
+
+// 0x5F: Load from reg-A to reg-E
+int ld_e_a(void) { return load_8bit_vp(registers.A, &registers.E, 4); }
 
 // 0x60: Load from reg-B to reg-H
 int ld_h_b(void) { return load_8bit_vp(registers.B, &registers.H, 4); }
@@ -213,6 +232,9 @@ int ld_h_l(void) { return load_8bit_vp(registers.L, &registers.H, 4); }
 // 0x66: Load from memory(HL) to reg-H
 int ld_h_hl(void) { return load_8bit_vp(read_byte(registers.HL), &registers.H, 8); }
 
+// 0x67: Load from reg-A to reg-H
+int ld_h_a(void) { return load_8bit_vp(registers.A, &registers.H, 4); }
+
 // 0x68: Load from reg-B to reg-L
 int ld_l_b(void) { return load_8bit_vp(registers.B, &registers.L, 4); }
 
@@ -234,6 +256,9 @@ int ld_l_l(void) { return 4; }
 // 0x6E: Load from memory(HL) to reg-L
 int ld_l_hl(void) { return load_8bit_vp(read_byte(registers.HL), &registers.L, 8); }
 
+// 0x6F: Load from reg-A to reg-L
+int ld_l_a(void) { return load_8bit_vp(registers.A, &registers.L, 4); }
+
 // 0x70: Load from reg-B to memory(HL)
 int ld_hl_b(void) { return load_8bit_va(registers.B, registers.HL, 8); }
 
@@ -251,6 +276,9 @@ int ld_hl_h(void) { return load_8bit_va(registers.H, registers.HL, 8); }
 
 // 0x75: Load from reg-L to memory(HL)
 int ld_hl_l(void) { return load_8bit_va(registers.L, registers.HL, 8); }
+
+// 0x77: Load from reg-A to memory(HL)
+int ld_hl_a(void) { return load_8bit_va(registers.A, registers.HL, 8); }
 
 // 0x78: Load from reg-B to reg-A
 int ld_a_b(void) { return load_8bit_vp(registers.B, &registers.A, 4); }
@@ -276,7 +304,18 @@ int ld_a_hl(void) { return load_8bit_vp(read_byte(registers.HL), &registers.A, 8
 // 0x7F: Load from reg-A to reg-A
 int ld_a_a(void) { return 4; }
 
+// 0xEA: Load from reg-A to memory address(nn)
+int ld_nn_a(void) {
+	write_byte(read_short(registers.PC), registers.A);
+	registers.PC += 2;
+	return 16;
+}
+
 // 0xFA: Load from memory address(nn) to reg-A
-int ld_a_nn(void) { return load_8bit_vpmp(&registers.A, 16); }
+int ld_a_nn(void) {
+	registers.A = read_byte(read_short(registers.PC));
+	registers.PC += 2;
+	return 16;
+}
 
 //endregion

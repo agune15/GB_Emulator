@@ -24,6 +24,17 @@ TEST_CASE("Registers initialization", "[CPU tests]") {
 
 //region Instructions
 
+TEST_CASE("0x02: Load from reg-A to memory(BC)", "[cpu][load]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x02;
+	registers.BC = GENERATE(take(10, random(0x8000, 0xFE9F)));
+	registers.A = GENERATE(take(1, random(0, 0xFF)));
+
+	int cycles = execute_next_instruction();
+	CHECK(read_byte(registers.BC) == registers.A);
+	CHECK(cycles == 8);
+}
+
 TEST_CASE("0x06: Load from memory(n) to reg-B", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x06;
@@ -53,6 +64,17 @@ TEST_CASE("0x0E: Load from memory(n) to reg-C", "[cpu][load]") {
 
 	int cycles = execute_next_instruction();
 	CHECK(registers.C == value);
+	CHECK(cycles == 8);
+}
+
+TEST_CASE("0x12: Load from reg-A to memory(DE)", "[cpu][load]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x12;
+	registers.DE = GENERATE(take(10, random(0x8000, 0xFE9F)));
+	registers.A = GENERATE(take(1, random(0, 0xFF)));
+
+	int cycles = execute_next_instruction();
+	CHECK(read_byte(registers.DE) == registers.A);
 	CHECK(cycles == 8);
 }
 
@@ -201,6 +223,16 @@ TEST_CASE("0x46: Load from memory(HL) to reg-B", "[cpu][load]") {
 	CHECK(cycles == 8);
 }
 
+TEST_CASE("0x47: Load from reg-A to reg-B", "[cpu][load]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x47;
+	registers.A = GENERATE(take(10, random(0, 0xFF)));
+
+	int cycles = execute_next_instruction();
+	CHECK(registers.B == registers.A);
+	CHECK(cycles == 4);
+}
+
 TEST_CASE("0x48: Load from reg-B to reg-C", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x48;
@@ -271,6 +303,16 @@ TEST_CASE("0x4E: Load from memory(HL) to reg-C", "[cpu][load]") {
 	int cycles = execute_next_instruction();
 	CHECK(registers.C == read_byte(registers.HL));
 	CHECK(cycles == 8);
+}
+
+TEST_CASE("0x4F: Load from reg-A to reg-C", "[cpu][load]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x4F;
+	registers.A = GENERATE(take(10, random(0, 0xFF)));
+
+	int cycles = execute_next_instruction();
+	CHECK(registers.C == registers.A);
+	CHECK(cycles == 4);
 }
 
 TEST_CASE("0x50: Load from reg-B to reg-D", "[cpu][load]") {
@@ -345,6 +387,16 @@ TEST_CASE("0x56: Load from memory(HL) to reg-D", "[cpu][load]") {
 	CHECK(cycles == 8);
 }
 
+TEST_CASE("0x57: Load from reg-A to reg-D", "[cpu][load]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x57;
+	registers.A = GENERATE(take(10, random(0, 0xFF)));
+
+	int cycles = execute_next_instruction();
+	CHECK(registers.D == registers.A);
+	CHECK(cycles == 4);
+}
+
 TEST_CASE("0x58: Load from reg-B to reg-E", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x58;
@@ -415,6 +467,16 @@ TEST_CASE("0x5E: Load from memory(HL) to reg-E", "[cpu][load]") {
 	int cycles = execute_next_instruction();
 	CHECK(registers.E == read_byte(registers.HL));
 	CHECK(cycles == 8);
+}
+
+TEST_CASE("0x5F: Load from reg-A to reg-E", "[cpu][load]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x5F;
+	registers.A = GENERATE(take(10, random(0, 0xFF)));
+
+	int cycles = execute_next_instruction();
+	CHECK(registers.E == registers.A);
+	CHECK(cycles == 4);
 }
 
 TEST_CASE("0x60: Load from reg-B to reg-H", "[cpu][load]") {
@@ -489,6 +551,16 @@ TEST_CASE("0x66: Load from memory(HL) to reg-H", "[cpu][load]") {
 	CHECK(cycles == 8);
 }
 
+TEST_CASE("0x67: Load from reg-A to reg-H", "[cpu][load]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x67;
+	registers.A = GENERATE(take(10, random(0, 0xFF)));
+
+	int cycles = execute_next_instruction();
+	CHECK(registers.H == registers.A);
+	CHECK(cycles == 4);
+}
+
 TEST_CASE("0x68: Load from reg-B to reg-L", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x68;
@@ -561,6 +633,16 @@ TEST_CASE("0x6E: Load from memory(HL) to reg-L", "[cpu][load]") {
 	CHECK(cycles == 8);
 }
 
+TEST_CASE("0x6F: Load from reg-A to reg-L", "[cpu][load]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x6F;
+	registers.A = GENERATE(take(10, random(0, 0xFF)));
+
+	int cycles = execute_next_instruction();
+	CHECK(registers.L == registers.A);
+	CHECK(cycles == 4);
+}
+
 TEST_CASE("0x70: Load from reg-B to memory(HL)", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x70;
@@ -622,6 +704,17 @@ TEST_CASE("0x75: Load from reg-L to memory(HL)", "[cpu][load]") {
 
 	int cycles = execute_next_instruction();
 	CHECK(read_byte(registers.HL) == registers.L);
+	CHECK(cycles == 8);
+}
+
+TEST_CASE("0x77: Load from reg-A to memory(HL)", "[cpu][load]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x77;
+	registers.HL = GENERATE(take(10, random(0x8000, 0xFE9F)));
+	registers.A = GENERATE(take(1, random(0, 0xFF)));
+
+	int cycles = execute_next_instruction();
+	CHECK(read_byte(registers.HL) == registers.A);
 	CHECK(cycles == 8);
 }
 
@@ -705,6 +798,19 @@ TEST_CASE("0x7F: Load from reg-A to reg-A", "[cpu][load]") {
 	int cycles = execute_next_instruction();
 	CHECK(registers.A == value);
 	CHECK(cycles == 4);
+}
+
+TEST_CASE("0xEA: Load from reg-A to memory address(nn)", "[cpu][load]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xEA;
+	unsigned short address = GENERATE(take(10, random(0x8000, 0xFE9F)));
+	ROM_banks[registers.PC+1] = address & 0x00FF;
+	ROM_banks[registers.PC+2] = (address & 0xFF00) >> 8;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+
+	int cycles = execute_next_instruction();
+	CHECK(read_byte(address) == registers.A);
+	CHECK(cycles == 16);
 }
 
 TEST_CASE("0xFA: Load from memory address(nn) to reg-A", "[cpu][load]") {

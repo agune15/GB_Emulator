@@ -161,7 +161,7 @@ TEST_CASE("Write short - read-only memory", "[memory][write][short]") {
 
 TEST_CASE("Write short - memory", "[memory][write][short]") {
 	unsigned short address = GENERATE(take(95, random(0x8000, 0xFE9F)),
-					  take(5, random(0xFF00, 0xFFFF)));
+					  take(5, random(0xFF00, 0xFFFE)));
 	unsigned short word = GENERATE(take(1, random(0x0000, 0xFFFF)));
 
 	//Corner cases
