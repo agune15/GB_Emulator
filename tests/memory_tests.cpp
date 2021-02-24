@@ -86,6 +86,10 @@ TEST_CASE("Read short - memory", "[memory][read][short]") {
 	unsigned short address = GENERATE(take(95, random(0x8000, 0xFE9E)),
 				   	  take(5, random(0xFF00, 0xFFFE)));
 	unsigned short word = GENERATE(take(1, random(0x0000, 0xFFFF)));
+
+	//Corner cases
+	if(address == 0xFF00) address++;
+
 	write_short(address, word);
 	DYNAMIC_SECTION("Read 0x"<<std::hex<<address<<" & 0x"<<std::hex<<address+1) {
 		CHECK(word == read_short(address));
