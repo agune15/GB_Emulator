@@ -110,6 +110,18 @@ TEST_CASE("0x1E: Load from memory(n) to reg-E", "[cpu][load]") {
 	CHECK(cycles == 8);
 }
 
+TEST_CASE("0x22: Load from reg-A to memory(HL), increment reg-HL", "[cpu][load]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x22;
+	int prev_HL = registers.HL = GENERATE(take(10, random(0x8000, 0xFE9F)));
+	registers.A = GENERATE(take(1, random(0, 0xFF)));
+
+	int cycles = execute_next_instruction();
+	CHECK(read_byte(prev_HL) == registers.A);
+	CHECK(registers.HL == prev_HL + 1);
+	CHECK(cycles == 8);
+}
+
 TEST_CASE("0x26: Load from memory(n) to reg-H", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x26;
@@ -117,6 +129,19 @@ TEST_CASE("0x26: Load from memory(n) to reg-H", "[cpu][load]") {
 
 	int cycles = execute_next_instruction();
 	CHECK(registers.H == value);
+	CHECK(cycles == 8);
+}
+
+TEST_CASE("0x2A: Load from memory(HL) to reg-A, increment reg-HL", "[cpu][load]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x2A;
+	int prev_HL = registers.HL = GENERATE(take(10, random(0x8000, 0xFE9F)));
+	int value = GENERATE(take(1, random(0, 0xFF)));
+	write_byte(registers.HL, value);
+
+	int cycles = execute_next_instruction();
+	CHECK(registers.A == read_byte(prev_HL));
+	CHECK(registers.HL == prev_HL + 1);
 	CHECK(cycles == 8);
 }
 
@@ -825,6 +850,20 @@ TEST_CASE("0x7F: Load from reg-A to reg-A", "[cpu][load]") {
 	CHECK(cycles == 4);
 }
 
+TEST_CASE("0xE0: Load from reg-A to memory(0xFF00 + n)", "[cpu][load]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xE0;
+	ROM_banks[registers.PC+1] = GENERATE(take(10, random(0, 0xFF)));
+	if (ROM_banks[registers.PC+1] == 0x00 || ROM_banks[registers.PC+1] == 0x44 || ROM_banks[registers.PC+1] == 0x46)
+		ROM_banks[registers.PC+1]++;
+	unsigned short address = 0xFF00 + ROM_banks[registers.PC+1];
+	registers.A = GENERATE(take(10, random(0, 0xFF)));
+
+	int cycles = execute_next_instruction();
+	CHECK(read_byte(address) == registers.A);
+	CHECK(cycles == 12);
+}
+
 TEST_CASE("0xE2: Load from reg-A to memory(0xFF00 + reg-C)", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0xE2;
@@ -851,15 +890,29 @@ TEST_CASE("0xEA: Load from reg-A to memory address(nn)", "[cpu][load]") {
 	CHECK(cycles == 16);
 }
 
+TEST_CASE("0xF0: Load from memory(0xFF00 + n) to reg-A", "[cpu][load]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xF0;
+	ROM_banks[registers.PC+1] = GENERATE(take(10, random(0, 0xFF)));
+	if (ROM_banks[registers.PC+1] == 0x00 || ROM_banks[registers.PC+1] == 0x44 || ROM_banks[registers.PC+1] == 0x46)
+		ROM_banks[registers.PC+1]++;
+	unsigned short address = 0xFF00 + ROM_banks[registers.PC+1];
+	unsigned char value = GENERATE(take(10, random(0, 0xFF)));
+	write_byte(address, value);
+
+	int cycles = execute_next_instruction();
+	CHECK(registers.A == read_byte(address));
+	CHECK(cycles == 12);
+}
+
 TEST_CASE("0xF2: Load from memory(0xFF00 + reg-C) to reg-A", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0xF2;
 	registers.C = GENERATE(take(10, random(0, 0xFF)));
-	unsigned short address = 0xFF00 + registers.C;
-	if(address == 0xFF00 || address == 0xFF44 || address == 0xFF46)
-		address++;
+	if(registers.C == 0x00 || registers.C == 0x44 || registers.C == 0x46)
+		registers.C++;
 	unsigned char value = GENERATE(take(5, random(0, 0xFF)));
-	write_byte(address, value);
+	write_byte(0xFF00 + registers.C, value);
 
 	int cycles = execute_next_instruction();
 	CHECK(registers.A == read_byte(0xFF00 + registers.C));

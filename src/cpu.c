@@ -11,7 +11,7 @@
 int (*instructions[256])(void) = {
 /*0x0*/	NULL, NULL, ld_bc_a, NULL, NULL, NULL, ld_b_n, NULL, NULL, NULL, ld_a_bc, NULL, NULL, NULL, ld_c_n, NULL,
 /*0x1*/	NULL, NULL, ld_de_a, NULL, NULL, NULL, ld_d_n, NULL, NULL, NULL, ld_a_de, NULL, NULL, NULL, ld_e_n, NULL,
-/*0x2*/	NULL, NULL, NULL, NULL, NULL, NULL, ld_h_n, NULL, NULL, NULL, NULL, NULL, NULL, NULL, ld_l_n, NULL,
+/*0x2*/	NULL, NULL, ldi_hl_a, NULL, NULL, NULL, ld_h_n, NULL, NULL, NULL, ldi_a_hl, NULL, NULL, NULL, ld_l_n, NULL,
 /*0x3*/	NULL, NULL, ldd_hl_a, NULL, NULL, NULL, ld_hl_n, NULL, NULL, NULL, ldd_a_hl, NULL, NULL, NULL, ld_a_n, NULL,
 /*0x4*/	ld_b_b, ld_b_c, ld_b_d, ld_b_e, ld_b_h, ld_b_l, ld_b_hl, ld_b_a, ld_c_b, ld_c_c, ld_c_d, ld_c_e, ld_c_h, ld_c_l, ld_c_hl, ld_c_a,
 /*0x5*/	ld_d_b, ld_d_c, ld_d_d, ld_d_e, ld_d_h, ld_d_l, ld_d_hl, ld_d_a, ld_e_b, ld_e_c, ld_e_d, ld_e_e, ld_e_h, ld_e_l, ld_e_hl, ld_e_a,
@@ -23,8 +23,8 @@ int (*instructions[256])(void) = {
 /*0xB*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0xC*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0xD*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-/*0xE*/	NULL, NULL, ld_ff_c_a, NULL, NULL, NULL, NULL, NULL, NULL, NULL, ld_nn_a, NULL, NULL, NULL, NULL, NULL,
-/*0xF*/	NULL, NULL, ld_a_ff_c, NULL, NULL, NULL, NULL, NULL, NULL, NULL, ld_a_nn, NULL, NULL, NULL, NULL, NULL,
+/*0xE*/	ld_ff_n_a, NULL, ld_ff_c_a, NULL, NULL, NULL, NULL, NULL, NULL, NULL, ld_nn_a, NULL, NULL, NULL, NULL, NULL,
+/*0xF*/	ld_a_ff_n, NULL, ld_a_ff_c, NULL, NULL, NULL, NULL, NULL, NULL, NULL, ld_a_nn, NULL, NULL, NULL, NULL, NULL,
 };
 
 struct registers registers;
@@ -72,7 +72,6 @@ int load_8bit_vpmp(unsigned char *storage, int cycles)		//TODO: Remove if not us
 	return cycles;
 }
 
-
 //endregion
 
 //endregion
@@ -103,8 +102,14 @@ int ld_a_de(void) { return load_8bit_vp(read_byte(registers.DE), &registers.A, 8
 // 0x1E: Load from memory(n) to reg-E
 int ld_e_n(void) { return load_8bit_vp(read_byte(registers.PC++), &registers.E, 8); }
 
+// 0x22: Load from reg-A to memory(HL), increment reg-HL
+int ldi_hl_a(void) { return load_8bit_va(registers.A, registers.HL++, 8); }
+
 // 0x26: Load from memory(n) to reg-H
 int ld_h_n(void) { return load_8bit_vp(read_byte(registers.PC++), &registers.H, 8); }
+
+// 0x2A: Load from memory(HL) to reg-A, increment reg-HL
+int ldi_a_hl(void) { return load_8bit_vp(read_byte(registers.HL++), &registers.A, 8); }
 
 // 0x2E: Load from memory(n) to reg-L
 int ld_l_n(void) { return load_8bit_vp(read_byte(registers.PC++), &registers.L, 8); }
@@ -310,6 +315,9 @@ int ld_a_hl(void) { return load_8bit_vp(read_byte(registers.HL), &registers.A, 8
 // 0x7F: Load from reg-A to reg-A
 int ld_a_a(void) { return 4; }
 
+// 0xE0: Load from reg-A to memory(0xFF00 + n)
+int ld_ff_n_a(void) { return load_8bit_va(registers.A, 0xFF00 + read_byte(registers.PC++), 12); }
+
 // 0xE2: Load from reg-A to memory(0xFF00 + reg-C)
 int ld_ff_c_a(void) { return load_8bit_va(registers.A, 0xFF00 + registers.C, 8); }
 
@@ -318,6 +326,11 @@ int ld_nn_a(void) {
 	write_byte(read_short(registers.PC), registers.A);
 	registers.PC += 2;
 	return 16;
+}
+
+// 0xF0: Load from memory(0xFF00 + n) to reg-A
+int ld_a_ff_n(void) {
+	return load_8bit_vp(read_byte(0xFF00 + read_byte(registers.PC++)), &registers.A, 12);
 }
 
 // 0xF2: Load from memory(0xFF00 + reg-C) to reg-A
