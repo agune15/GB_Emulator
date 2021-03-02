@@ -1,23 +1,27 @@
 #pragma once
 
-extern int (*instructions[256])(void);
+//extern int (*instructions[256])(void);
 
 // Instructions
+int ld_bc_nn(void);
 int ld_bc_a(void);
 int ld_b_n(void);
 int ld_a_bc(void);
 int ld_c_n(void);
 // 0x1-
+int ld_de_nn(void);
 int ld_de_a(void);
 int ld_d_n(void);
 int ld_a_de(void);
 int ld_e_n(void);
 // 0x2-
+int ld_hl_nn(void);
 int ldi_hl_a(void);
 int ld_h_n(void);
 int ldi_a_hl(void);
 int ld_l_n(void);
 // 0x3-
+int ld_sp_nn(void);
 int ldd_hl_a(void);
 int ld_hl_n(void);
 int ldd_a_hl(void);
@@ -92,8 +96,8 @@ int ld_a_a(void);
 // 0xE-
 int ld_ff_n_a(void);
 int ld_ff_c_a(void);
-int ld_nn_a(void);
+int ld_nnp_a(void);
 // 0xF-
 int ld_a_ff_n(void);
 int ld_a_ff_c(void);
-int ld_a_nn(void);
+int ld_a_nnp(void);

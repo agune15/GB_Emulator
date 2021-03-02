@@ -1,7 +1,3 @@
-/*
- *
- */
-
 #include "stdlib.h"
 #include "cpu.h"
 #include "registers.h"
@@ -9,10 +5,10 @@
 #include "memory.h"
 
 int (*instructions[256])(void) = {
-/*0x0*/	NULL, NULL, ld_bc_a, NULL, NULL, NULL, ld_b_n, NULL, NULL, NULL, ld_a_bc, NULL, NULL, NULL, ld_c_n, NULL,
-/*0x1*/	NULL, NULL, ld_de_a, NULL, NULL, NULL, ld_d_n, NULL, NULL, NULL, ld_a_de, NULL, NULL, NULL, ld_e_n, NULL,
-/*0x2*/	NULL, NULL, ldi_hl_a, NULL, NULL, NULL, ld_h_n, NULL, NULL, NULL, ldi_a_hl, NULL, NULL, NULL, ld_l_n, NULL,
-/*0x3*/	NULL, NULL, ldd_hl_a, NULL, NULL, NULL, ld_hl_n, NULL, NULL, NULL, ldd_a_hl, NULL, NULL, NULL, ld_a_n, NULL,
+/*0x0*/	NULL, ld_bc_nn, ld_bc_a, NULL, NULL, NULL, ld_b_n, NULL, NULL, NULL, ld_a_bc, NULL, NULL, NULL, ld_c_n, NULL,
+/*0x1*/	NULL, ld_de_nn, ld_de_a, NULL, NULL, NULL, ld_d_n, NULL, NULL, NULL, ld_a_de, NULL, NULL, NULL, ld_e_n, NULL,
+/*0x2*/	NULL, ld_hl_nn, ldi_hl_a, NULL, NULL, NULL, ld_h_n, NULL, NULL, NULL, ldi_a_hl, NULL, NULL, NULL, ld_l_n, NULL,
+/*0x3*/	NULL, ld_sp_nn, ldd_hl_a, NULL, NULL, NULL, ld_hl_n, NULL, NULL, NULL, ldd_a_hl, NULL, NULL, NULL, ld_a_n, NULL,
 /*0x4*/	ld_b_b, ld_b_c, ld_b_d, ld_b_e, ld_b_h, ld_b_l, ld_b_hl, ld_b_a, ld_c_b, ld_c_c, ld_c_d, ld_c_e, ld_c_h, ld_c_l, ld_c_hl, ld_c_a,
 /*0x5*/	ld_d_b, ld_d_c, ld_d_d, ld_d_e, ld_d_h, ld_d_l, ld_d_hl, ld_d_a, ld_e_b, ld_e_c, ld_e_d, ld_e_e, ld_e_h, ld_e_l, ld_e_hl, ld_e_a,
 /*0x6*/	ld_h_b, ld_h_c, ld_h_d, ld_h_e, ld_h_h, ld_h_l, ld_h_hl, ld_h_a, ld_l_b, ld_l_c, ld_l_d, ld_l_e, ld_l_h, ld_l_l, ld_l_hl, ld_l_a,
@@ -23,8 +19,8 @@ int (*instructions[256])(void) = {
 /*0xB*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0xC*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0xD*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-/*0xE*/	ld_ff_n_a, NULL, ld_ff_c_a, NULL, NULL, NULL, NULL, NULL, NULL, NULL, ld_nn_a, NULL, NULL, NULL, NULL, NULL,
-/*0xF*/	ld_a_ff_n, NULL, ld_a_ff_c, NULL, NULL, NULL, NULL, NULL, NULL, NULL, ld_a_nn, NULL, NULL, NULL, NULL, NULL,
+/*0xE*/	ld_ff_n_a, NULL, ld_ff_c_a, NULL, NULL, NULL, NULL, NULL, NULL, NULL, ld_nnp_a, NULL, NULL, NULL, NULL, NULL,
+/*0xF*/	ld_a_ff_n, NULL, ld_a_ff_c, NULL, NULL, NULL, NULL, NULL, NULL, NULL, ld_a_nnp, NULL, NULL, NULL, NULL, NULL,
 };
 
 struct registers registers;
@@ -40,6 +36,7 @@ void init_registers()
 	registers.PC = 0x100;
 }
 
+//TODO: Description
 int execute_next_instruction(void)
 {
 	unsigned char instruction = read_byte(registers.PC++);
@@ -50,21 +47,21 @@ int execute_next_instruction(void)
 
 //region 8-bit loads
 
-// Load value into pointer
+// Load byte into pointer
 int load_8bit_vp(unsigned char value, unsigned char *storage, int cycles)
 {
 	*storage = value;
 	return cycles;
 }
 
-// Load value into memory address
+// Load byte into memory address
 int load_8bit_va(unsigned char value, unsigned short address, int cycles)
 {
 	write_byte(address, value);
 	return cycles;
 }
 
-// Load value from address in program memory to pointer
+// Load byte from address in program memory to pointer
 int load_8bit_vpmp(unsigned char *storage, int cycles)		//TODO: Remove if not used in the future
 {
 	*storage = read_byte(read_short(registers.PC));
@@ -74,9 +71,24 @@ int load_8bit_vpmp(unsigned char *storage, int cycles)		//TODO: Remove if not us
 
 //endregion
 
+//region 16-bit loads
+
+// Load short from memory(nn) into pointer
+int load_16bit_nnp(unsigned short *storage, int cycles)
+{
+	*storage = read_short(registers.PC);
+	registers.PC += 2;
+	return cycles;
+}
+
+//endregion
+
 //endregion
 
 //region Instructions
+
+// 0x01: Load from memory(nn) to reg-BC
+int ld_bc_nn(void) { return load_16bit_nnp(&registers.BC, 12); }
 
 // 0x02: Load from reg-A to memory(BC)
 int ld_bc_a(void) { return load_8bit_va(registers.A, registers.BC, 8); }
@@ -90,6 +102,9 @@ int ld_a_bc(void) { return load_8bit_vp(read_byte(registers.BC), &registers.A, 8
 // 0x0E: Load from memory(n) to reg-C
 int ld_c_n(void) { return load_8bit_vp(read_byte(registers.PC++), &registers.C, 8); }
 
+// 0x11: Load from memory(nn) to reg-DE
+int ld_de_nn(void) { return load_16bit_nnp(&registers.DE, 12); }
+
 // 0x12: Load from reg-A to memory(DE)
 int ld_de_a(void) { return load_8bit_va(registers.A, registers.DE, 8); }
 
@@ -102,6 +117,9 @@ int ld_a_de(void) { return load_8bit_vp(read_byte(registers.DE), &registers.A, 8
 // 0x1E: Load from memory(n) to reg-E
 int ld_e_n(void) { return load_8bit_vp(read_byte(registers.PC++), &registers.E, 8); }
 
+// 0x21: Load from memory(nn) to reg-HL
+int ld_hl_nn(void) { return load_16bit_nnp(&registers.HL, 12); }
+
 // 0x22: Load from reg-A to memory(HL), increment reg-HL
 int ldi_hl_a(void) { return load_8bit_va(registers.A, registers.HL++, 8); }
 
@@ -113,6 +131,9 @@ int ldi_a_hl(void) { return load_8bit_vp(read_byte(registers.HL++), &registers.A
 
 // 0x2E: Load from memory(n) to reg-L
 int ld_l_n(void) { return load_8bit_vp(read_byte(registers.PC++), &registers.L, 8); }
+
+// 0x31: Load from memory(nn) to reg-SP
+int ld_sp_nn(void) { return load_16bit_nnp(&registers.SP, 12); }
 
 // 0x32: Load from reg-A to memory(HL), decrement reg-HL
 int ldd_hl_a(void) { return load_8bit_va(registers.A, registers.HL--, 8); }
@@ -321,8 +342,8 @@ int ld_ff_n_a(void) { return load_8bit_va(registers.A, 0xFF00 + read_byte(regist
 // 0xE2: Load from reg-A to memory(0xFF00 + reg-C)
 int ld_ff_c_a(void) { return load_8bit_va(registers.A, 0xFF00 + registers.C, 8); }
 
-// 0xEA: Load from reg-A to memory address(nn)
-int ld_nn_a(void) {
+// 0xEA: Load from reg-A to memory address pointed in(nn)
+int ld_nnp_a(void) {
 	write_byte(read_short(registers.PC), registers.A);
 	registers.PC += 2;
 	return 16;
@@ -336,8 +357,8 @@ int ld_a_ff_n(void) {
 // 0xF2: Load from memory(0xFF00 + reg-C) to reg-A
 int ld_a_ff_c(void) { return load_8bit_vp(read_byte(0xFF00 + registers.C), &registers.A, 8); }
 
-// 0xFA: Load from memory address(nn) to reg-A
-int ld_a_nn(void) {
+// 0xFA: Load from memory address pointed in(nn) to reg-A
+int ld_a_nnp(void) {
 	registers.A = read_byte(read_short(registers.PC));
 	registers.PC += 2;
 	return 16;
