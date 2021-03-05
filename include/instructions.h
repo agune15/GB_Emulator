@@ -100,4 +100,6 @@ int ld_nnp_a(void);
 // 0xF-
 int ld_a_ff_n(void);
 int ld_a_ff_c(void);
+int ld_hl_sp_n(void);
+int ld_sp_hl(void);
 int ld_a_nnp(void);

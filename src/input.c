@@ -9,14 +9,14 @@
 
 unsigned char buttons_state = 0xFF;
 
-static bool is_button_pressed(button_t button);
-static void set_button_flag(button_t button);
-static void clear_button_flag(button_t button);
+static bool is_button_pressed(buttons_t button);
+static void set_button_flag(buttons_t button);
+static void clear_button_flag(buttons_t button);
 static bool is_standard_selected(void);
 static bool is_direction_selected(void);
 
 // Set button state as pressed
-void joypad_button_down(button_t button)
+void joypad_button_down(buttons_t button)
 {
 	bool already_pressed = is_button_pressed(button);
 	clear_button_flag(button);
@@ -33,7 +33,7 @@ void joypad_button_down(button_t button)
 }
 
 // Set button state as unpressed
-void joypad_button_up(button_t button)
+void joypad_button_up(buttons_t button)
 {
 	set_button_flag(button);
 }
@@ -56,19 +56,19 @@ unsigned char get_joypad_state(unsigned char joypad_state)
 //region Helpers
 
 // Return the state of the desired button flag
-static bool is_button_pressed(button_t button)
+static bool is_button_pressed(buttons_t button)
 {
 	return ((buttons_state >> button) & 1) ? false : true;
 }
 
 // Set button flag in buttons_state
-static void set_button_flag(button_t button)
+static void set_button_flag(buttons_t button)
 {
 	buttons_state |= (1 << button);
 }
 
 // Clear button flag in buttons_state
-static void clear_button_flag(button_t button)
+static void clear_button_flag(buttons_t button)
 {
 	buttons_state &= ~(1 << button);
 }

@@ -967,6 +967,16 @@ TEST_CASE("0xF2: Load from memory(0xFF00 + reg-C) to reg-A", "[cpu][load]") {
 	CHECK(cycles == 8);
 }
 
+TEST_CASE("0xF9: Load from reg-HL to reg-SP", "[cpu][load]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xF9;
+	registers.HL = GENERATE(take(10, random(0, 0xFFFF)));
+
+	int cycles = execute_next_instruction();
+	CHECK(registers.SP == registers.HL);
+	CHECK(cycles == 8);
+}
+
 TEST_CASE("0xFA: Load from memory address pointed in(nn) to reg-A", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0xFA;

@@ -5,8 +5,8 @@
 #define IE_ADDRESS  0xFFFF	// Interrupt Enable register address
 #define IF_ADDRESS  0xFF0F	// Interrupt Flag register address
 
-typedef enum {VBLANK, LCD, TIMER, SERIAL, JOYPAD} interrupt_t;
+typedef enum {VBLANK, LCD, TIMER, SERIAL, JOYPAD} interrupts_t;
 
-void request_interrupt(interrupt_t interrupt);
+void request_interrupt(interrupts_t interrupt);
 void check_interrupts_state(void);
-void perform_interrupt(interrupt_t interrupt);
+void perform_interrupt(interrupts_t interrupt);

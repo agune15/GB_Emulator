@@ -11,16 +11,16 @@ extern "C" {
 TEST_CASE("Button down", "[input]") {
 	buttons_state = 0xFF;
 	for(int button = 0; button < START; button++) {
-		joypad_button_down((button_t)button);
-		CHECK(is_button_pressed((button_t)button) == true);
+		joypad_button_down((buttons_t)button);
+		CHECK(is_button_pressed((buttons_t)button) == true);
 	}
 }
 
 TEST_CASE("Button up", "[input]") {
 	buttons_state = 0x00;
 	for(int button = 0; button < START; button++) {
-		joypad_button_up((button_t)button);
-		CHECK(is_button_pressed((button_t)button) == false);
+		joypad_button_up((buttons_t)button);
+		CHECK(is_button_pressed((buttons_t)button) == false);
 	}
 }
 
@@ -48,23 +48,23 @@ TEST_CASE("Get joypad state", "[input]") {
 TEST_CASE("Button already pressed", "[input]") {
 	for(int button = 0, bit_mask = 0x01; button <= START; button++, bit_mask *= 2) {
 		buttons_state = ~bit_mask;
-		CHECK(is_button_pressed((button_t)button) == true);
+		CHECK(is_button_pressed((buttons_t)button) == true);
 		buttons_state = bit_mask;
-		CHECK(is_button_pressed((button_t)button) == false);
+		CHECK(is_button_pressed((buttons_t)button) == false);
 	}
 }
 
 TEST_CASE("Set button flag", "[input]") {
 	for(int button = 0; button <= START; button++) {
-		set_button_flag((button_t)button);
-		CHECK(is_button_pressed((button_t)button) == false);
+		set_button_flag((buttons_t)button);
+		CHECK(is_button_pressed((buttons_t)button) == false);
 	}
 }
 
 TEST_CASE("Clear button flag", "[input]") {
 	for(int button = 0; button <= START; button++) {
-		clear_button_flag((button_t)button);
-		CHECK(is_button_pressed((button_t)button) == true);
+		clear_button_flag((buttons_t)button);
+		CHECK(is_button_pressed((buttons_t)button) == true);
 	}
 }
 

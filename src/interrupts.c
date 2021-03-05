@@ -9,15 +9,15 @@
 #include "registers.h"
 
 unsigned short interrupt_addresses[5] = { 0x0040,
-	0x0048,
-	0x0050,
-	0x0058,
-	0x0060 };
+					  0x0048,
+					  0x0050,
+					  0x0058,
+					  0x0060 };
 
 bool interrupt_master_enable = true;	//TODO: Include in init() method in the future
 
 // Set desired interrupt flag in IF
-void request_interrupt(interrupt_t interrupt)
+void request_interrupt(interrupts_t interrupt)
 {
 	unsigned char interrupt_flags = read_byte(IF_ADDRESS);
 	interrupt_flags |= (1 << interrupt);
@@ -36,7 +36,7 @@ void check_interrupts_state(void)
 	for(int i = 0; i <= JOYPAD; i++) {
 		if(current_IF & 0x01) {
 			if(current_IE & 0x01) {
-				perform_interrupt((interrupt_t)i);
+				perform_interrupt((interrupts_t)i);
 			}
 		}
 		current_IE = current_IE >> 1;
@@ -45,7 +45,7 @@ void check_interrupts_state(void)
 }
 
 // Jump to instruction routine of desired interrupt
-void perform_interrupt(interrupt_t interrupt)
+void perform_interrupt(interrupts_t interrupt)
 {
 	interrupt_master_enable = false;
 	unsigned char current_IF = read_byte(IF_ADDRESS);

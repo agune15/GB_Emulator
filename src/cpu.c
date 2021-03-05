@@ -1,4 +1,5 @@
-#include "stdlib.h"
+#include <stdlib.h>
+#include <stdbool.h>
 #include "cpu.h"
 #include "registers.h"
 #include "instructions.h"
@@ -20,7 +21,7 @@ int (*instructions[256])(void) = {
 /*0xC*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0xD*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0xE*/	ld_ff_n_a, NULL, ld_ff_c_a, NULL, NULL, NULL, NULL, NULL, NULL, NULL, ld_nnp_a, NULL, NULL, NULL, NULL, NULL,
-/*0xF*/	ld_a_ff_n, NULL, ld_a_ff_c, NULL, NULL, NULL, NULL, NULL, NULL, NULL, ld_a_nnp, NULL, NULL, NULL, NULL, NULL,
+/*0xF*/	ld_a_ff_n, NULL, ld_a_ff_c, NULL, NULL, NULL, NULL, NULL, ld_hl_sp_n, ld_sp_hl, ld_a_nnp, NULL, NULL, NULL, NULL, NULL,
 };
 
 struct registers registers;
@@ -44,6 +45,25 @@ int execute_next_instruction(void)
 }
 
 //region Helpers
+
+//region Flags
+
+bool is_flag_set(flags_t flag)
+{
+	return (registers.F >> flag) & 1;
+}
+
+void set_flag(flags_t flag)
+{
+	registers.F |= (1 << flag);
+}
+
+void clear_flag(flags_t flag)
+{
+	registers.F &= ~(1 << flag);
+}
+
+//endregion
 
 //region 8-bit loads
 
@@ -356,6 +376,22 @@ int ld_a_ff_n(void) {
 
 // 0xF2: Load from memory(0xFF00 + reg-C) to reg-A
 int ld_a_ff_c(void) { return load_8bit_vp(read_byte(0xFF00 + registers.C), &registers.A, 8); }
+
+// 0xF8: Load from reg-SP + (signed)memory(n) to reg-HL
+int ld_hl_sp_n(void) {	//TODO: Finish!
+
+
+	clear_flag(ZERO);
+	clear_flag(NEGATIVE);
+
+	return 12;
+}
+
+// 0xF9: Load from reg-HL to reg-SP
+int ld_sp_hl(void) {
+	registers.SP = registers.HL;
+	return 8;
+}
 
 // 0xFA: Load from memory address pointed in(nn) to reg-A
 int ld_a_nnp(void) {
