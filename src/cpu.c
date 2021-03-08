@@ -378,11 +378,26 @@ int ld_a_ff_n(void) {
 int ld_a_ff_c(void) { return load_8bit_vp(read_byte(0xFF00 + registers.C), &registers.A, 8); }
 
 // 0xF8: Load from reg-SP + (signed)memory(n) to reg-HL
-int ld_hl_sp_n(void) {	//TODO: Finish!
+int ld_hl_sp_n(void) {
+	signed char operand = (signed char)read_byte(registers.PC++);
+	int addition = registers.SP + operand;
 
+	if(addition > 0xFFFF) {
+		set_flag(CARRY);
+	}
+	else
+		clear_flag(CARRY);
+
+	int low_nibble_add = (registers.SP & 0x0F) + (operand & 0x0F);
+	if(low_nibble_add > 0x0F)
+		set_flag(HALFCARRY);
+	else
+		clear_flag(HALFCARRY);
 
 	clear_flag(ZERO);
 	clear_flag(NEGATIVE);
+
+	registers.HL = (unsigned short)(addition & 0xFFFF);
 
 	return 12;
 }

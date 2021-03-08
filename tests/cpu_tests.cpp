@@ -2,9 +2,7 @@
 #include "catch.hpp"
 
 extern "C" {
-	#include "cpu.h"
-	#include "registers.h"
-	#include "memory.h"
+	#include "../src/cpu.c"
 };
 
 //region Others
@@ -965,6 +963,28 @@ TEST_CASE("0xF2: Load from memory(0xFF00 + reg-C) to reg-A", "[cpu][load]") {
 	int cycles = execute_next_instruction();
 	CHECK(registers.A == read_byte(0xFF00 + registers.C));
 	CHECK(cycles == 8);
+}
+
+TEST_CASE("0xF8: Load from reg-SP + (signed)memory(n) to reg-HL", "[cpu][load]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xF8;
+	int operand = ROM_banks[registers.PC+1] = GENERATE(take(10, random(0, 0xFF)));
+	registers.SP = GENERATE(take(10, random(0, 0xFFFF)));
+
+	int addition = registers.SP + (signed char)operand;
+	int low_nibble_add = (registers.SP & 0x0F) + ((signed char)operand & 0x0F);
+
+	bool carry_flag_state = addition > 0xFFFF;
+	bool halfcarry_flag_state = low_nibble_add > 0x0F;
+
+	int cycles = execute_next_instruction();
+	CHECK(registers.HL == addition);
+	CHECK(cycles == 12);
+
+	CHECK(is_flag_set(CARRY) == carry_flag_state);
+	CHECK(is_flag_set(HALFCARRY) == halfcarry_flag_state);
+	CHECK(is_flag_set(NEGATIVE) == false);
+	CHECK(is_flag_set(ZERO) == false);
 }
 
 TEST_CASE("0xF9: Load from reg-HL to reg-SP", "[cpu][load]") {
