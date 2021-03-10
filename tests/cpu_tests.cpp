@@ -55,6 +55,20 @@ TEST_CASE("0x06: Load from memory(n) to reg-B", "[cpu][load]") {
 	CHECK(cycles == 8);
 }
 
+
+TEST_CASE("0x08: Load from reg-SP to memory address pointed in(nn)", "[cpu][load]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x08;
+	unsigned short address = GENERATE(take(10, random(0x8000, 0xFE9F)));
+	ROM_banks[registers.PC+1] = address & 0x00FF;
+	ROM_banks[registers.PC+2] = (address & 0xFF00) >> 8;
+	registers.SP = GENERATE(take(5, random(0, 0xFFFF)));
+
+	int cycles = execute_next_instruction();
+	CHECK(read_short(address) == registers.SP);
+	CHECK(cycles == 20);
+}
+
 TEST_CASE("0x0A: Load from memory(BC) to reg-A", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x0A;
@@ -896,6 +910,30 @@ TEST_CASE("0x7F: Load from reg-A to reg-A", "[cpu][load]") {
 	CHECK(cycles == 4);
 }
 
+TEST_CASE("0xC5: Push reg-BC to stack, decrement SP twice", "[cpu][load]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xC5;
+	unsigned short address = registers.SP = GENERATE(take(5, random(0xFF82, 0xFFFF)));
+	registers.BC = GENERATE(take(1, random(0, 0xFFFF)));
+
+	int cycles = execute_next_instruction();
+	CHECK(read_short(address-2) == registers.BC);
+	CHECK(registers.SP == address-2);
+	CHECK(cycles == 16);
+}
+
+TEST_CASE("0xD5: Push reg-DE to stack, decrement SP twice", "[cpu][load]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xD5;
+	unsigned short address = registers.SP = GENERATE(take(5, random(0xFF82, 0xFFFF)));
+	registers.DE = GENERATE(take(1, random(0, 0xFFFF)));
+
+	int cycles = execute_next_instruction();
+	CHECK(read_short(address-2) == registers.DE);
+	CHECK(registers.SP == address-2);
+	CHECK(cycles == 16);
+}
+
 TEST_CASE("0xE0: Load from reg-A to memory(0xFF00 + n)", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0xE0;
@@ -921,6 +959,18 @@ TEST_CASE("0xE2: Load from reg-A to memory(0xFF00 + reg-C)", "[cpu][load]") {
 	int cycles = execute_next_instruction();
 	CHECK(read_byte(0xFF00 + registers.C) == registers.A);
 	CHECK(cycles == 8);
+}
+
+TEST_CASE("0xE5: Push reg-HL to stack, decrement SP twice", "[cpu][load]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xE5;
+	unsigned short address = registers.SP = GENERATE(take(5, random(0xFF82, 0xFFFF)));
+	registers.HL = GENERATE(take(1, random(0, 0xFFFF)));
+
+	int cycles = execute_next_instruction();
+	CHECK(read_short(address-2) == registers.HL);
+	CHECK(registers.SP == address-2);
+	CHECK(cycles == 16);
 }
 
 TEST_CASE("0xEA: Load from reg-A to memory address pointed in(nn)", "[cpu][load]") {
@@ -963,6 +1013,18 @@ TEST_CASE("0xF2: Load from memory(0xFF00 + reg-C) to reg-A", "[cpu][load]") {
 	int cycles = execute_next_instruction();
 	CHECK(registers.A == read_byte(0xFF00 + registers.C));
 	CHECK(cycles == 8);
+}
+
+TEST_CASE("0xF5: Push reg-AF to stack, decrement SP twice", "[cpu][load]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xF5;
+	unsigned short address = registers.SP = GENERATE(take(5, random(0xFF82, 0xFFFF)));
+	registers.AF = GENERATE(take(1, random(0, 0xFFFF)));
+
+	int cycles = execute_next_instruction();
+	CHECK(read_short(address-2) == registers.AF);
+	CHECK(registers.SP == address-2);
+	CHECK(cycles == 16);
 }
 
 TEST_CASE("0xF8: Load from reg-SP + (signed)memory(n) to reg-HL", "[cpu][load]") {

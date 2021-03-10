@@ -6,7 +6,7 @@
 #include "memory.h"
 
 int (*instructions[256])(void) = {
-/*0x0*/	NULL, ld_bc_nn, ld_bc_a, NULL, NULL, NULL, ld_b_n, NULL, NULL, NULL, ld_a_bc, NULL, NULL, NULL, ld_c_n, NULL,
+/*0x0*/	NULL, ld_bc_nn, ld_bc_a, NULL, NULL, NULL, ld_b_n, NULL, ld_nnp_sp, NULL, ld_a_bc, NULL, NULL, NULL, ld_c_n, NULL,
 /*0x1*/	NULL, ld_de_nn, ld_de_a, NULL, NULL, NULL, ld_d_n, NULL, NULL, NULL, ld_a_de, NULL, NULL, NULL, ld_e_n, NULL,
 /*0x2*/	NULL, ld_hl_nn, ldi_hl_a, NULL, NULL, NULL, ld_h_n, NULL, NULL, NULL, ldi_a_hl, NULL, NULL, NULL, ld_l_n, NULL,
 /*0x3*/	NULL, ld_sp_nn, ldd_hl_a, NULL, NULL, NULL, ld_hl_n, NULL, NULL, NULL, ldd_a_hl, NULL, NULL, NULL, ld_a_n, NULL,
@@ -18,10 +18,10 @@ int (*instructions[256])(void) = {
 /*0x9*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0xA*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0xB*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-/*0xC*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-/*0xD*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-/*0xE*/	ld_ff_n_a, NULL, ld_ff_c_a, NULL, NULL, NULL, NULL, NULL, NULL, NULL, ld_nnp_a, NULL, NULL, NULL, NULL, NULL,
-/*0xF*/	ld_a_ff_n, NULL, ld_a_ff_c, NULL, NULL, NULL, NULL, NULL, ld_hl_sp_n, ld_sp_hl, ld_a_nnp, NULL, NULL, NULL, NULL, NULL,
+/*0xC*/	NULL, NULL, NULL, NULL, NULL, push_bc, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+/*0xD*/	NULL, NULL, NULL, NULL, NULL, push_de, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+/*0xE*/	ld_ff_n_a, NULL, ld_ff_c_a, NULL, NULL, push_hl, NULL, NULL, NULL, NULL, ld_nnp_a, NULL, NULL, NULL, NULL, NULL,
+/*0xF*/	ld_a_ff_n, NULL, ld_a_ff_c, NULL, NULL, push_af, NULL, NULL, ld_hl_sp_n, ld_sp_hl, ld_a_nnp, NULL, NULL, NULL, NULL, NULL,
 };
 
 struct registers registers;
@@ -115,6 +115,13 @@ int ld_bc_a(void) { return load_8bit_va(registers.A, registers.BC, 8); }
 
 // 0x06: Load from memory(n) to reg-B
 int ld_b_n(void) { return load_8bit_vp(read_byte(registers.PC++), &registers.B, 8); }
+
+// 0x08: Load from reg-SP to memory address pointed in(nn)
+int ld_nnp_sp(void) {
+	write_short(read_short(registers.PC), registers.SP);
+	registers.PC += 2;
+	return 20;
+}
 
 // 0x0A: Load from memory(BC) to reg-A
 int ld_a_bc(void) { return load_8bit_vp(read_byte(registers.BC), &registers.A, 8); }
@@ -356,11 +363,29 @@ int ld_a_hl(void) { return load_8bit_vp(read_byte(registers.HL), &registers.A, 8
 // 0x7F: Load from reg-A to reg-A
 int ld_a_a(void) { return 4; }
 
+// 0xC5: Push reg-BC to stack, decrement SP twice
+int push_bc(void) {
+	push_short_stack(registers.BC);
+	return 16;
+}
+
+// 0xD5: Push reg-DE to stack, decrement SP twice
+int push_de(void) {
+	push_short_stack(registers.DE);
+	return 16;
+}
+
 // 0xE0: Load from reg-A to memory(0xFF00 + n)
 int ld_ff_n_a(void) { return load_8bit_va(registers.A, 0xFF00 + read_byte(registers.PC++), 12); }
 
 // 0xE2: Load from reg-A to memory(0xFF00 + reg-C)
 int ld_ff_c_a(void) { return load_8bit_va(registers.A, 0xFF00 + registers.C, 8); }
+
+// 0xE5: Push reg-HL to stack, decrement SP twice
+int push_hl(void) {
+	push_short_stack(registers.HL);
+	return 16;
+}
 
 // 0xEA: Load from reg-A to memory address pointed in(nn)
 int ld_nnp_a(void) {
@@ -377,6 +402,12 @@ int ld_a_ff_n(void) {
 // 0xF2: Load from memory(0xFF00 + reg-C) to reg-A
 int ld_a_ff_c(void) { return load_8bit_vp(read_byte(0xFF00 + registers.C), &registers.A, 8); }
 
+// 0xF5: Push reg-AF to stack, decrement SP twice
+int push_af(void) {
+	push_short_stack(registers.AF);
+	return 16;
+}
+
 // 0xF8: Load from reg-SP + (signed)memory(n) to reg-HL
 int ld_hl_sp_n(void) {
 	signed char operand = (signed char)read_byte(registers.PC++);
@@ -389,7 +420,7 @@ int ld_hl_sp_n(void) {
 		clear_flag(CARRY);
 
 	int low_nibble_add = (registers.SP & 0x0F) + (operand & 0x0F);
-	if(low_nibble_add > 0x0F)
+	if (low_nibble_add > 0x0F)
 		set_flag(HALFCARRY);
 	else
 		clear_flag(HALFCARRY);

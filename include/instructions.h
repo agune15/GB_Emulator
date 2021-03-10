@@ -6,6 +6,7 @@
 int ld_bc_nn(void);
 int ld_bc_a(void);
 int ld_b_n(void);
+int ld_nnp_sp(void);
 int ld_a_bc(void);
 int ld_c_n(void);
 // 0x1-
@@ -93,13 +94,19 @@ int ld_a_h(void);
 int ld_a_l(void);
 int ld_a_hl(void);
 int ld_a_a(void);
+// 0xC-
+int push_bc(void);
+// 0xD-
+int push_de(void);
 // 0xE-
 int ld_ff_n_a(void);
 int ld_ff_c_a(void);
+int push_hl(void);
 int ld_nnp_a(void);
 // 0xF-
 int ld_a_ff_n(void);
 int ld_a_ff_c(void);
+int push_af(void);
 int ld_hl_sp_n(void);
 int ld_sp_hl(void);
 int ld_a_nnp(void);
