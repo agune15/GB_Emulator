@@ -910,6 +910,18 @@ TEST_CASE("0x7F: Load from reg-A to reg-A", "[cpu][load]") {
 	CHECK(cycles == 4);
 }
 
+TEST_CASE("0xC1: Pop from stack to reg-BC, increment SP twice", "[cpu][load]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xC1;
+	registers.SP = GENERATE(take(5, random(0xFF82, 0xFFFF)));
+	unsigned short word = GENERATE(take(1, random(0, 0xFFFF)));
+	push_short_stack(word);
+
+	int cycles = execute_next_instruction();
+	CHECK(registers.BC == word);
+	CHECK(cycles == 12);
+}
+
 TEST_CASE("0xC5: Push reg-BC to stack, decrement SP twice", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0xC5;
@@ -920,6 +932,18 @@ TEST_CASE("0xC5: Push reg-BC to stack, decrement SP twice", "[cpu][load]") {
 	CHECK(read_short(address-2) == registers.BC);
 	CHECK(registers.SP == address-2);
 	CHECK(cycles == 16);
+}
+
+TEST_CASE("0xD1: Pop from stack to reg-DE, increment SP twice", "[cpu][load]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xD1;
+	registers.SP = GENERATE(take(5, random(0xFF82, 0xFFFF)));
+	unsigned short word = GENERATE(take(1, random(0, 0xFFFF)));
+	push_short_stack(word);
+
+	int cycles = execute_next_instruction();
+	CHECK(registers.DE == word);
+	CHECK(cycles == 12);
 }
 
 TEST_CASE("0xD5: Push reg-DE to stack, decrement SP twice", "[cpu][load]") {
@@ -945,6 +969,18 @@ TEST_CASE("0xE0: Load from reg-A to memory(0xFF00 + n)", "[cpu][load]") {
 
 	int cycles = execute_next_instruction();
 	CHECK(read_byte(address) == registers.A);
+	CHECK(cycles == 12);
+}
+
+TEST_CASE("0xE1: Pop from stack to reg-HL, increment SP twice", "[cpu][load]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xE1;
+	registers.SP = GENERATE(take(5, random(0xFF82, 0xFFFF)));
+	unsigned short word = GENERATE(take(1, random(0, 0xFFFF)));
+	push_short_stack(word);
+
+	int cycles = execute_next_instruction();
+	CHECK(registers.HL == word);
 	CHECK(cycles == 12);
 }
 
@@ -1001,6 +1037,18 @@ TEST_CASE("0xF0: Load from memory(0xFF00 + n) to reg-A", "[cpu][load]") {
 	CHECK(cycles == 12);
 }
 
+TEST_CASE("0xF1: Pop from stack to reg-AF, increment SP twice", "[cpu][load]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xF1;
+	registers.SP = GENERATE(take(5, random(0xFF82, 0xFFFF)));
+	unsigned short word = GENERATE(take(1, random(0, 0xFFFF)));
+	push_short_stack(word);
+
+	int cycles = execute_next_instruction();
+	CHECK(registers.AF == word);
+	CHECK(cycles == 12);
+}
+
 TEST_CASE("0xF2: Load from memory(0xFF00 + reg-C) to reg-A", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0xF2;
@@ -1040,7 +1088,7 @@ TEST_CASE("0xF8: Load from reg-SP + (signed)memory(n) to reg-HL", "[cpu][load]")
 	bool halfcarry_flag_state = low_nibble_add > 0x0F;
 
 	int cycles = execute_next_instruction();
-	CHECK(registers.HL == addition);
+	CHECK(registers.HL == (unsigned short)addition);
 	CHECK(cycles == 12);
 
 	CHECK(is_flag_set(CARRY) == carry_flag_state);

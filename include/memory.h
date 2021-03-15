@@ -17,7 +17,7 @@ void init_memory();
 
 unsigned char read_byte(unsigned short address);
 unsigned short read_short(unsigned short address);
-unsigned short pull_short_stack(void);
+unsigned short pop_short_stack(void);
 
 void write_byte(unsigned short address, unsigned char byte);
 void write_short(unsigned short address, unsigned short word);

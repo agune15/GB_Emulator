@@ -18,10 +18,10 @@ int (*instructions[256])(void) = {
 /*0x9*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0xA*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0xB*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-/*0xC*/	NULL, NULL, NULL, NULL, NULL, push_bc, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-/*0xD*/	NULL, NULL, NULL, NULL, NULL, push_de, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-/*0xE*/	ld_ff_n_a, NULL, ld_ff_c_a, NULL, NULL, push_hl, NULL, NULL, NULL, NULL, ld_nnp_a, NULL, NULL, NULL, NULL, NULL,
-/*0xF*/	ld_a_ff_n, NULL, ld_a_ff_c, NULL, NULL, push_af, NULL, NULL, ld_hl_sp_n, ld_sp_hl, ld_a_nnp, NULL, NULL, NULL, NULL, NULL,
+/*0xC*/	NULL, pop_bc, NULL, NULL, NULL, push_bc, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+/*0xD*/	NULL, pop_de, NULL, NULL, NULL, push_de, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+/*0xE*/	ld_ff_n_a, pop_hl, ld_ff_c_a, NULL, NULL, push_hl, NULL, NULL, NULL, NULL, ld_nnp_a, NULL, NULL, NULL, NULL, NULL,
+/*0xF*/	ld_a_ff_n, pop_af, ld_a_ff_c, NULL, NULL, push_af, NULL, NULL, ld_hl_sp_n, ld_sp_hl, ld_a_nnp, NULL, NULL, NULL, NULL, NULL,
 };
 
 struct registers registers;
@@ -363,10 +363,22 @@ int ld_a_hl(void) { return load_8bit_vp(read_byte(registers.HL), &registers.A, 8
 // 0x7F: Load from reg-A to reg-A
 int ld_a_a(void) { return 4; }
 
+// 0xC1: Pop from stack to reg-BC, increment SP twice
+int pop_bc(void) {
+	registers.BC = pop_short_stack();
+	return 12;
+}
+
 // 0xC5: Push reg-BC to stack, decrement SP twice
 int push_bc(void) {
 	push_short_stack(registers.BC);
 	return 16;
+}
+
+// 0xD1: Pop from stack to reg-DE, increment SP twice
+int pop_de(void) {
+	registers.DE = pop_short_stack();
+	return 12;
 }
 
 // 0xD5: Push reg-DE to stack, decrement SP twice
@@ -377,6 +389,12 @@ int push_de(void) {
 
 // 0xE0: Load from reg-A to memory(0xFF00 + n)
 int ld_ff_n_a(void) { return load_8bit_va(registers.A, 0xFF00 + read_byte(registers.PC++), 12); }
+
+// 0xE1: Pop from stack to reg-HL, increment SP twice
+int pop_hl(void) {
+	registers.HL = pop_short_stack();
+	return 12;
+}
 
 // 0xE2: Load from reg-A to memory(0xFF00 + reg-C)
 int ld_ff_c_a(void) { return load_8bit_va(registers.A, 0xFF00 + registers.C, 8); }
@@ -397,6 +415,12 @@ int ld_nnp_a(void) {
 // 0xF0: Load from memory(0xFF00 + n) to reg-A
 int ld_a_ff_n(void) {
 	return load_8bit_vp(read_byte(0xFF00 + read_byte(registers.PC++)), &registers.A, 12);
+}
+
+// 0xF1: Pop from stack to reg-AF, increment SP twice
+int pop_af(void) {
+	registers.AF = pop_short_stack();
+	return 12;
 }
 
 // 0xF2: Load from memory(0xFF00 + reg-C) to reg-A

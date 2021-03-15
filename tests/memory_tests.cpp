@@ -105,12 +105,12 @@ TEST_CASE("Read short - restricted area", "[memory][read][short]") {
 	}
 }
 
-TEST_CASE("Pull from stack", "[memory][read][stack]") {
+TEST_CASE("Pop from stack", "[memory][read][stack]") {
 	unsigned short address = GENERATE(take(50, random(0xFF82, 0xFFFE)));
 	registers.SP = address;
 	unsigned short word = GENERATE(take(1, random(0x0000, 0xFFFF)));
 	push_short_stack(word);
-	CHECK(word == pull_short_stack());
+	CHECK(word == pop_short_stack());
 	CHECK(registers.SP == address);
 }
 

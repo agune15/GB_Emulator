@@ -93,8 +93,8 @@ unsigned short read_short(unsigned short address)
 	return read_byte(address) + (read_byte(address + 1) << 8);
 }
 
-// Pull short (2 bytes) from stack and change SP accordingly
-unsigned short pull_short_stack(void)
+// Pop short (2 bytes) from stack and change SP accordingly
+unsigned short pop_short_stack(void)
 {
 	unsigned short word = read_short(registers.SP);
 	registers.SP += 2;
