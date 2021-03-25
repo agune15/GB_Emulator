@@ -94,6 +94,14 @@ int ld_a_h(void);
 int ld_a_l(void);
 int ld_a_hl(void);
 int ld_a_a(void);
+// 0x8-
+int add_a_b(void);
+int add_a_c(void);
+int add_a_d(void);
+int add_a_e(void);
+int add_a_h(void);
+int add_a_l(void);
+int add_a_a(void);
 // 0xC-
 int pop_bc(void);
 int push_bc(void);

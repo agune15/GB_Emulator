@@ -910,6 +910,55 @@ TEST_CASE("0x7F: Load from reg-A to reg-A", "[cpu][load]") {
 	CHECK(cycles == 4);
 }
 
+TEST_CASE("0x80: Add reg-B to reg-A", "[cpu][add]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x80;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.B = GENERATE(take(5, random(0, 0xFF)));
+
+	unsigned int addition = registers.A + registers.B;
+	int low_nibble_add = (registers.A & 0x0F) + (registers.B & 0x0F);
+
+	bool carry_flag_state = addition > 0xFF;
+	bool halfcarry_flag_state = low_nibble_add > 0x0F;
+
+	addition = addition & 0xFF;
+	bool zero_flag_state = addition == 0;
+
+	int cycles = execute_next_instruction();
+	CHECK(registers.A == addition);
+	CHECK(cycles == 4);
+
+	CHECK(is_flag_set(CARRY) == carry_flag_state);
+	CHECK(is_flag_set(HALFCARRY) == halfcarry_flag_state);
+	CHECK(is_flag_set(NEGATIVE) == false);
+	CHECK(is_flag_set(ZERO) == zero_flag_state);
+}
+
+TEST_CASE("0x87: Add reg-A to reg-A", "[cpu][add]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x87;
+	registers.A = GENERATE(take(10, random(0, 0xFF)));
+
+	unsigned int addition = registers.A + registers.A;
+	int low_nibble_add = (registers.A & 0x0F) + (registers.A & 0x0F);
+
+	bool carry_flag_state = addition > 0xFF;
+	bool halfcarry_flag_state = low_nibble_add > 0x0F;
+
+	addition = addition & 0xFF;
+	bool zero_flag_state = addition == 0;
+
+	int cycles = execute_next_instruction();
+	CHECK(registers.A == addition);
+	CHECK(cycles == 4);
+
+	CHECK(is_flag_set(CARRY) == carry_flag_state);
+	CHECK(is_flag_set(HALFCARRY) == halfcarry_flag_state);
+	CHECK(is_flag_set(NEGATIVE) == false);
+	CHECK(is_flag_set(ZERO) == zero_flag_state);
+}
+
 TEST_CASE("0xC1: Pop from stack to reg-BC, increment SP twice", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0xC1;

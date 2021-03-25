@@ -4,6 +4,8 @@ extern "C" {
 	#include "../src/memory.c"
 }
 
+//TODO: Modularize tests, create functions for repeated code, like the "Corner Cases" sections
+
 //region Read from memory
 
 TEST_CASE("Read ROM banks", "[memory][read][byte]") {
@@ -88,7 +90,7 @@ TEST_CASE("Read short - memory", "[memory][read][short]") {
 	unsigned short word = GENERATE(take(1, random(0x0000, 0xFFFF)));
 
 	//Corner cases
-	if(address == 0xFF00) address++;
+	if(address == 0xFF00 || address == 0xFF46) address++;
 
 	write_short(address, word);
 	DYNAMIC_SECTION("Read 0x"<<std::hex<<address<<" & 0x"<<std::hex<<address+1) {

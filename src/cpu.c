@@ -14,7 +14,7 @@ int (*instructions[256])(void) = {
 /*0x5*/	ld_d_b, ld_d_c, ld_d_d, ld_d_e, ld_d_h, ld_d_l, ld_d_hl, ld_d_a, ld_e_b, ld_e_c, ld_e_d, ld_e_e, ld_e_h, ld_e_l, ld_e_hl, ld_e_a,
 /*0x6*/	ld_h_b, ld_h_c, ld_h_d, ld_h_e, ld_h_h, ld_h_l, ld_h_hl, ld_h_a, ld_l_b, ld_l_c, ld_l_d, ld_l_e, ld_l_h, ld_l_l, ld_l_hl, ld_l_a,
 /*0x7*/	ld_hl_b, ld_hl_c, ld_hl_d, ld_hl_e, ld_hl_h, ld_hl_l, NULL, ld_hl_a, ld_a_b, ld_a_c, ld_a_d, ld_a_e, ld_a_h, ld_a_l, ld_a_hl, ld_a_a,
-/*0x8*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+/*0x8*/	add_a_b, NULL, NULL, NULL, NULL, NULL, NULL, add_a_a, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0x9*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0xA*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0xB*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
@@ -48,16 +48,19 @@ int execute_next_instruction(void)
 
 //region Flags
 
+// Return status of flag
 bool is_flag_set(flags_t flag)
 {
 	return (registers.F >> flag) & 1;
 }
 
+// Set a flag
 void set_flag(flags_t flag)
 {
 	registers.F |= (1 << flag);
 }
 
+// Clear/reset a flag
 void clear_flag(flags_t flag)
 {
 	registers.F &= ~(1 << flag);
@@ -67,10 +70,10 @@ void clear_flag(flags_t flag)
 
 //region 8-bit loads
 
-// Load byte into pointer
-int load_8bit_vp(unsigned char value, unsigned char *storage, int cycles)
+// Load byte into register
+int load_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
 {
-	*storage = value;
+	*reg = value;
 	return cycles;
 }
 
@@ -81,10 +84,10 @@ int load_8bit_va(unsigned char value, unsigned short address, int cycles)
 	return cycles;
 }
 
-// Load byte from address in program memory to pointer
-int load_8bit_vpmp(unsigned char *storage, int cycles)		//TODO: Remove if not used in the future
+// Load byte from address in program memory to register
+int load_8bit_vpmp(unsigned char *reg, int cycles)		//TODO: Remove if not used in the future
 {
-	*storage = read_byte(read_short(registers.PC));
+	*reg = read_byte(read_short(registers.PC));
 	registers.PC += 2;
 	return cycles;
 }
@@ -93,11 +96,43 @@ int load_8bit_vpmp(unsigned char *storage, int cycles)		//TODO: Remove if not us
 
 //region 16-bit loads
 
-// Load short from memory(nn) into pointer
-int load_16bit_nnp(unsigned short *storage, int cycles)
+// Load short from memory(nn) into register
+int load_16bit_nnp(unsigned short *reg, int cycles)
 {
-	*storage = read_short(registers.PC);
+	*reg = read_short(registers.PC);
 	registers.PC += 2;
+	return cycles;
+}
+
+//endregion
+
+//region 8-bit adds
+
+// Add byte to register
+int add_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
+{
+	unsigned int addition = *reg + value;
+
+	if (addition > 0xFF)
+		set_flag(CARRY);
+	else
+		clear_flag(CARRY);
+
+	int low_nibble_add = (*reg & 0x0F) + (value & 0x0F);
+	if (low_nibble_add > 0xF)
+		set_flag(HALFCARRY);
+	else
+		clear_flag(HALFCARRY);
+
+	*reg = (unsigned char)(addition & 0xFF);
+
+	if (*reg)
+		clear_flag(ZERO);
+	else
+		set_flag(ZERO);
+
+	clear_flag(NEGATIVE);
+
 	return cycles;
 }
 
@@ -363,6 +398,12 @@ int ld_a_hl(void) { return load_8bit_vp(read_byte(registers.HL), &registers.A, 8
 // 0x7F: Load from reg-A to reg-A
 int ld_a_a(void) { return 4; }
 
+// 0x80: Add reg-B to reg-A
+int add_a_b(void) { return add_8bit_vp(registers.B, &registers.A, 4); }
+
+// 0x87: Add reg-A to reg-A
+int add_a_a(void) { return add_8bit_vp(registers.A, &registers.A, 4); }
+
 // 0xC1: Pop from stack to reg-BC, increment SP twice
 int pop_bc(void) {
 	registers.BC = pop_short_stack();
@@ -437,9 +478,8 @@ int ld_hl_sp_n(void) {
 	signed char operand = (signed char)read_byte(registers.PC++);
 	int addition = registers.SP + operand;
 
-	if(addition > 0xFFFF) {
+	if(addition > 0xFFFF)
 		set_flag(CARRY);
-	}
 	else
 		clear_flag(CARRY);
 
