@@ -1,6 +1,6 @@
 #pragma once
 
-extern struct registers {
+typedef struct {
 	union {
 		unsigned short AF;
 		struct {
@@ -31,4 +31,6 @@ extern struct registers {
 	};
 	unsigned short SP;
 	unsigned short PC;
-} registers;
+} registers_t;
+
+extern registers_t registers;
