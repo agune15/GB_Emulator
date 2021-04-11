@@ -14,11 +14,11 @@ int (*instructions[256])(void) = {
 /*0x5*/	ld_d_b, ld_d_c, ld_d_d, ld_d_e, ld_d_h, ld_d_l, ld_d_hl, ld_d_a, ld_e_b, ld_e_c, ld_e_d, ld_e_e, ld_e_h, ld_e_l, ld_e_hl, ld_e_a,
 /*0x6*/	ld_h_b, ld_h_c, ld_h_d, ld_h_e, ld_h_h, ld_h_l, ld_h_hl, ld_h_a, ld_l_b, ld_l_c, ld_l_d, ld_l_e, ld_l_h, ld_l_l, ld_l_hl, ld_l_a,
 /*0x7*/	ld_hl_b, ld_hl_c, ld_hl_d, ld_hl_e, ld_hl_h, ld_hl_l, NULL, ld_hl_a, ld_a_b, ld_a_c, ld_a_d, ld_a_e, ld_a_h, ld_a_l, ld_a_hl, ld_a_a,
-/*0x8*/	add_a_b, add_a_c, add_a_d, add_a_e, add_a_h, add_a_l, add_a_hl, add_a_a, NULL, NULL, NULL, NULL, NULL, NULL, NULL, adc_a_a,
+/*0x8*/	add_a_b, add_a_c, add_a_d, add_a_e, add_a_h, add_a_l, add_a_hl, add_a_a, adc_a_b, adc_a_c, adc_a_d, adc_a_e, adc_a_h, adc_a_l, adc_a_hl, adc_a_a,
 /*0x9*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0xA*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0xB*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-/*0xC*/	NULL, pop_bc, NULL, NULL, NULL, push_bc, add_a_n, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+/*0xC*/	NULL, pop_bc, NULL, NULL, NULL, push_bc, add_a_n, NULL, NULL, NULL, NULL, NULL, NULL, NULL, adc_a_n, NULL,
 /*0xD*/	NULL, pop_de, NULL, NULL, NULL, push_de, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0xE*/	ld_ff_n_a, pop_hl, ld_ff_c_a, NULL, NULL, push_hl, NULL, NULL, NULL, NULL, ld_nnp_a, NULL, NULL, NULL, NULL, NULL,
 /*0xF*/	ld_a_ff_n, pop_af, ld_a_ff_c, NULL, NULL, push_af, NULL, NULL, ld_hl_sp_n, ld_sp_hl, ld_a_nnp, NULL, NULL, NULL, NULL, NULL,
@@ -430,7 +430,28 @@ int add_a_hl(void) { return add_8bit_vp(read_byte(registers.HL), &registers.A, 8
 // 0x87: Add reg-A to reg-A
 int add_a_a(void) { return add_8bit_vp(registers.A, &registers.A, 4); }
 
-// 0x8F: Add reg-A + carry flag to reg-A
+// 0x88: Add reg-B (+ carry flag) to reg-A
+int adc_a_b(void) { return adc_8bit_vp(registers.B, &registers.A, 4); }
+
+// 0x89: Add reg-C (+ carry flag) to reg-A
+int adc_a_c(void) { return adc_8bit_vp(registers.C, &registers.A, 4); }
+
+// 0x8A: Add reg-D (+ carry flag) to reg-A
+int adc_a_d(void) { return adc_8bit_vp(registers.D, &registers.A, 4); }
+
+// 0x8B: Add reg-E (+ carry flag) to reg-A
+int adc_a_e(void) { return adc_8bit_vp(registers.E, &registers.A, 4); }
+
+// 0x8C: Add reg-H (+ carry flag) to reg-A
+int adc_a_h(void) { return adc_8bit_vp(registers.H, &registers.A, 4); }
+
+// 0x8D: Add reg-L (+ carry flag) to reg-A
+int adc_a_l(void) { return adc_8bit_vp(registers.L, &registers.A, 4); }
+
+// 0x8E: Add memory(HL) (+ carry flag) to reg-A
+int adc_a_hl(void) { return adc_8bit_vp(read_byte(registers.HL), &registers.A, 8); }
+
+// 0x8F: Add reg-A (+ carry flag) to reg-A
 int adc_a_a(void) { return adc_8bit_vp(registers.A, &registers.A, 4); }
 
 // 0xC1: Pop from stack to reg-BC, increment SP twice
@@ -447,6 +468,9 @@ int push_bc(void) {
 
 // 0xC6: Add memory(n) to reg-A
 int add_a_n(void) { return add_8bit_vp(read_byte(registers.PC++), &registers.A, 8); }
+
+// 0xCE: Add memory(n) (+ carry flag) to reg-A
+int adc_a_n(void) { return adc_8bit_vp(read_byte(registers.PC++), &registers.A, 8); }
 
 // 0xD1: Pop from stack to reg-DE, increment SP twice
 int pop_de(void) {

@@ -987,7 +987,72 @@ TEST_CASE("0x87: Add reg-A to reg-A", "[cpu][add]") {
 	add_a_test(registers.A, 4);
 }
 
-TEST_CASE("0x8F: Add reg-A + carry flag to reg-A", "[cpu][add]") {
+TEST_CASE("0x88: Add reg-B (+ carry flag) to reg-A", "[cpu][add]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x88;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.B = GENERATE(take(5, random(0, 0xFF)));
+
+	adc_a_test(registers.B, 4);
+}
+
+TEST_CASE("0x89: Add reg-C (+ carry flag) to reg-A", "[cpu][add]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x89;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.C = GENERATE(take(5, random(0, 0xFF)));
+
+	adc_a_test(registers.C, 4);
+}
+
+TEST_CASE("0x8A: Add reg-D (+ carry flag) to reg-A", "[cpu][add]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x8A;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.D = GENERATE(take(5, random(0, 0xFF)));
+
+	adc_a_test(registers.D, 4);
+}
+
+TEST_CASE("0x8B: Add reg-E (+ carry flag) to reg-A", "[cpu][add]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x8B;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.E = GENERATE(take(5, random(0, 0xFF)));
+
+	adc_a_test(registers.E, 4);
+}
+
+TEST_CASE("0x8C: Add reg-H (+ carry flag) to reg-A", "[cpu][add]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x8C;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.H = GENERATE(take(5, random(0, 0xFF)));
+
+	adc_a_test(registers.H, 4);
+}
+
+TEST_CASE("0x8D: Add reg-L (+ carry flag) to reg-A", "[cpu][add]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x8D;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.L = GENERATE(take(5, random(0, 0xFF)));
+
+	adc_a_test(registers.L, 4);
+}
+
+TEST_CASE("0x8E: Add memory(HL) (+ carry flag) to reg-A", "[cpu][add]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x8E;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.HL = GENERATE(take(5, random(0x8000, 0xFE9F)));
+	unsigned char value = GENERATE(take(1, random(0, 0xFF)));
+	write_byte(registers.HL, value);
+
+	adc_a_test(read_byte(registers.HL), 8);
+}
+
+TEST_CASE("0x8F: Add reg-A (+ carry flag) to reg-A", "[cpu][add]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x8F;
 	registers.A = GENERATE(take(5, random(0, 0xFF)));
@@ -1026,6 +1091,15 @@ TEST_CASE("0xC6: Add memory(n) to reg-A", "[cpu][add]") {
 	registers.A = GENERATE(take(5, random(0, 0xFF)));
 
 	add_a_test(read_byte(registers.PC+1), 8);
+}
+
+TEST_CASE("0xCE: Add memory(n) (+ carry flag) to reg-A", "[cpu][add]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xCE;
+	ROM_banks[registers.PC+1] = GENERATE(take(5, random(0, 0xFF)));
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+
+	adc_a_test(read_byte(registers.PC+1), 8);
 }
 
 TEST_CASE("0xD1: Pop from stack to reg-DE, increment SP twice", "[cpu][load]") {
