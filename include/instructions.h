@@ -111,6 +111,15 @@ int adc_a_h(void);
 int adc_a_l(void);
 int adc_a_hl(void);
 int adc_a_a(void);
+// 0x9-
+int sub_a_b(void);
+int sub_a_c(void);
+int sub_a_d(void);
+int sub_a_e(void);
+int sub_a_h(void);
+int sub_a_l(void);
+int sub_a_hl(void);
+int sub_a_a(void);
 // 0xC-
 int pop_bc(void);
 int push_bc(void);
@@ -119,6 +128,7 @@ int adc_a_n(void);
 // 0xD-
 int pop_de(void);
 int push_de(void);
+int sub_a_n(void);
 // 0xE-
 int ld_ff_n_a(void);
 int pop_hl(void);

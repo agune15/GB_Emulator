@@ -8,6 +8,8 @@ extern "C" {
 // Test helpers
 void add_a_test(unsigned char valueToAdd, int opCycles);
 void adc_a_test(unsigned char valueToAdd, int opCycles);
+void sub_a_test(unsigned char valueToAdd, int opCycles);
+void sbc_a_test(unsigned char valueToAdd, int opCycles);
 
 //region Others
 
@@ -1060,6 +1062,79 @@ TEST_CASE("0x8F: Add reg-A (+ carry flag) to reg-A", "[cpu][add]") {
 	adc_a_test(registers.A, 4);
 }
 
+TEST_CASE("0x90: Subtract reg-B from reg-A", "[cpu][sub]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x90;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.B = GENERATE(take(5, random(0, 0xFF)));
+
+	sub_a_test(registers.B, 4);
+}
+
+TEST_CASE("0x91: Subtract reg-C from reg-A", "[cpu][sub]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x91;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.C = GENERATE(take(5, random(0, 0xFF)));
+
+	sub_a_test(registers.C, 4);
+}
+
+TEST_CASE("0x92: Subtract reg-D from reg-A", "[cpu][sub]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x92;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.D = GENERATE(take(5, random(0, 0xFF)));
+
+	sub_a_test(registers.D, 4);
+}
+
+TEST_CASE("0x93: Subtract reg-E from reg-A", "[cpu][sub]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x93;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.E = GENERATE(take(5, random(0, 0xFF)));
+
+	sub_a_test(registers.E, 4);
+}
+
+TEST_CASE("0x94: Subtract reg-H from reg-A", "[cpu][sub]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x94;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.H = GENERATE(take(5, random(0, 0xFF)));
+
+	sub_a_test(registers.H, 4);
+}
+
+TEST_CASE("0x95: Subtract reg-L from reg-A", "[cpu][sub]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x95;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.L = GENERATE(take(5, random(0, 0xFF)));
+
+	sub_a_test(registers.L, 4);
+}
+
+TEST_CASE("0x96: Subtract memory(HL) from reg-A", "[cpu][sub]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x96;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.HL = GENERATE(take(5, random(0x8000, 0xFE9F)));
+	unsigned char value = GENERATE(take(1, random(0, 0xFF)));
+	write_byte(registers.HL, value);
+
+	sub_a_test(read_byte(registers.HL), 8);
+}
+
+TEST_CASE("0x97: Subtract reg-A from reg-A", "[cpu][sub]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x97;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+
+	sub_a_test(registers.A, 4);
+}
+
 TEST_CASE("0xC1: Pop from stack to reg-BC, increment SP twice", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0xC1;
@@ -1124,6 +1199,15 @@ TEST_CASE("0xD5: Push reg-DE to stack, decrement SP twice", "[cpu][load]") {
 	CHECK(read_short(address-2) == registers.DE);
 	CHECK(registers.SP == address-2);
 	CHECK(cycles == 16);
+}
+
+TEST_CASE("0xD6: Add memory(n) to reg-A", "[cpu][sub]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xD6;
+	ROM_banks[registers.PC+1] = GENERATE(take(5, random(0, 0xFF)));
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+
+	sub_a_test(read_byte(registers.PC+1), 8);
 }
 
 TEST_CASE("0xE0: Load from reg-A to memory(0xFF00 + n)", "[cpu][load]") {
@@ -1316,9 +1400,44 @@ void add_a_test(unsigned char valueToAdd, int opCycles)
 
 void adc_a_test(unsigned char valueToAdd, int opCycles)
 {
+	if (valueToAdd % 2 == 0)
+		set_flag(CARRY);
+	else
+		clear_flag(CARRY);
+
 	valueToAdd += (is_flag_set(CARRY)) ? 1 : 0;
 
 	add_a_test(valueToAdd, opCycles);
+}
+
+void sub_a_test(unsigned char valueToAdd, int opCycles)
+{
+	bool carry_flag_state = valueToAdd > registers.A;
+	bool halfcarry_flag_state = (valueToAdd & 0x0F) > (registers.A & 0x0F);
+
+	unsigned char subtract = registers.A - valueToAdd;
+	bool zero_flag_state = subtract == 0;
+
+	int cycles = execute_next_instruction();
+	CHECK(registers.A == subtract);
+	CHECK(cycles == opCycles);
+
+	CHECK(is_flag_set(CARRY) == carry_flag_state);
+	CHECK(is_flag_set(HALFCARRY) == halfcarry_flag_state);
+	CHECK(is_flag_set(NEGATIVE) == true);
+	CHECK(is_flag_set(ZERO) == zero_flag_state);
+}
+
+void sbc_a_test(unsigned char valueToAdd, int opCycles)
+{
+	if (valueToAdd % 2 == 0)
+		set_flag(CARRY);
+	else
+		clear_flag(CARRY);
+
+	valueToAdd += (is_flag_set(CARRY)) ? 1 : 0;
+
+	sub_a_test(valueToAdd, opCycles);
 }
 
 //endregion

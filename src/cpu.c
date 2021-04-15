@@ -15,11 +15,11 @@ int (*instructions[256])(void) = {
 /*0x6*/	ld_h_b, ld_h_c, ld_h_d, ld_h_e, ld_h_h, ld_h_l, ld_h_hl, ld_h_a, ld_l_b, ld_l_c, ld_l_d, ld_l_e, ld_l_h, ld_l_l, ld_l_hl, ld_l_a,
 /*0x7*/	ld_hl_b, ld_hl_c, ld_hl_d, ld_hl_e, ld_hl_h, ld_hl_l, NULL, ld_hl_a, ld_a_b, ld_a_c, ld_a_d, ld_a_e, ld_a_h, ld_a_l, ld_a_hl, ld_a_a,
 /*0x8*/	add_a_b, add_a_c, add_a_d, add_a_e, add_a_h, add_a_l, add_a_hl, add_a_a, adc_a_b, adc_a_c, adc_a_d, adc_a_e, adc_a_h, adc_a_l, adc_a_hl, adc_a_a,
-/*0x9*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+/*0x9*/	sub_a_b, sub_a_c, sub_a_d, sub_a_e, sub_a_h, sub_a_l, sub_a_hl, sub_a_a, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0xA*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0xB*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0xC*/	NULL, pop_bc, NULL, NULL, NULL, push_bc, add_a_n, NULL, NULL, NULL, NULL, NULL, NULL, NULL, adc_a_n, NULL,
-/*0xD*/	NULL, pop_de, NULL, NULL, NULL, push_de, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+/*0xD*/	NULL, pop_de, NULL, NULL, NULL, push_de, sub_a_n, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0xE*/	ld_ff_n_a, pop_hl, ld_ff_c_a, NULL, NULL, push_hl, NULL, NULL, NULL, NULL, ld_nnp_a, NULL, NULL, NULL, NULL, NULL,
 /*0xF*/	ld_a_ff_n, pop_af, ld_a_ff_c, NULL, NULL, push_af, NULL, NULL, ld_hl_sp_n, ld_sp_hl, ld_a_nnp, NULL, NULL, NULL, NULL, NULL,
 };
@@ -145,6 +145,43 @@ int adc_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
 }
 
 //endregion
+
+//region 8-bit subs
+
+//TODO:
+int sub_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
+{
+	set_flag(NEGATIVE);
+
+	if (value > *reg)
+		set_flag(CARRY);
+	else
+		clear_flag(CARRY);
+
+	if ((value & 0x0F) > (*reg & 0x0F))
+		set_flag(HALFCARRY);
+	else
+		clear_flag(HALFCARRY);
+
+	*reg -= value;
+
+	if (*reg)
+		clear_flag(ZERO);
+	else
+		set_flag(ZERO);
+
+	return cycles;
+}
+
+//TODO:
+int sbc_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
+{
+	value += (is_flag_set(CARRY)) ? 1 : 0;
+
+	return sub_8bit_vp(value, reg, cycles);
+}
+
+//end region
 
 //endregion
 
@@ -454,6 +491,30 @@ int adc_a_hl(void) { return adc_8bit_vp(read_byte(registers.HL), &registers.A, 8
 // 0x8F: Add reg-A (+ carry flag) to reg-A
 int adc_a_a(void) { return adc_8bit_vp(registers.A, &registers.A, 4); }
 
+// 0x90: Subtract reg-B from reg-A
+int sub_a_b(void) { return sub_8bit_vp(registers.B, &registers.A, 4); }
+
+// 0x91: Subtract reg-C from reg-A
+int sub_a_c(void) { return sub_8bit_vp(registers.C, &registers.A, 4); }
+
+// 0x92: Subtract reg-D from reg-A
+int sub_a_d(void) { return sub_8bit_vp(registers.D, &registers.A, 4); }
+
+// 0x93: Subtract reg-E from reg-A
+int sub_a_e(void) { return sub_8bit_vp(registers.E, &registers.A, 4); }
+
+// 0x94: Subtract reg-H from reg-A
+int sub_a_h(void) { return sub_8bit_vp(registers.H, &registers.A, 4); }
+
+// 0x95: Subtract reg-L from reg-A
+int sub_a_l(void) { return sub_8bit_vp(registers.L, &registers.A, 4); }
+
+// 0x96: Subtract memory(HL) from reg-A
+int sub_a_hl(void) { return sub_8bit_vp(read_byte(registers.HL), &registers.A, 8); }
+
+// 0x97: Subtract reg-A from reg-A
+int sub_a_a(void) { return sub_8bit_vp(registers.A, &registers.A, 4); }
+
 // 0xC1: Pop from stack to reg-BC, increment SP twice
 int pop_bc(void) {
 	registers.BC = pop_short_stack();
@@ -483,6 +544,9 @@ int push_de(void) {
 	push_short_stack(registers.DE);
 	return 16;
 }
+
+// 0xD6: Subtract memory(n) from reg-A
+int sub_a_n(void) { return sub_8bit_vp(read_byte(registers.PC++), &registers.A, 8); }
 
 // 0xE0: Load from reg-A to memory(0xFF00 + n)
 int ld_ff_n_a(void) { return load_8bit_va(registers.A, 0xFF00 + read_byte(registers.PC++), 12); }
