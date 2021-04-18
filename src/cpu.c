@@ -15,11 +15,11 @@ int (*instructions[256])(void) = {
 /*0x6*/	ld_h_b, ld_h_c, ld_h_d, ld_h_e, ld_h_h, ld_h_l, ld_h_hl, ld_h_a, ld_l_b, ld_l_c, ld_l_d, ld_l_e, ld_l_h, ld_l_l, ld_l_hl, ld_l_a,
 /*0x7*/	ld_hl_b, ld_hl_c, ld_hl_d, ld_hl_e, ld_hl_h, ld_hl_l, NULL, ld_hl_a, ld_a_b, ld_a_c, ld_a_d, ld_a_e, ld_a_h, ld_a_l, ld_a_hl, ld_a_a,
 /*0x8*/	add_a_b, add_a_c, add_a_d, add_a_e, add_a_h, add_a_l, add_a_hl, add_a_a, adc_a_b, adc_a_c, adc_a_d, adc_a_e, adc_a_h, adc_a_l, adc_a_hl, adc_a_a,
-/*0x9*/	sub_a_b, sub_a_c, sub_a_d, sub_a_e, sub_a_h, sub_a_l, sub_a_hl, sub_a_a, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-/*0xA*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+/*0x9*/	sub_a_b, sub_a_c, sub_a_d, sub_a_e, sub_a_h, sub_a_l, sub_a_hl, sub_a_a, sbc_a_b, sbc_a_c, sbc_a_d, sbc_a_e, sbc_a_h, sbc_a_l, sbc_a_hl, sbc_a_a,
+/*0xA*/	and_a_b, and_a_c, and_a_d, and_a_e, and_a_h, and_a_l, and_a_hl, and_a_a, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0xB*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0xC*/	NULL, pop_bc, NULL, NULL, NULL, push_bc, add_a_n, NULL, NULL, NULL, NULL, NULL, NULL, NULL, adc_a_n, NULL,
-/*0xD*/	NULL, pop_de, NULL, NULL, NULL, push_de, sub_a_n, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+/*0xD*/	NULL, pop_de, NULL, NULL, NULL, push_de, sub_a_n, NULL, NULL, NULL, NULL, NULL, NULL, NULL, sbc_a_n, NULL,
 /*0xE*/	ld_ff_n_a, pop_hl, ld_ff_c_a, NULL, NULL, push_hl, NULL, NULL, NULL, NULL, ld_nnp_a, NULL, NULL, NULL, NULL, NULL,
 /*0xF*/	ld_a_ff_n, pop_af, ld_a_ff_c, NULL, NULL, push_af, NULL, NULL, ld_hl_sp_n, ld_sp_hl, ld_a_nnp, NULL, NULL, NULL, NULL, NULL,
 };
@@ -136,7 +136,7 @@ int add_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
 	return cycles;
 }
 
-// Add byte + carry flag to register
+// Add byte (+ carry flag) to register
 int adc_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
 {
 	value += (is_flag_set(CARRY)) ? 1 : 0;
@@ -148,7 +148,7 @@ int adc_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
 
 //region 8-bit subs
 
-//TODO:
+// Subtract byte from register
 int sub_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
 {
 	set_flag(NEGATIVE);
@@ -173,7 +173,7 @@ int sub_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
 	return cycles;
 }
 
-//TODO:
+// Subtract byte (+ carry flag) from register
 int sbc_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
 {
 	value += (is_flag_set(CARRY)) ? 1 : 0;
@@ -182,6 +182,32 @@ int sbc_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
 }
 
 //end region
+
+//endregion
+
+//region 8-bit AND
+
+int and_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
+{
+	*reg &= value;
+
+	if (*reg)
+		clear_flag(ZERO);
+	else
+		set_flag(ZERO);
+
+	clear_flag(NEGATIVE);
+	set_flag(HALFCARRY);
+	clear_flag(CARRY);
+
+	return cycles;
+}
+
+//endregion
+
+//region 8-bit OR
+
+
 
 //endregion
 
@@ -515,6 +541,54 @@ int sub_a_hl(void) { return sub_8bit_vp(read_byte(registers.HL), &registers.A, 8
 // 0x97: Subtract reg-A from reg-A
 int sub_a_a(void) { return sub_8bit_vp(registers.A, &registers.A, 4); }
 
+// 0x98: Subtract reg-B (+ carry flag) from reg-A
+int sbc_a_b(void) { return sbc_8bit_vp(registers.B, &registers.A, 4); }
+
+// 0x99: Subtract reg-C (+ carry flag) from reg-A
+int sbc_a_c(void) { return sbc_8bit_vp(registers.C, &registers.A, 4); }
+
+// 0x9A: Subtract reg-D (+ carry flag) from reg-A
+int sbc_a_d(void) { return sbc_8bit_vp(registers.D, &registers.A, 4); }
+
+// 0x9B: Subtract reg-E (+ carry flag) from reg-A
+int sbc_a_e(void) { return sbc_8bit_vp(registers.E, &registers.A, 4); }
+
+// 0x9C: Subtract reg-H (+ carry flag) from reg-A
+int sbc_a_h(void) { return sbc_8bit_vp(registers.H, &registers.A, 4); }
+
+// 0x9D: Subtract reg-L (+ carry flag) from reg-A
+int sbc_a_l(void) { return sbc_8bit_vp(registers.L, &registers.A, 4); }
+
+// 0x9E: Subtract memory(HL) (+ carry flag) from reg-A
+int sbc_a_hl(void) { return sbc_8bit_vp(read_byte(registers.HL), &registers.A, 8); }
+
+// 0x9F: Subtract reg-A (+ carry flag) from reg-A
+int sbc_a_a(void) { return sbc_8bit_vp(registers.A, &registers.A, 4); }
+
+// 0xA0: Logical AND, reg-B & reg-A, result in reg-A
+int and_a_b(void) { return and_8bit_vp(registers.B, &registers.A, 4); }
+
+// 0xA1: Logical AND, reg-C & reg-A, result in reg-A
+int and_a_c(void) { return and_8bit_vp(registers.C, &registers.A, 4); }
+
+// 0xA2: Logical AND, reg-D & reg-A, result in reg-A
+int and_a_d(void) { return and_8bit_vp(registers.D, &registers.A, 4); }
+
+// 0xA3: Logical AND, reg-E & reg-A, result in reg-A
+int and_a_e(void) { return and_8bit_vp(registers.E, &registers.A, 4); }
+
+// 0xA4: Logical AND, reg-H & reg-A, result in reg-A
+int and_a_h(void) { return and_8bit_vp(registers.H, &registers.A, 4); }
+
+// 0xA5: Logical AND, reg-L & reg-A, result in reg-A
+int and_a_l(void) { return and_8bit_vp(registers.L, &registers.A, 4); }
+
+// 0xA6: Logical AND, memory(HL) & reg-A, result in reg-A
+int and_a_hl(void) { return and_8bit_vp(read_byte(registers.HL), &registers.A, 8); }
+
+// 0xA7: Logical AND, reg-A & reg-A, result in reg-A
+int and_a_a(void) { return and_8bit_vp(registers.A, &registers.A, 4); }
+
 // 0xC1: Pop from stack to reg-BC, increment SP twice
 int pop_bc(void) {
 	registers.BC = pop_short_stack();
@@ -547,6 +621,9 @@ int push_de(void) {
 
 // 0xD6: Subtract memory(n) from reg-A
 int sub_a_n(void) { return sub_8bit_vp(read_byte(registers.PC++), &registers.A, 8); }
+
+// 0xDE: Subtract memory(n) (+ carry flag) from reg-A
+int sbc_a_n(void) { return sbc_8bit_vp(read_byte(registers.PC++), &registers.A, 8); }
 
 // 0xE0: Load from reg-A to memory(0xFF00 + n)
 int ld_ff_n_a(void) { return load_8bit_va(registers.A, 0xFF00 + read_byte(registers.PC++), 12); }

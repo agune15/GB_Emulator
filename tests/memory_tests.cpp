@@ -89,8 +89,10 @@ TEST_CASE("Read short - memory", "[memory][read][short]") {
 				   	  take(5, random(0xFF00, 0xFFFE)));
 	unsigned short word = GENERATE(take(1, random(0x0000, 0xFFFF)));
 
-	//Corner cases
-	if(address == 0xFF00 || address == 0xFF46) address++;
+	// Corner cases
+	if (address == 0xFF44) word &= 0xFF00;
+	else if (address+1 == 0xFF44) word &= 0x00FF;
+	else if (address == 0xFF00 || address == 0xFF46) address++;
 
 	write_short(address, word);
 	DYNAMIC_SECTION("Read 0x"<<std::hex<<address<<" & 0x"<<std::hex<<address+1) {
@@ -135,7 +137,7 @@ TEST_CASE("Write byte - memory", "[memory][write][byte]") {
 				   	  take(5, random(0xFF00, 0xFFFF)));
 	unsigned char value = GENERATE(take(1, random(0x00, 0xFF)));
 
-	//Corner cases
+	// Corner cases
 	if (address == 0xFF44) value = 0;
 	else if (address == 0xFF00 || address == 0xFF46) address++;
 
