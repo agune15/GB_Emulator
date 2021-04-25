@@ -20,7 +20,7 @@ int (*instructions[256])(void) = {
 /*0xB*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0xC*/	NULL, pop_bc, NULL, NULL, NULL, push_bc, add_a_n, NULL, NULL, NULL, NULL, NULL, NULL, NULL, adc_a_n, NULL,
 /*0xD*/	NULL, pop_de, NULL, NULL, NULL, push_de, sub_a_n, NULL, NULL, NULL, NULL, NULL, NULL, NULL, sbc_a_n, NULL,
-/*0xE*/	ld_ff_n_a, pop_hl, ld_ff_c_a, NULL, NULL, push_hl, NULL, NULL, NULL, NULL, ld_nnp_a, NULL, NULL, NULL, NULL, NULL,
+/*0xE*/	ld_ff_n_a, pop_hl, ld_ff_c_a, NULL, NULL, push_hl, and_a_n, NULL, NULL, NULL, ld_nnp_a, NULL, NULL, NULL, NULL, NULL,
 /*0xF*/	ld_a_ff_n, pop_af, ld_a_ff_c, NULL, NULL, push_af, NULL, NULL, ld_hl_sp_n, ld_sp_hl, ld_a_nnp, NULL, NULL, NULL, NULL, NULL,
 };
 
@@ -642,6 +642,9 @@ int push_hl(void) {
 	push_short_stack(registers.HL);
 	return 16;
 }
+
+// 0xE6: Logical AND, memory(n) & reg-A, result in reg-A
+int and_a_n(void) { return and_8bit_vp(read_byte(registers.PC++), &registers.A, 8); }
 
 // 0xEA: Load from reg-A to memory address pointed in(nn)
 int ld_nnp_a(void) {

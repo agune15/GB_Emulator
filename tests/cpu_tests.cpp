@@ -1348,7 +1348,7 @@ TEST_CASE("0xD5: Push reg-DE to stack, decrement SP twice", "[cpu][load]") {
 	CHECK(cycles == 16);
 }
 
-TEST_CASE("0xD6: Add memory(n) to reg-A", "[cpu][sub]") {
+TEST_CASE("0xD6: Subtract memory(n) from reg-A", "[cpu][sub]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0xD6;
 	ROM_banks[registers.PC+1] = GENERATE(take(5, random(0, 0xFF)));
@@ -1357,7 +1357,7 @@ TEST_CASE("0xD6: Add memory(n) to reg-A", "[cpu][sub]") {
 	sub_a_test(read_byte(registers.PC+1), 8);
 }
 
-TEST_CASE("0xDE: Add memory(n) (+ carry flag) to reg-A", "[cpu][sub]") {
+TEST_CASE("0xDE: Subtract memory(n) (+ carry flag) from reg-A", "[cpu][sub]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0xDE;
 	ROM_banks[registers.PC+1] = GENERATE(take(5, random(0, 0xFF)));
@@ -1415,6 +1415,15 @@ TEST_CASE("0xE5: Push reg-HL to stack, decrement SP twice", "[cpu][load]") {
 	CHECK(read_short(address-2) == registers.HL);
 	CHECK(registers.SP == address-2);
 	CHECK(cycles == 16);
+}
+
+TEST_CASE("0xE6: Logical AND, memory(n) & reg-A, result in reg-A", "[cpu][and]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xE6;
+	ROM_banks[registers.PC+1] = GENERATE(take(5, random(0, 0xFF)));
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+
+	and_a_test(read_byte(registers.PC+1), 8);
 }
 
 TEST_CASE("0xEA: Load from reg-A to memory address pointed in(nn)", "[cpu][load]") {

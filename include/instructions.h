@@ -152,6 +152,7 @@ int ld_ff_n_a(void);
 int pop_hl(void);
 int ld_ff_c_a(void);
 int push_hl(void);
+int and_a_n(void);
 int ld_nnp_a(void);
 // 0xF-
 int ld_a_ff_n(void);
