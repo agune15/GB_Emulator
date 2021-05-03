@@ -16,12 +16,12 @@ int (*instructions[256])(void) = {
 /*0x7*/	ld_hl_b, ld_hl_c, ld_hl_d, ld_hl_e, ld_hl_h, ld_hl_l, NULL, ld_hl_a, ld_a_b, ld_a_c, ld_a_d, ld_a_e, ld_a_h, ld_a_l, ld_a_hl, ld_a_a,
 /*0x8*/	add_a_b, add_a_c, add_a_d, add_a_e, add_a_h, add_a_l, add_a_hl, add_a_a, adc_a_b, adc_a_c, adc_a_d, adc_a_e, adc_a_h, adc_a_l, adc_a_hl, adc_a_a,
 /*0x9*/	sub_a_b, sub_a_c, sub_a_d, sub_a_e, sub_a_h, sub_a_l, sub_a_hl, sub_a_a, sbc_a_b, sbc_a_c, sbc_a_d, sbc_a_e, sbc_a_h, sbc_a_l, sbc_a_hl, sbc_a_a,
-/*0xA*/	and_a_b, and_a_c, and_a_d, and_a_e, and_a_h, and_a_l, and_a_hl, and_a_a, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-/*0xB*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+/*0xA*/	and_a_b, and_a_c, and_a_d, and_a_e, and_a_h, and_a_l, and_a_hl, and_a_a, xor_a_b, xor_a_c, xor_a_d, xor_a_e, xor_a_h, xor_a_l, xor_a_hl, xor_a_a,
+/*0xB*/ or_a_b, or_a_c, or_a_d, or_a_e, or_a_h, or_a_l, or_a_hl, or_a_a, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0xC*/	NULL, pop_bc, NULL, NULL, NULL, push_bc, add_a_n, NULL, NULL, NULL, NULL, NULL, NULL, NULL, adc_a_n, NULL,
 /*0xD*/	NULL, pop_de, NULL, NULL, NULL, push_de, sub_a_n, NULL, NULL, NULL, NULL, NULL, NULL, NULL, sbc_a_n, NULL,
 /*0xE*/	ld_ff_n_a, pop_hl, ld_ff_c_a, NULL, NULL, push_hl, and_a_n, NULL, NULL, NULL, ld_nnp_a, NULL, NULL, NULL, NULL, NULL,
-/*0xF*/	ld_a_ff_n, pop_af, ld_a_ff_c, NULL, NULL, push_af, NULL, NULL, ld_hl_sp_n, ld_sp_hl, ld_a_nnp, NULL, NULL, NULL, NULL, NULL,
+/*0xF*/	ld_a_ff_n, pop_af, ld_a_ff_c, NULL, NULL, push_af, or_a_n, NULL, ld_hl_sp_n, ld_sp_hl, ld_a_nnp, NULL, NULL, NULL, NULL, NULL,
 };
 
 registers_t registers;
@@ -207,7 +207,39 @@ int and_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
 
 //region 8-bit OR
 
+int or_8bit_vp(unsigned char value, unsigned char *reg, int cycles) {
+	*reg |= value;
 
+	if (*reg)
+		clear_flag(ZERO);
+	else
+		set_flag(ZERO);
+
+	clear_flag(NEGATIVE);
+	clear_flag(HALFCARRY);
+	clear_flag(CARRY);
+
+	return cycles;
+}
+
+//endregion
+
+//region 8-bit XOR
+
+int xor_8bit_vp(unsigned char value, unsigned char *reg, int cycles) {
+	*reg ^= value;
+
+	if (*reg)
+		clear_flag(ZERO);
+	else
+		set_flag(ZERO);
+
+	clear_flag(NEGATIVE);
+	clear_flag(HALFCARRY);
+	clear_flag(CARRY);
+
+	return cycles;
+}
 
 //endregion
 
@@ -589,6 +621,54 @@ int and_a_hl(void) { return and_8bit_vp(read_byte(registers.HL), &registers.A, 8
 // 0xA7: Logical AND, reg-A & reg-A, result in reg-A
 int and_a_a(void) { return and_8bit_vp(registers.A, &registers.A, 4); }
 
+// 0xA8: Logical XOR, reg-B ^ reg-A, result in reg-A
+int xor_a_b(void) { return xor_8bit_vp(registers.B, &registers.A, 4); }
+
+// 0xA9: Logical XOR, reg-C ^ reg-A, result in reg-A
+int xor_a_c(void) { return xor_8bit_vp(registers.C, &registers.A, 4); }
+
+// 0xAA: Logical XOR, reg-D ^ reg-A, result in reg-A
+int xor_a_d(void) { return xor_8bit_vp(registers.D, &registers.A, 4); }
+
+// 0xAB: Logical XOR, reg-E ^ reg-A, result in reg-A
+int xor_a_e(void) { return xor_8bit_vp(registers.E, &registers.A, 4); }
+
+// 0xAC: Logical XOR, reg-H ^ reg-A, result in reg-A
+int xor_a_h(void) { return xor_8bit_vp(registers.H, &registers.A, 4); }
+
+// 0xAD: Logical XOR, reg-L ^ reg-A, result in reg-A
+int xor_a_l(void) { return xor_8bit_vp(registers.L, &registers.A, 4); }
+
+// 0xAE: Logical XOR, memory(HL) ^ reg-A, result in reg-A
+int xor_a_hl(void) { return xor_8bit_vp(read_byte(registers.HL), &registers.A, 8); }
+
+// 0xAF: Logical XOR, reg-A ^ reg-A, result in reg-A
+int xor_a_a(void) { return xor_8bit_vp(registers.A, &registers.A, 4); }
+
+// 0xB0: Logical OR, reg-B | reg-A, result in reg-A
+int or_a_b(void) { return or_8bit_vp(registers.B, &registers.A, 4); }
+
+// 0xB1: Logical OR, reg-C | reg-A, result in reg-A
+int or_a_c(void) { return or_8bit_vp(registers.C, &registers.A, 4); }
+
+// 0xB2: Logical OR, reg-D | reg-A, result in reg-A
+int or_a_d(void) { return or_8bit_vp(registers.D, &registers.A, 4); }
+
+// 0xB3: Logical OR, reg-E | reg-A, result in reg-A
+int or_a_e(void) { return or_8bit_vp(registers.E, &registers.A, 4); }
+
+// 0xB4: Logical OR, reg-H | reg-A, result in reg-A
+int or_a_h(void) { return or_8bit_vp(registers.H, &registers.A, 4); }
+
+// 0xB5: Logical OR, reg-L | reg-A, result in reg-A
+int or_a_l(void) { return or_8bit_vp(registers.L, &registers.A, 4); }
+
+// 0xB6: Logical OR, memory(HL) | reg-A, result in reg-A
+int or_a_hl(void) { return or_8bit_vp(read_byte(registers.HL), &registers.A, 8); }
+
+// 0xB7: Logical OR, reg-A | reg-A, result in reg-A
+int or_a_a(void) { return or_8bit_vp(registers.A, &registers.A, 4); }
+
 // 0xC1: Pop from stack to reg-BC, increment SP twice
 int pop_bc(void) {
 	registers.BC = pop_short_stack();
@@ -672,6 +752,9 @@ int push_af(void) {
 	push_short_stack(registers.AF);
 	return 16;
 }
+
+// 0xF6: Logical OR, memory(n) | reg-A, result in reg-A
+int or_a_n(void) { return or_8bit_vp(read_byte(registers.PC++), &registers.A, 8); }
 
 // 0xF8: Load from reg-SP + (signed)memory(n) to reg-HL
 int ld_hl_sp_n(void) {

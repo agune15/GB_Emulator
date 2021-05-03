@@ -11,6 +11,8 @@ void adc_a_test(unsigned char valueToAdd, int opCycles);
 void sub_a_test(unsigned char valueToSub, int opCycles);
 void sbc_a_test(unsigned char valueToSub, int opCycles);
 void and_a_test(unsigned char valueToAnd, int opCycles);
+void or_a_test(unsigned char valueToOr, int opCycles);
+void xor_a_test(unsigned char valueToXor, int opCycles);
 
 //region Others
 
@@ -1282,6 +1284,152 @@ TEST_CASE("0xA7: Logical AND, reg-A & reg-A, result in reg-A", "[cpu][and]") {
 	and_a_test(registers.A, 4);
 }
 
+TEST_CASE("0xA8: Logical XOR, reg-B ^ reg-A, result in reg-A", "[cpu][xor]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xA8;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.B = GENERATE(take(5, random(0, 0xFF)));
+
+	xor_a_test(registers.B, 4);
+}
+
+TEST_CASE("0xA9: Logical XOR, reg-C ^ reg-A, result in reg-A", "[cpu][xor]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xA9;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.C = GENERATE(take(5, random(0, 0xFF)));
+
+	xor_a_test(registers.C, 4);
+}
+
+TEST_CASE("0xAA: Logical XOR, reg-D ^ reg-A, result in reg-A", "[cpu][xor]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xAA;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.D = GENERATE(take(5, random(0, 0xFF)));
+
+	xor_a_test(registers.D, 4);
+}
+
+TEST_CASE("0xAB: Logical XOR, reg-E ^ reg-A, result in reg-A", "[cpu][xor]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xAB;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.E = GENERATE(take(5, random(0, 0xFF)));
+
+	xor_a_test(registers.E, 4);
+}
+
+TEST_CASE("0xAC: Logical XOR, reg-H ^ reg-A, result in reg-A", "[cpu][xor]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xAC;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.H = GENERATE(take(5, random(0, 0xFF)));
+
+	xor_a_test(registers.H, 4);
+}
+
+TEST_CASE("0xAD: Logical XOR, reg-L ^ reg-A, result in reg-A", "[cpu][xor]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xAD;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.L = GENERATE(take(5, random(0, 0xFF)));
+
+	xor_a_test(registers.L, 4);
+}
+
+TEST_CASE("0xAE: Logical XOR, memory(HL) ^ reg-A, result in reg-A", "[cpu][xor]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xAE;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.HL = GENERATE(take(5, random(0x8000, 0xFE9F)));
+	unsigned char value = GENERATE(take(1, random(0, 0xFF)));
+	write_byte(registers.HL, value);
+
+	xor_a_test(read_byte(registers.HL), 8);
+}
+
+TEST_CASE("0xAF: Logical XOR, reg-A ^ reg-A, result in reg-A", "[cpu][xor]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xAF;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+
+	xor_a_test(registers.A, 4);
+}
+
+TEST_CASE("0xB0: Logical OR, reg-B | reg-A, result in reg-A", "[cpu][or]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xB0;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.B = GENERATE(take(5, random(0, 0xFF)));
+
+	or_a_test(registers.B, 4);
+}
+
+TEST_CASE("0xB1: Logical OR, reg-C | reg-A, result in reg-A", "[cpu][or]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xB1;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.C = GENERATE(take(5, random(0, 0xFF)));
+
+	or_a_test(registers.C, 4);
+}
+
+TEST_CASE("0xB2: Logical OR, reg-D | reg-A, result in reg-A", "[cpu][or]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xB2;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.D = GENERATE(take(5, random(0, 0xFF)));
+
+	or_a_test(registers.D, 4);
+}
+
+TEST_CASE("0xB3: Logical OR, reg-E | reg-A, result in reg-A", "[cpu][or]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xB3;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.E = GENERATE(take(5, random(0, 0xFF)));
+
+	or_a_test(registers.E, 4);
+}
+
+TEST_CASE("0xB4: Logical OR, reg-H | reg-A, result in reg-A", "[cpu][or]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xB4;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.H = GENERATE(take(5, random(0, 0xFF)));
+
+	or_a_test(registers.H, 4);
+}
+
+TEST_CASE("0xB5: Logical OR, reg-L | reg-A, result in reg-A", "[cpu][or]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xB5;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.L = GENERATE(take(5, random(0, 0xFF)));
+
+	or_a_test(registers.L, 4);
+}
+
+TEST_CASE("0xB6: Logical OR, memory(HL) | reg-A, result in reg-A", "[cpu][or]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xB6;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.HL = GENERATE(take(5, random(0x8000, 0xFE9F)));
+	unsigned char value = GENERATE(take(1, random(0, 0xFF)));
+	write_byte(registers.HL, value);
+
+	or_a_test(read_byte(registers.HL), 8);
+}
+
+TEST_CASE("0xB7: Logical OR, reg-L | reg-A, result in reg-A", "[cpu][or]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xB7;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+
+	or_a_test(registers.A, 4);
+}
+
 TEST_CASE("0xC1: Pop from stack to reg-BC, increment SP twice", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0xC1;
@@ -1492,6 +1640,15 @@ TEST_CASE("0xF5: Push reg-AF to stack, decrement SP twice", "[cpu][load]") {
 	CHECK(cycles == 16);
 }
 
+TEST_CASE("0xF6: Logical OR, memory(n) | reg-A, result in reg-A", "[cpu][or]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xF6;
+	ROM_banks[registers.PC+1] = GENERATE(take(5, random(0, 0xFF)));
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+
+	or_a_test(read_byte(registers.PC+1), 8);
+}
+
 TEST_CASE("0xF8: Load from reg-SP + (signed)memory(n) to reg-HL", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0xF8;
@@ -1616,6 +1773,36 @@ void and_a_test(unsigned char valueToAnd, int opCycles)
 
 	CHECK(is_flag_set(CARRY) == false);
 	CHECK(is_flag_set(HALFCARRY) == true);
+	CHECK(is_flag_set(NEGATIVE) == false);
+	CHECK(is_flag_set(ZERO) == zero_flag_state);
+}
+
+void or_a_test(unsigned char valueToOr, int opCycles)
+{
+	unsigned char logical_or = registers.A | valueToOr;
+	bool zero_flag_state = logical_or == 0;
+
+	int cycles = execute_next_instruction();
+	CHECK(registers.A == logical_or);
+	CHECK(cycles == opCycles);
+
+	CHECK(is_flag_set(CARRY) == false);
+	CHECK(is_flag_set(HALFCARRY) == false);
+	CHECK(is_flag_set(NEGATIVE) == false);
+	CHECK(is_flag_set(ZERO) == zero_flag_state);
+}
+
+void xor_a_test(unsigned char valueToXor, int opCycles)
+{
+	unsigned char logical_xor = registers.A ^ valueToXor;
+	bool zero_flag_state = logical_xor == 0;
+
+	int cycles = execute_next_instruction();
+	CHECK(registers.A == logical_xor);
+	CHECK(cycles == opCycles);
+
+	CHECK(is_flag_set(CARRY) == false);
+	CHECK(is_flag_set(HALFCARRY) == false);
 	CHECK(is_flag_set(NEGATIVE) == false);
 	CHECK(is_flag_set(ZERO) == zero_flag_state);
 }
