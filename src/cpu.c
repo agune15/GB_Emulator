@@ -20,7 +20,7 @@ int (*instructions[256])(void) = {
 /*0xB*/ or_a_b, or_a_c, or_a_d, or_a_e, or_a_h, or_a_l, or_a_hl, or_a_a, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0xC*/	NULL, pop_bc, NULL, NULL, NULL, push_bc, add_a_n, NULL, NULL, NULL, NULL, NULL, NULL, NULL, adc_a_n, NULL,
 /*0xD*/	NULL, pop_de, NULL, NULL, NULL, push_de, sub_a_n, NULL, NULL, NULL, NULL, NULL, NULL, NULL, sbc_a_n, NULL,
-/*0xE*/	ld_ff_n_a, pop_hl, ld_ff_c_a, NULL, NULL, push_hl, and_a_n, NULL, NULL, NULL, ld_nnp_a, NULL, NULL, NULL, NULL, NULL,
+/*0xE*/	ld_ff_n_a, pop_hl, ld_ff_c_a, NULL, NULL, push_hl, and_a_n, NULL, NULL, NULL, ld_nnp_a, NULL, NULL, NULL, xor_a_n, NULL,
 /*0xF*/	ld_a_ff_n, pop_af, ld_a_ff_c, NULL, NULL, push_af, or_a_n, NULL, ld_hl_sp_n, ld_sp_hl, ld_a_nnp, NULL, NULL, NULL, NULL, NULL,
 };
 
@@ -732,6 +732,9 @@ int ld_nnp_a(void) {
 	registers.PC += 2;
 	return 16;
 }
+
+// OxEE: Logical XOR, memory(n) ^ reg-A, result in reg-A
+int xor_a_n(void) { return xor_8bit_vp(read_byte(registers.PC++), &registers.A, 8); }
 
 // 0xF0: Load from memory(0xFF00 + n) to reg-A
 int ld_a_ff_n(void) {

@@ -1587,6 +1587,15 @@ TEST_CASE("0xEA: Load from reg-A to memory address pointed in(nn)", "[cpu][load]
 	CHECK(cycles == 16);
 }
 
+TEST_CASE("0xEE: Logical XOR, memory(n) ^ reg-A, result in reg-A", "[cpu][xor]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xEE;
+	ROM_banks[registers.PC+1] = GENERATE(take(5, random(0, 0xFF)));
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+
+	xor_a_test(read_byte(registers.PC+1), 8);
+}
+
 TEST_CASE("0xF0: Load from memory(0xFF00 + n) to reg-A", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0xF0;
