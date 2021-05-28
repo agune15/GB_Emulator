@@ -13,6 +13,7 @@ void sbc_a_test(unsigned char valueToSub, int opCycles);
 void and_a_test(unsigned char valueToAnd, int opCycles);
 void or_a_test(unsigned char valueToOr, int opCycles);
 void xor_a_test(unsigned char valueToXor, int opCycles);
+void cp_a_test(unsigned char valueToCmp, int opCycles);
 
 //region Others
 
@@ -1430,6 +1431,79 @@ TEST_CASE("0xB7: Logical OR, reg-L | reg-A, result in reg-A", "[cpu][or]") {
 	or_a_test(registers.A, 4);
 }
 
+TEST_CASE("0xB8: Compare reg-B with reg-A", "[cpu][cp]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xB8;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.B = GENERATE(take(5, random(0, 0xFF)));
+
+	cp_a_test(registers.B, 4);
+}
+
+TEST_CASE("0xB9: Compare reg-C with reg-A", "[cpu][cp]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xB9;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.C = GENERATE(take(5, random(0, 0xFF)));
+
+	cp_a_test(registers.C, 4);
+}
+
+TEST_CASE("0xBA: Compare reg-D with reg-A", "[cpu][cp]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xBA;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.D = GENERATE(take(5, random(0, 0xFF)));
+
+	cp_a_test(registers.D, 4);
+}
+
+TEST_CASE("0xBB: Compare reg-E with reg-A", "[cpu][cp]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xBB;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.E = GENERATE(take(5, random(0, 0xFF)));
+
+	cp_a_test(registers.E, 4);
+}
+
+TEST_CASE("0xBC: Compare reg-H with reg-A", "[cpu][cp]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xBC;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.H = GENERATE(take(5, random(0, 0xFF)));
+
+	cp_a_test(registers.H, 4);
+}
+
+TEST_CASE("0xBD: Compare reg-L with reg-A", "[cpu][cp]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xBD;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.L = GENERATE(take(5, random(0, 0xFF)));
+
+	cp_a_test(registers.L, 4);
+}
+
+TEST_CASE("0xBE: Compare memory(HL) with reg-A", "[cpu][cp]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xBE;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.HL = GENERATE(take(5, random(0x8000, 0xFE9F)));
+	unsigned char value = GENERATE(take(1, random(0, 0xFF)));
+	write_byte(registers.HL, value);
+
+	cp_a_test(read_byte(registers.HL), 8);
+}
+
+TEST_CASE("0xBF: Compare reg-A with reg-A", "[cpu][cp]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xBF;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+
+	cp_a_test(registers.A, 4);
+}
+
 TEST_CASE("0xC1: Pop from stack to reg-BC, increment SP twice", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0xC1;
@@ -1704,6 +1778,15 @@ TEST_CASE("0xFA: Load from memory address pointed in(nn) to reg-A", "[cpu][load]
 	CHECK(cycles == 16);
 }
 
+TEST_CASE("0xFE: Compare memory(n) with reg-A", "[cpu][cp]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xFE;
+	ROM_banks[registers.PC+1] = GENERATE(take(5, random(0, 0xFF)));
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+
+	cp_a_test(read_byte(registers.PC+1), 8);
+}
+
 //endregion
 
 //region Helpers
@@ -1813,6 +1896,21 @@ void xor_a_test(unsigned char valueToXor, int opCycles)
 	CHECK(is_flag_set(CARRY) == false);
 	CHECK(is_flag_set(HALFCARRY) == false);
 	CHECK(is_flag_set(NEGATIVE) == false);
+	CHECK(is_flag_set(ZERO) == zero_flag_state);
+}
+
+void cp_a_test(unsigned char valueToCmp, int opCycles)
+{
+	bool carry_flag_state = valueToCmp > registers.A;
+	bool halfcarry_flag_state = (valueToCmp & 0x0F) > (registers.A & 0x0F);
+	bool zero_flag_state = valueToCmp == registers.A;
+
+	int cycles = execute_next_instruction();
+	CHECK(cycles == opCycles);
+
+	CHECK(is_flag_set(CARRY) == carry_flag_state);
+	CHECK(is_flag_set(HALFCARRY) == halfcarry_flag_state);
+	CHECK(is_flag_set(NEGATIVE) == true);
 	CHECK(is_flag_set(ZERO) == zero_flag_state);
 }
 
