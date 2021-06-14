@@ -6,10 +6,10 @@
 #include "memory.h"
 
 int (*instructions[256])(void) = {
-/*0x0*/	NULL, ld_bc_nn, ld_bc_a, NULL, NULL, NULL, ld_b_n, NULL, ld_nnp_sp, NULL, ld_a_bc, NULL, NULL, NULL, ld_c_n, NULL,
-/*0x1*/	NULL, ld_de_nn, ld_de_a, NULL, NULL, NULL, ld_d_n, NULL, NULL, NULL, ld_a_de, NULL, NULL, NULL, ld_e_n, NULL,
-/*0x2*/	NULL, ld_hl_nn, ldi_hl_a, NULL, NULL, NULL, ld_h_n, NULL, NULL, NULL, ldi_a_hl, NULL, NULL, NULL, ld_l_n, NULL,
-/*0x3*/	NULL, ld_sp_nn, ldd_hl_a, NULL, NULL, NULL, ld_hl_n, NULL, NULL, NULL, ldd_a_hl, NULL, NULL, NULL, ld_a_n, NULL,
+/*0x0*/	NULL, ld_bc_nn, ld_bc_a, NULL, inc_b, NULL, ld_b_n, NULL, ld_nnp_sp, NULL, ld_a_bc, NULL, inc_c, NULL, ld_c_n, NULL,
+/*0x1*/	NULL, ld_de_nn, ld_de_a, NULL, inc_d, NULL, ld_d_n, NULL, NULL, NULL, ld_a_de, NULL, inc_e, NULL, ld_e_n, NULL,
+/*0x2*/	NULL, ld_hl_nn, ldi_hl_a, NULL, inc_h, NULL, ld_h_n, NULL, NULL, NULL, ldi_a_hl, NULL, inc_l, NULL, ld_l_n, NULL,
+/*0x3*/	NULL, ld_sp_nn, ldd_hl_a, NULL, inc_hl, NULL, ld_hl_n, NULL, NULL, NULL, ldd_a_hl, NULL, inc_a, NULL, ld_a_n, NULL,
 /*0x4*/	ld_b_b, ld_b_c, ld_b_d, ld_b_e, ld_b_h, ld_b_l, ld_b_hl, ld_b_a, ld_c_b, ld_c_c, ld_c_d, ld_c_e, ld_c_h, ld_c_l, ld_c_hl, ld_c_a,
 /*0x5*/	ld_d_b, ld_d_c, ld_d_d, ld_d_e, ld_d_h, ld_d_l, ld_d_hl, ld_d_a, ld_e_b, ld_e_c, ld_e_d, ld_e_e, ld_e_h, ld_e_l, ld_e_hl, ld_e_a,
 /*0x6*/	ld_h_b, ld_h_c, ld_h_d, ld_h_e, ld_h_h, ld_h_l, ld_h_hl, ld_h_a, ld_l_b, ld_l_c, ld_l_d, ld_l_e, ld_l_h, ld_l_l, ld_l_hl, ld_l_a,
@@ -187,6 +187,7 @@ int sbc_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
 
 //region 8-bit AND
 
+//TODO:
 int and_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
 {
 	*reg &= value;
@@ -207,6 +208,7 @@ int and_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
 
 //region 8-bit OR
 
+//TODO:
 int or_8bit_vp(unsigned char value, unsigned char *reg, int cycles) {
 	*reg |= value;
 
@@ -226,6 +228,7 @@ int or_8bit_vp(unsigned char value, unsigned char *reg, int cycles) {
 
 //region 8-bit XOR
 
+//TODO:
 int xor_8bit_vp(unsigned char value, unsigned char *reg, int cycles) {
 	*reg ^= value;
 
@@ -245,6 +248,7 @@ int xor_8bit_vp(unsigned char value, unsigned char *reg, int cycles) {
 
 //region 8-bit CP
 
+//TODO:
 int cp_8bit_vp(unsigned char value, unsigned char *reg, int cycles) {
 	set_flag(NEGATIVE);
 
@@ -268,6 +272,51 @@ int cp_8bit_vp(unsigned char value, unsigned char *reg, int cycles) {
 
 //endregion
 
+//region 8-bit INC
+
+// Increment register
+int inc_8bit_p(unsigned char *reg, int cycles) {
+	if ((*reg & 0x0F) == 0x0F)
+		set_flag(HALFCARRY);
+	else
+		clear_flag(HALFCARRY);
+
+	(*reg)++;
+
+	if (*reg)
+		clear_flag(ZERO);
+	else
+		set_flag(ZERO);
+
+	clear_flag(NEGATIVE);
+
+	return cycles;
+}
+
+// Increment byte from address
+int inc_8bit_a(unsigned short address, int cycles) {
+	unsigned char byte = read_byte(address);
+
+	if ((byte & 0x0F) == 0x0F)
+		set_flag(HALFCARRY);
+	else
+		clear_flag(HALFCARRY);
+
+	byte++;
+	write_byte(address, byte);
+
+	if (byte)
+		clear_flag(ZERO);
+	else
+		set_flag(ZERO);
+
+	clear_flag(NEGATIVE);
+
+	return cycles;
+}
+
+//endregion
+
 //region Instructions
 
 // 0x01: Load from memory(nn) to reg-BC
@@ -275,6 +324,9 @@ int ld_bc_nn(void) { return load_16bit_nnp(&registers.BC, 12); }
 
 // 0x02: Load from reg-A to memory(BC)
 int ld_bc_a(void) { return load_8bit_va(registers.A, registers.BC, 8); }
+
+// 0x04: Increment reg-B
+int inc_b(void) { return inc_8bit_p(&registers.B, 4); }
 
 // 0x06: Load from memory(n) to reg-B
 int ld_b_n(void) { return load_8bit_vp(read_byte(registers.PC++), &registers.B, 8); }
@@ -289,6 +341,9 @@ int ld_nnp_sp(void) {
 // 0x0A: Load from memory(BC) to reg-A
 int ld_a_bc(void) { return load_8bit_vp(read_byte(registers.BC), &registers.A, 8); }
 
+// 0x0C: Increment reg-C
+int inc_c(void) { return inc_8bit_p(&registers.C, 4); }
+
 // 0x0E: Load from memory(n) to reg-C
 int ld_c_n(void) { return load_8bit_vp(read_byte(registers.PC++), &registers.C, 8); }
 
@@ -298,11 +353,17 @@ int ld_de_nn(void) { return load_16bit_nnp(&registers.DE, 12); }
 // 0x12: Load from reg-A to memory(DE)
 int ld_de_a(void) { return load_8bit_va(registers.A, registers.DE, 8); }
 
+// 0x14: Increment reg-D
+int inc_d(void) { return inc_8bit_p(&registers.D, 4); }
+
 // 0x16: Load from memory(n) to reg-D
 int ld_d_n(void) { return load_8bit_vp(read_byte(registers.PC++), &registers.D, 8); }
 
 // 0x1A: Load from memory(DE) to reg-A
 int ld_a_de(void) { return load_8bit_vp(read_byte(registers.DE), &registers.A, 8); }
+
+// 0x1C: Increment reg-E
+int inc_e(void) { return inc_8bit_p(&registers.E, 4); }
 
 // 0x1E: Load from memory(n) to reg-E
 int ld_e_n(void) { return load_8bit_vp(read_byte(registers.PC++), &registers.E, 8); }
@@ -313,11 +374,17 @@ int ld_hl_nn(void) { return load_16bit_nnp(&registers.HL, 12); }
 // 0x22: Load from reg-A to memory(HL), increment reg-HL
 int ldi_hl_a(void) { return load_8bit_va(registers.A, registers.HL++, 8); }
 
+// 0x24: Increment reg-H
+int inc_h(void) { return inc_8bit_p(&registers.H, 4); }
+
 // 0x26: Load from memory(n) to reg-H
 int ld_h_n(void) { return load_8bit_vp(read_byte(registers.PC++), &registers.H, 8); }
 
 // 0x2A: Load from memory(HL) to reg-A, increment reg-HL
 int ldi_a_hl(void) { return load_8bit_vp(read_byte(registers.HL++), &registers.A, 8); }
+
+// 0x2C: Increment reg-L
+int inc_l(void) { return inc_8bit_p(&registers.L, 4); }
 
 // 0x2E: Load from memory(n) to reg-L
 int ld_l_n(void) { return load_8bit_vp(read_byte(registers.PC++), &registers.L, 8); }
@@ -328,11 +395,17 @@ int ld_sp_nn(void) { return load_16bit_nnp(&registers.SP, 12); }
 // 0x32: Load from reg-A to memory(HL), decrement reg-HL
 int ldd_hl_a(void) { return load_8bit_va(registers.A, registers.HL--, 8); }
 
+// 0x34: Increment memory(HL)
+int inc_hl(void) { return inc_8bit_a(registers.HL, 12); }
+
 // 0x36: Load from memory(n) to memory(HL)
 int ld_hl_n(void) { return load_8bit_va(read_byte(registers.PC++), registers.HL, 12); }
 
 // 0x3A: Load from memory(HL) to reg-A, decrement reg-HL
 int ldd_a_hl(void) { return load_8bit_vp(read_byte(registers.HL--), &registers.A, 8); }
+
+// 0x3C: Increment reg-A
+int inc_a(void) { return inc_8bit_p(&registers.A, 4); }
 
 // 0x3E: Load from memory(n) to reg-A
 int ld_a_n(void) { return load_8bit_vp(read_byte(registers.PC++), &registers.A, 8); }

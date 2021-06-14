@@ -14,6 +14,7 @@ void and_a_test(unsigned char valueToAnd, int opCycles);
 void or_a_test(unsigned char valueToOr, int opCycles);
 void xor_a_test(unsigned char valueToXor, int opCycles);
 void cp_a_test(unsigned char valueToCmp, int opCycles);
+void inc_test(unsigned char valueToInc, int opCycles);
 
 //region Others
 
@@ -55,6 +56,14 @@ TEST_CASE("0x02: Load from reg-A to memory(BC)", "[cpu][load]") {
 	CHECK(cycles == 8);
 }
 
+TEST_CASE("0x04: Increment reg-B", "[cpu][inc]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x04;
+	registers.B = GENERATE(take(5, random(0, 0xFF)));
+
+	inc_test(registers.B, 4);
+}
+
 TEST_CASE("0x06: Load from memory(n) to reg-B", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x06;
@@ -91,6 +100,14 @@ TEST_CASE("0x0A: Load from memory(BC) to reg-A", "[cpu][load]") {
 	CHECK(cycles == 8);
 }
 
+TEST_CASE("0x0C: Increment reg-C", "[cpu][inc]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x0C;
+	registers.C = GENERATE(take(5, random(0, 0xFF)));
+
+	inc_test(registers.C, 4);
+}
+
 TEST_CASE("0x0E: Load from memory(n) to reg-C", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x0E;
@@ -124,6 +141,14 @@ TEST_CASE("0x12: Load from reg-A to memory(DE)", "[cpu][load]") {
 	CHECK(cycles == 8);
 }
 
+TEST_CASE("0x14: Increment reg-D", "[cpu][inc]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x14;
+	registers.D = GENERATE(take(5, random(0, 0xFF)));
+
+	inc_test(registers.D, 4);
+}
+
 TEST_CASE("0x16: Load from memory(n) to reg-D", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x16;
@@ -144,6 +169,14 @@ TEST_CASE("0x1A: Load from memory(DE) to reg-A", "[cpu][load]") {
 	int cycles = execute_next_instruction();
 	CHECK(registers.A == read_byte(registers.DE));
 	CHECK(cycles == 8);
+}
+
+TEST_CASE("0x1C: Increment reg-E", "[cpu][inc]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x1C;
+	registers.E = GENERATE(take(5, random(0, 0xFF)));
+
+	inc_test(registers.E, 4);
 }
 
 TEST_CASE("0x1E: Load from memory(n) to reg-E", "[cpu][load]") {
@@ -180,6 +213,14 @@ TEST_CASE("0x22: Load from reg-A to memory(HL), increment reg-HL", "[cpu][load]"
 	CHECK(cycles == 8);
 }
 
+TEST_CASE("0x24: Increment reg-H", "[cpu][inc]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x24;
+	registers.H = GENERATE(take(5, random(0, 0xFF)));
+
+	inc_test(registers.H, 4);
+}
+
 TEST_CASE("0x26: Load from memory(n) to reg-H", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x26;
@@ -201,6 +242,14 @@ TEST_CASE("0x2A: Load from memory(HL) to reg-A, increment reg-HL", "[cpu][load]"
 	CHECK(registers.A == read_byte(prev_HL));
 	CHECK(registers.HL == prev_HL + 1);
 	CHECK(cycles == 8);
+}
+
+TEST_CASE("0x2C: Increment reg-L", "[cpu][inc]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x2C;
+	registers.L = GENERATE(take(5, random(0, 0xFF)));
+
+	inc_test(registers.L, 4);
 }
 
 TEST_CASE("0x2E: Load from memory(n) to reg-L", "[cpu][load]") {
@@ -237,6 +286,16 @@ TEST_CASE("0x32: Load from reg-A to memory(HL), decrement reg-HL", "[cpu][load]"
 	CHECK(cycles == 8);
 }
 
+TEST_CASE("0x34: Increment memory(HL)", "[cpu][inc]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x34;
+	registers.HL = GENERATE(take(5, random(0x8000, 0xFE9F)));
+	int value = GENERATE(take(5, random(0, 0xFF)));
+	write_byte(registers.HL, value);
+
+	inc_test(read_byte(registers.HL), 12);
+}
+
 TEST_CASE("0x36: Load from memory(n) to memory(HL)", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x36;
@@ -259,6 +318,14 @@ TEST_CASE("0x3A: Load from memory(HL) to reg-A, decrement reg-HL", "[cpu][load]"
 	CHECK(registers.A == read_byte(prev_HL));
 	CHECK(registers.HL == prev_HL - 1);
 	CHECK(cycles == 8);
+}
+
+TEST_CASE("0x3C: Increment reg-A", "[cpu][inc]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x3C;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+
+	inc_test(registers.A, 4);
 }
 
 TEST_CASE("0x3E: Load from memory(n) to reg-A", "[cpu][load]") {
@@ -1911,6 +1978,19 @@ void cp_a_test(unsigned char valueToCmp, int opCycles)
 	CHECK(is_flag_set(CARRY) == carry_flag_state);
 	CHECK(is_flag_set(HALFCARRY) == halfcarry_flag_state);
 	CHECK(is_flag_set(NEGATIVE) == true);
+	CHECK(is_flag_set(ZERO) == zero_flag_state);
+}
+
+void inc_test(unsigned char valueToInc, int opCycles)
+{
+	bool halfcarry_flag_state = (valueToInc & 0x0F) == 0x0F;
+	bool zero_flag_state = valueToInc+1 == 0;
+
+	int cycles = execute_next_instruction();
+	CHECK(cycles == opCycles);
+
+	CHECK(is_flag_set(HALFCARRY) == halfcarry_flag_state);
+	CHECK(is_flag_set(NEGATIVE) == false);
 	CHECK(is_flag_set(ZERO) == zero_flag_state);
 }
 
