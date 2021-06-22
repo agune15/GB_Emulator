@@ -15,6 +15,7 @@ void or_a_test(unsigned char valueToOr, int opCycles);
 void xor_a_test(unsigned char valueToXor, int opCycles);
 void cp_a_test(unsigned char valueToCmp, int opCycles);
 void inc_test(unsigned char valueToInc, int opCycles);
+void dec_test(unsigned char valueToDec, int opCycles);
 
 //region Others
 
@@ -64,6 +65,14 @@ TEST_CASE("0x04: Increment reg-B", "[cpu][inc]") {
 	inc_test(registers.B, 4);
 }
 
+TEST_CASE("0x05: Decrement reg-B", "[cpu][dec]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x05;
+	registers.B = GENERATE(take(5, random(0, 0xFF)));
+
+	dec_test(registers.B, 4);
+}
+
 TEST_CASE("0x06: Load from memory(n) to reg-B", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x06;
@@ -73,7 +82,6 @@ TEST_CASE("0x06: Load from memory(n) to reg-B", "[cpu][load]") {
 	CHECK(registers.B == value);
 	CHECK(cycles == 8);
 }
-
 
 TEST_CASE("0x08: Load from reg-SP to memory address pointed in(nn)", "[cpu][load]") {
 	registers.PC = 0x0100;
@@ -1991,6 +1999,19 @@ void inc_test(unsigned char valueToInc, int opCycles)
 
 	CHECK(is_flag_set(HALFCARRY) == halfcarry_flag_state);
 	CHECK(is_flag_set(NEGATIVE) == false);
+	CHECK(is_flag_set(ZERO) == zero_flag_state);
+}
+
+void dec_test(unsigned char valueToDec, int opCycles)
+{
+	bool halfcarry_flag_state = (valueToDec & 0x0F) == 0;
+	bool zero_flag_state = valueToDec - 1 == 0;
+
+	int cycles = execute_next_instruction();
+	CHECK(cycles == opCycles);
+
+	CHECK(is_flag_set(HALFCARRY) == halfcarry_flag_state);
+	CHECK(is_flag_set(NEGATIVE) == true);
 	CHECK(is_flag_set(ZERO) == zero_flag_state);
 }
 
