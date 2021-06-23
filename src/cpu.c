@@ -118,7 +118,8 @@ int add_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
 	else
 		clear_flag(CARRY);
 
-	if (*reg <= 0x0F && result > 0x0F)
+	int low_nibble_add = (*reg & 0x0F) + (value & 0x0F);
+	if (low_nibble_add > 0x0F)
 		set_flag(HALFCARRY);
 	else
 		clear_flag(HALFCARRY);
@@ -381,7 +382,7 @@ int add_16bit_hl(unsigned short value, int cycles)
 
 	registers.HL = (unsigned short)(result & 0xFFFF);
 
-	if (registers.HL <= 0x0FFF && result > 0x0FFF)
+	if (registers.HL <= 0x0FFF && result > 0x0FFF) //TODO: This is wrong
 		set_flag(HALFCARRY);
 	else
 		clear_flag(HALFCARRY);
