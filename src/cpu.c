@@ -111,20 +111,19 @@ int load_16bit_nnp(unsigned short *reg, int cycles)
 // Add byte to register
 int add_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
 {
-	unsigned int addition = *reg + value;
+	unsigned int result = *reg + value;
 
-	if (addition > 0xFF)
+	if (result > 0xFF)
 		set_flag(CARRY);
 	else
 		clear_flag(CARRY);
 
-	int low_nibble_add = (*reg & 0x0F) + (value & 0x0F);
-	if (low_nibble_add > 0xF)
+	if (*reg <= 0x0F && result > 0x0F)
 		set_flag(HALFCARRY);
 	else
 		clear_flag(HALFCARRY);
 
-	*reg = (unsigned char)(addition & 0xFF);
+	*reg = (unsigned char)(result & 0xFF);
 
 	if (*reg)
 		clear_flag(ZERO);
@@ -365,6 +364,33 @@ int dec_8bit_a(unsigned short address, int cycles)
 
 	return cycles;
 }
+
+//endregion
+
+//region 16-bit ADD
+
+// Add short to reg-HL
+int add_16bit_hl(unsigned short value, int cycles)
+{
+	unsigned long result = value + registers.HL;
+
+	if (result > 0xFFFF)
+		set_flag(CARRY);
+	else
+		clear_flag(CARRY);
+
+	registers.HL = (unsigned short)(result & 0xFFFF);
+
+	if (registers.HL <= 0x0FFF && result > 0x0FFF)
+		set_flag(HALFCARRY);
+	else
+		clear_flag(HALFCARRY);
+
+	clear_flag(NEGATIVE);
+
+	return cycles;
+}
+
 
 //endregion
 

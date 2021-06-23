@@ -116,6 +116,14 @@ TEST_CASE("0x0C: Increment reg-C", "[cpu][inc]") {
 	inc_test(registers.C, 4);
 }
 
+TEST_CASE("0x0D: Decrement reg-C", "[cpu][dec]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x0D;
+	registers.C = GENERATE(take(5, random(0, 0xFF)));
+
+	dec_test(registers.C, 4);
+}
+
 TEST_CASE("0x0E: Load from memory(n) to reg-C", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x0E;
@@ -157,6 +165,14 @@ TEST_CASE("0x14: Increment reg-D", "[cpu][inc]") {
 	inc_test(registers.D, 4);
 }
 
+TEST_CASE("0x15: Decrement reg-D", "[cpu][dec]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x15;
+	registers.D = GENERATE(take(5, random(0, 0xFF)));
+
+	dec_test(registers.D, 4);
+}
+
 TEST_CASE("0x16: Load from memory(n) to reg-D", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x16;
@@ -185,6 +201,14 @@ TEST_CASE("0x1C: Increment reg-E", "[cpu][inc]") {
 	registers.E = GENERATE(take(5, random(0, 0xFF)));
 
 	inc_test(registers.E, 4);
+}
+
+TEST_CASE("0x1D: Decrement reg-E", "[cpu][dec]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x1D;
+	registers.E = GENERATE(take(5, random(0, 0xFF)));
+
+	dec_test(registers.E, 4);
 }
 
 TEST_CASE("0x1E: Load from memory(n) to reg-E", "[cpu][load]") {
@@ -229,6 +253,14 @@ TEST_CASE("0x24: Increment reg-H", "[cpu][inc]") {
 	inc_test(registers.H, 4);
 }
 
+TEST_CASE("0x25: Decrement reg-H", "[cpu][dec]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x25;
+	registers.H = GENERATE(take(5, random(0, 0xFF)));
+
+	dec_test(registers.H, 4);
+}
+
 TEST_CASE("0x26: Load from memory(n) to reg-H", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x26;
@@ -258,6 +290,14 @@ TEST_CASE("0x2C: Increment reg-L", "[cpu][inc]") {
 	registers.L = GENERATE(take(5, random(0, 0xFF)));
 
 	inc_test(registers.L, 4);
+}
+
+TEST_CASE("0x2D: Decrement reg-L", "[cpu][dec]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x2D;
+	registers.L = GENERATE(take(5, random(0, 0xFF)));
+
+	dec_test(registers.L, 4);
 }
 
 TEST_CASE("0x2E: Load from memory(n) to reg-L", "[cpu][load]") {
@@ -304,6 +344,16 @@ TEST_CASE("0x34: Increment memory(HL)", "[cpu][inc]") {
 	inc_test(read_byte(registers.HL), 12);
 }
 
+TEST_CASE("0x35: Decrement memory(HL)", "[cpu][dec]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x35;
+	registers.HL = GENERATE(take(5, random(0x8000, 0xFE9F)));
+	int value = GENERATE(take(5, random(0, 0xFF)));
+	write_byte(registers.HL, value);
+
+	dec_test(read_byte(registers.HL), 12);
+}
+
 TEST_CASE("0x36: Load from memory(n) to memory(HL)", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x36;
@@ -334,6 +384,14 @@ TEST_CASE("0x3C: Increment reg-A", "[cpu][inc]") {
 	registers.A = GENERATE(take(5, random(0, 0xFF)));
 
 	inc_test(registers.A, 4);
+}
+
+TEST_CASE("0x3D: Decrement reg-A", "[cpu][dec]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x3D;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+
+	dec_test(registers.A, 4);
 }
 
 TEST_CASE("0x3E: Load from memory(n) to reg-A", "[cpu][load]") {
