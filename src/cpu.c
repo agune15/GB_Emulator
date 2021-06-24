@@ -6,10 +6,10 @@
 #include "memory.h"
 
 int (*instructions[256])(void) = {
-/*0x0*/	NULL, ld_bc_nn, ld_bc_a, NULL, inc_b, dec_b, ld_b_n, NULL, ld_nnp_sp, NULL, ld_a_bc, NULL, inc_c, dec_c, ld_c_n, NULL,
-/*0x1*/	NULL, ld_de_nn, ld_de_a, NULL, inc_d, dec_d, ld_d_n, NULL, NULL, NULL, ld_a_de, NULL, inc_e, dec_e, ld_e_n, NULL,
-/*0x2*/	NULL, ld_hl_nn, ldi_hl_a, NULL, inc_h, dec_h, ld_h_n, NULL, NULL, NULL, ldi_a_hl, NULL, inc_l, dec_l, ld_l_n, NULL,
-/*0x3*/	NULL, ld_sp_nn, ldd_hl_a, NULL, inc_hl, dec_hl, ld_hl_n, NULL, NULL, NULL, ldd_a_hl, NULL, inc_a, dec_a, ld_a_n, NULL,
+/*0x0*/	NULL, ld_bc_nn, ld_bc_a, NULL, inc_b, dec_b, ld_b_n, NULL, ld_nnp_sp, add_hl_bc, ld_a_bc, NULL, inc_c, dec_c, ld_c_n, NULL,
+/*0x1*/	NULL, ld_de_nn, ld_de_a, NULL, inc_d, dec_d, ld_d_n, NULL, NULL, add_hl_de, ld_a_de, NULL, inc_e, dec_e, ld_e_n, NULL,
+/*0x2*/	NULL, ld_hl_nn, ldi_hl_a, NULL, inc_h, dec_h, ld_h_n, NULL, NULL, add_hl_hl, ldi_a_hl, NULL, inc_l, dec_l, ld_l_n, NULL,
+/*0x3*/	NULL, ld_sp_nn, ldd_hl_a, NULL, inc_hl, dec_hl, ld_hl_n, NULL, NULL, add_hl_sp, ldd_a_hl, NULL, inc_a, dec_a, ld_a_n, NULL,
 /*0x4*/	ld_b_b, ld_b_c, ld_b_d, ld_b_e, ld_b_h, ld_b_l, ld_b_hl, ld_b_a, ld_c_b, ld_c_c, ld_c_d, ld_c_e, ld_c_h, ld_c_l, ld_c_hl, ld_c_a,
 /*0x5*/	ld_d_b, ld_d_c, ld_d_d, ld_d_e, ld_d_h, ld_d_l, ld_d_hl, ld_d_a, ld_e_b, ld_e_c, ld_e_d, ld_e_e, ld_e_h, ld_e_l, ld_e_hl, ld_e_a,
 /*0x6*/	ld_h_b, ld_h_c, ld_h_d, ld_h_e, ld_h_h, ld_h_l, ld_h_hl, ld_h_a, ld_l_b, ld_l_c, ld_l_d, ld_l_e, ld_l_h, ld_l_l, ld_l_hl, ld_l_a,
@@ -382,7 +382,7 @@ int add_16bit_hl(unsigned short value, int cycles)
 
 	registers.HL = (unsigned short)(result & 0xFFFF);
 
-	if (registers.HL <= 0x0FFF && result > 0x0FFF) //TODO: This is wrong
+	if ((registers.HL & 0x0FFF + result & 0x0FFF) > 0x0FFF)
 		set_flag(HALFCARRY);
 	else
 		clear_flag(HALFCARRY);
@@ -419,6 +419,9 @@ int ld_nnp_sp(void) {
 	return 20;
 }
 
+// 0x09: Add reg-BC to reg-HL
+int add_hl_bc(void) { return add_16bit_hl(registers.BC, 8); }
+
 // 0x0A: Load from memory(BC) to reg-A
 int ld_a_bc(void) { return load_8bit_vp(read_byte(registers.BC), &registers.A, 8); }
 
@@ -445,6 +448,9 @@ int dec_d(void) { return dec_8bit_p(&registers.D, 4); }
 
 // 0x16: Load from memory(n) to reg-D
 int ld_d_n(void) { return load_8bit_vp(read_byte(registers.PC++), &registers.D, 8); }
+
+// 0x19: Add reg-DE to reg-HL
+int add_hl_de(void) { return add_16bit_hl(registers.DE, 8); }
 
 // 0x1A: Load from memory(DE) to reg-A
 int ld_a_de(void) { return load_8bit_vp(read_byte(registers.DE), &registers.A, 8); }
@@ -473,6 +479,9 @@ int dec_h(void) { return dec_8bit_p(&registers.H, 4); }
 // 0x26: Load from memory(n) to reg-H
 int ld_h_n(void) { return load_8bit_vp(read_byte(registers.PC++), &registers.H, 8); }
 
+// 0x29: Add reg-HL to reg-HL
+int add_hl_hl(void) { return add_16bit_hl(registers.HL, 8); }
+
 // 0x2A: Load from memory(HL) to reg-A, increment reg-HL
 int ldi_a_hl(void) { return load_8bit_vp(read_byte(registers.HL++), &registers.A, 8); }
 
@@ -499,6 +508,9 @@ int dec_hl(void) { return dec_8bit_a(registers.HL, 12); }
 
 // 0x36: Load from memory(n) to memory(HL)
 int ld_hl_n(void) { return load_8bit_va(read_byte(registers.PC++), registers.HL, 12); }
+
+// 0x39: Add reg-SP to reg-HL
+int add_hl_sp(void) { return add_16bit_hl(registers.SP, 8); }
 
 // 0x3A: Load from memory(HL) to reg-A, decrement reg-HL
 int ldd_a_hl(void) { return load_8bit_vp(read_byte(registers.HL--), &registers.A, 8); }

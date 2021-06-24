@@ -16,6 +16,7 @@ void xor_a_test(unsigned char valueToXor, int opCycles);
 void cp_a_test(unsigned char valueToCmp, int opCycles);
 void inc_test(unsigned char valueToInc, int opCycles);
 void dec_test(unsigned char valueToDec, int opCycles);
+void add_hl_test(unsigned short valueToAdd, int opCycles);
 
 //region Others
 
@@ -94,6 +95,14 @@ TEST_CASE("0x08: Load from reg-SP to memory address pointed in(nn)", "[cpu][load
 	int cycles = execute_next_instruction();
 	CHECK(read_short(address) == registers.SP);
 	CHECK(cycles == 20);
+}
+
+TEST_CASE("0x09: Add reg-BC to reg-HL", "[cpu][add]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x09;
+	registers.HL = registers.BC = GENERATE(take(5, random(0, 0xFFFF)));
+
+	add_hl_test(registers.BC, 8);
 }
 
 TEST_CASE("0x0A: Load from memory(BC) to reg-A", "[cpu][load]") {
@@ -183,6 +192,14 @@ TEST_CASE("0x16: Load from memory(n) to reg-D", "[cpu][load]") {
 	CHECK(cycles == 8);
 }
 
+TEST_CASE("0x19: Add reg-DE to reg-HL", "[cpu][add]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x19;
+	registers.HL = registers.DE = GENERATE(take(5, random(0, 0xFFFF)));
+
+	add_hl_test(registers.DE, 8);
+}
+
 TEST_CASE("0x1A: Load from memory(DE) to reg-A", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x1A;
@@ -269,6 +286,14 @@ TEST_CASE("0x26: Load from memory(n) to reg-H", "[cpu][load]") {
 	int cycles = execute_next_instruction();
 	CHECK(registers.H == value);
 	CHECK(cycles == 8);
+}
+
+TEST_CASE("0x29: Add reg-HL to reg-HL", "[cpu][add]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x29;
+	registers.HL = GENERATE(take(5, random(0, 0xFFFF)));
+
+	add_hl_test(registers.HL, 8);
 }
 
 TEST_CASE("0x2A: Load from memory(HL) to reg-A, increment reg-HL", "[cpu][load]") {
@@ -363,6 +388,14 @@ TEST_CASE("0x36: Load from memory(n) to memory(HL)", "[cpu][load]") {
 	int cycles = execute_next_instruction();
 	CHECK(read_byte(registers.HL) == value);
 	CHECK(cycles == 12);
+}
+
+TEST_CASE("0x39: Add reg-SP to reg-HL", "[cpu][add]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x39;
+	registers.HL = registers.SP = GENERATE(take(5, random(0, 0xFFFF)));
+
+	add_hl_test(registers.SP, 8);
 }
 
 TEST_CASE("0x3A: Load from memory(HL) to reg-A, decrement reg-HL", "[cpu][load]") {
@@ -1926,17 +1959,17 @@ TEST_CASE("0xFE: Compare memory(n) with reg-A", "[cpu][cp]") {
 
 void add_a_test(unsigned char valueToAdd, int opCycles)
 {
-	unsigned int addition = registers.A + valueToAdd;
+	unsigned int result = registers.A + valueToAdd;
 	int low_nibble_add = (registers.A & 0x0F) + (valueToAdd & 0x0F);
 
-	bool carry_flag_state = addition > 0xFF;
+	bool carry_flag_state = result > 0xFF;
 	bool halfcarry_flag_state = low_nibble_add > 0x0F;
 
-	addition = addition & 0xFF;
-	bool zero_flag_state = addition == 0;
+	result = result & 0xFF;
+	bool zero_flag_state = result == 0;
 
 	int cycles = execute_next_instruction();
-	CHECK(registers.A == addition);
+	CHECK(registers.A == result);
 	CHECK(cycles == opCycles);
 
 	CHECK(is_flag_set(CARRY) == carry_flag_state);
@@ -2050,7 +2083,7 @@ void cp_a_test(unsigned char valueToCmp, int opCycles)
 void inc_test(unsigned char valueToInc, int opCycles)
 {
 	bool halfcarry_flag_state = (valueToInc & 0x0F) == 0x0F;
-	bool zero_flag_state = valueToInc+1 == 0;
+	bool zero_flag_state = (valueToInc+1 & 0xFF) == 0;
 
 	int cycles = execute_next_instruction();
 	CHECK(cycles == opCycles);
@@ -2063,7 +2096,7 @@ void inc_test(unsigned char valueToInc, int opCycles)
 void dec_test(unsigned char valueToDec, int opCycles)
 {
 	bool halfcarry_flag_state = (valueToDec & 0x0F) == 0;
-	bool zero_flag_state = valueToDec - 1 == 0;
+	bool zero_flag_state = valueToDec-1 == 0;
 
 	int cycles = execute_next_instruction();
 	CHECK(cycles == opCycles);
@@ -2071,6 +2104,24 @@ void dec_test(unsigned char valueToDec, int opCycles)
 	CHECK(is_flag_set(HALFCARRY) == halfcarry_flag_state);
 	CHECK(is_flag_set(NEGATIVE) == true);
 	CHECK(is_flag_set(ZERO) == zero_flag_state);
+}
+
+void add_hl_test(unsigned short valueToAdd, int opCycles)
+{
+	unsigned long result = valueToAdd + registers.HL;
+
+	bool halfcarry_state = (valueToAdd & 0x0FFF + registers.HL & 0x0FFF) > 0x0FFF;
+	bool carry_state = result > 0xFFFF;
+
+	result &= 0xFFFF;
+
+	int cycles = execute_next_instruction();
+	CHECK(registers.HL == result);
+	CHECK(cycles == opCycles);
+
+	CHECK(is_flag_set(CARRY) == carry_state);
+	CHECK(is_flag_set(HALFCARRY) == halfcarry_state);
+	CHECK(is_flag_set(NEGATIVE) == false);
 }
 
 //endregion
