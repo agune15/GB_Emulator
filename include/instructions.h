@@ -198,6 +198,7 @@ int pop_hl(void);
 int ld_ff_c_a(void);
 int push_hl(void);
 int and_a_n(void);
+int add_sp_n(void);
 int ld_nnp_a(void);
 int xor_a_n(void);
 // 0xF-

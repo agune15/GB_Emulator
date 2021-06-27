@@ -20,7 +20,7 @@ int (*instructions[256])(void) = {
 /*0xB*/ or_a_b, or_a_c, or_a_d, or_a_e, or_a_h, or_a_l, or_a_hl, or_a_a, cp_a_b, cp_a_c, cp_a_d, cp_a_e, cp_a_h, cp_a_l, cp_a_hl, cp_a_a,
 /*0xC*/	NULL, pop_bc, NULL, NULL, NULL, push_bc, add_a_n, NULL, NULL, NULL, NULL, NULL, NULL, NULL, adc_a_n, NULL,
 /*0xD*/	NULL, pop_de, NULL, NULL, NULL, push_de, sub_a_n, NULL, NULL, NULL, NULL, NULL, NULL, NULL, sbc_a_n, NULL,
-/*0xE*/	ld_ff_n_a, pop_hl, ld_ff_c_a, NULL, NULL, push_hl, and_a_n, NULL, NULL, NULL, ld_nnp_a, NULL, NULL, NULL, xor_a_n, NULL,
+/*0xE*/	ld_ff_n_a, pop_hl, ld_ff_c_a, NULL, NULL, push_hl, and_a_n, NULL, add_sp_n, NULL, ld_nnp_a, NULL, NULL, NULL, xor_a_n, NULL,
 /*0xF*/	ld_a_ff_n, pop_af, ld_a_ff_c, NULL, NULL, push_af, or_a_n, NULL, ld_hl_sp_n, ld_sp_hl, ld_a_nnp, NULL, NULL, NULL, cp_a_n, NULL,
 };
 
@@ -375,23 +375,47 @@ int add_16bit_hl(unsigned short value, int cycles)
 {
 	unsigned long result = value + registers.HL;
 
-	if (result > 0xFFFF)
-		set_flag(CARRY);
-	else
-		clear_flag(CARRY);
-
-	registers.HL = (unsigned short)(result & 0xFFFF);
-
 	if ((registers.HL & 0x0FFF + result & 0x0FFF) > 0x0FFF)
 		set_flag(HALFCARRY);
 	else
 		clear_flag(HALFCARRY);
+
+	registers.HL = (unsigned short)(result & 0xFFFF);
+
+	if (result > 0xFFFF) {
+		set_flag(CARRY);
+	}
+	else {
+		clear_flag(CARRY);
+	}
 
 	clear_flag(NEGATIVE);
 
 	return cycles;
 }
 
+
+//endregion
+
+//region 16-bit INC
+
+int inc_16bit_p(unsigned short *reg, int cycles)
+{
+	(*reg)++;
+
+	return cycles;
+}
+
+//endregion
+
+//region 16-bit DEC
+
+int dec_16bit_p(unsigned short *reg, int cycles)
+{
+	(*reg)--;
+
+	return cycles;
+}
 
 //endregion
 
@@ -961,6 +985,29 @@ int push_hl(void) {
 
 // 0xE6: Logical AND, memory(n) & reg-A, result in reg-A
 int and_a_n(void) { return and_8bit_vp(read_byte(registers.PC++), &registers.A, 8); }
+
+// 0xE8: Add memory(n) to reg-SP
+int add_sp_n(void) {
+	unsigned char value = read_byte(registers.PC++);
+	unsigned long result = registers.SP + value;
+
+	if ((registers.SP & 0xFF + value) > 0xFF)
+		set_flag(CARRY);
+	else
+		clear_flag(CARRY);
+
+	if ((registers.SP & 0x0F + value & 0x0F) > 0x0F)
+		set_flag(HALFCARRY);
+	else
+		clear_flag(HALFCARRY);
+
+	registers.SP = (unsigned short)(result & 0xFFFF);
+
+	clear_flag(ZERO);
+	clear_flag(NEGATIVE);
+
+	return 16;
+}
 
 // 0xEA: Load from reg-A to memory address pointed in(nn)
 int ld_nnp_a(void) {

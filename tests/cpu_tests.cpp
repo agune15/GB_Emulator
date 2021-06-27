@@ -17,6 +17,7 @@ void cp_a_test(unsigned char valueToCmp, int opCycles);
 void inc_test(unsigned char valueToInc, int opCycles);
 void dec_test(unsigned char valueToDec, int opCycles);
 void add_hl_test(unsigned short valueToAdd, int opCycles);
+void add_sp_test(void);
 
 //region Others
 
@@ -1814,6 +1815,15 @@ TEST_CASE("0xE6: Logical AND, memory(n) & reg-A, result in reg-A", "[cpu][and]")
 	and_a_test(read_byte(registers.PC+1), 8);
 }
 
+TEST_CASE("0xE8: Add memory(n) to reg-SP", "[cpu][add]") {
+	registers.PC = 0x100;
+	ROM_banks[registers.PC] = 0xE8;
+	ROM_banks[registers.PC+1] = GENERATE(take(5, random(0, 0xFF)));
+	registers.SP = GENERATE(take(5, random(0, 0xFFFF)));
+
+	add_sp_test();
+}
+
 TEST_CASE("0xEA: Load from reg-A to memory address pointed in(nn)", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0xEA;
@@ -2121,6 +2131,26 @@ void add_hl_test(unsigned short valueToAdd, int opCycles)
 
 	CHECK(is_flag_set(CARRY) == carry_state);
 	CHECK(is_flag_set(HALFCARRY) == halfcarry_state);
+	CHECK(is_flag_set(NEGATIVE) == false);
+}
+
+void add_sp_test(void)
+{
+	unsigned char value = read_byte(registers.PC+1);
+	unsigned long result = registers.SP + value;
+
+	bool carry_state = (registers.SP & 0xFF + value) > 0xFF;
+	bool halfcarry_state = (registers.SP & 0x0F + value & 0xF) > 0x0F;
+
+	result &= 0xFFFF;
+
+	int cycles = execute_next_instruction();
+	CHECK(registers.SP == result);
+	CHECK(cycles == 16);
+
+	CHECK(is_flag_set(CARRY) == carry_state);
+	CHECK(is_flag_set(HALFCARRY) == halfcarry_state);
+	CHECK(is_flag_set(ZERO) == false);
 	CHECK(is_flag_set(NEGATIVE) == false);
 }
 
