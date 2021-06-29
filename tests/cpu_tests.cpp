@@ -14,10 +14,12 @@ void and_a_test(unsigned char valueToAnd, int opCycles);
 void or_a_test(unsigned char valueToOr, int opCycles);
 void xor_a_test(unsigned char valueToXor, int opCycles);
 void cp_a_test(unsigned char valueToCmp, int opCycles);
-void inc_test(unsigned char valueToInc, int opCycles);
+void inc_8bit_test(unsigned char valueToInc, int opCycles);
 void dec_test(unsigned char valueToDec, int opCycles);
 void add_hl_test(unsigned short valueToAdd, int opCycles);
 void add_sp_test(void);
+void inc_16bit_test(unsigned short *regToInc, int opCycles);
+void dec_16bit_test(unsigned short *regToDec, int opCycles);
 
 //region Others
 
@@ -59,12 +61,20 @@ TEST_CASE("0x02: Load from reg-A to memory(BC)", "[cpu][load]") {
 	CHECK(cycles == 8);
 }
 
+TEST_CASE("0x03: Increment reg-BC", "[cpu][inc]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x03;
+	registers.BC = GENERATE(take(5, random(0, 0xFFFF)));
+
+	inc_16bit_test(&registers.BC, 8);
+}
+
 TEST_CASE("0x04: Increment reg-B", "[cpu][inc]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x04;
 	registers.B = GENERATE(take(5, random(0, 0xFF)));
 
-	inc_test(registers.B, 4);
+	inc_8bit_test(registers.B, 4);
 }
 
 TEST_CASE("0x05: Decrement reg-B", "[cpu][dec]") {
@@ -118,12 +128,20 @@ TEST_CASE("0x0A: Load from memory(BC) to reg-A", "[cpu][load]") {
 	CHECK(cycles == 8);
 }
 
+TEST_CASE("0x0B: Decrement reg-BC", "[cpu][dec]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x0B;
+	registers.BC = GENERATE(take(5, random(0, 0xFFFF)));
+
+	dec_16bit_test(&registers.BC, 8);
+}
+
 TEST_CASE("0x0C: Increment reg-C", "[cpu][inc]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x0C;
 	registers.C = GENERATE(take(5, random(0, 0xFF)));
 
-	inc_test(registers.C, 4);
+	inc_8bit_test(registers.C, 4);
 }
 
 TEST_CASE("0x0D: Decrement reg-C", "[cpu][dec]") {
@@ -167,12 +185,20 @@ TEST_CASE("0x12: Load from reg-A to memory(DE)", "[cpu][load]") {
 	CHECK(cycles == 8);
 }
 
+TEST_CASE("0x13: Increment reg-DE", "[cpu][inc]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x13;
+	registers.DE = GENERATE(take(5, random(0, 0xFFFF)));
+
+	inc_16bit_test(&registers.DE, 8);
+}
+
 TEST_CASE("0x14: Increment reg-D", "[cpu][inc]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x14;
 	registers.D = GENERATE(take(5, random(0, 0xFF)));
 
-	inc_test(registers.D, 4);
+	inc_8bit_test(registers.D, 4);
 }
 
 TEST_CASE("0x15: Decrement reg-D", "[cpu][dec]") {
@@ -213,12 +239,20 @@ TEST_CASE("0x1A: Load from memory(DE) to reg-A", "[cpu][load]") {
 	CHECK(cycles == 8);
 }
 
+TEST_CASE("0x1B: Decrement reg-DE", "[cpu][dec]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x1B;
+	registers.DE = GENERATE(take(5, random(0, 0xFFFF)));
+
+	dec_16bit_test(&registers.DE, 8);
+}
+
 TEST_CASE("0x1C: Increment reg-E", "[cpu][inc]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x1C;
 	registers.E = GENERATE(take(5, random(0, 0xFF)));
 
-	inc_test(registers.E, 4);
+	inc_8bit_test(registers.E, 4);
 }
 
 TEST_CASE("0x1D: Decrement reg-E", "[cpu][dec]") {
@@ -263,12 +297,20 @@ TEST_CASE("0x22: Load from reg-A to memory(HL), increment reg-HL", "[cpu][load]"
 	CHECK(cycles == 8);
 }
 
+TEST_CASE("0x23: Increment reg-HL", "[cpu][inc]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x23;
+	registers.HL = GENERATE(take(5, random(0, 0xFFFF)));
+
+	inc_16bit_test(&registers.HL, 8);
+}
+
 TEST_CASE("0x24: Increment reg-H", "[cpu][inc]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x24;
 	registers.H = GENERATE(take(5, random(0, 0xFF)));
 
-	inc_test(registers.H, 4);
+	inc_8bit_test(registers.H, 4);
 }
 
 TEST_CASE("0x25: Decrement reg-H", "[cpu][dec]") {
@@ -310,12 +352,20 @@ TEST_CASE("0x2A: Load from memory(HL) to reg-A, increment reg-HL", "[cpu][load]"
 	CHECK(cycles == 8);
 }
 
+TEST_CASE("0x2B: Decrement reg-HL", "[cpu][dec]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x2B;
+	registers.HL = GENERATE(take(5, random(0, 0xFFFF)));
+
+	dec_16bit_test(&registers.HL, 8);
+}
+
 TEST_CASE("0x2C: Increment reg-L", "[cpu][inc]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x2C;
 	registers.L = GENERATE(take(5, random(0, 0xFF)));
 
-	inc_test(registers.L, 4);
+	inc_8bit_test(registers.L, 4);
 }
 
 TEST_CASE("0x2D: Decrement reg-L", "[cpu][dec]") {
@@ -360,6 +410,14 @@ TEST_CASE("0x32: Load from reg-A to memory(HL), decrement reg-HL", "[cpu][load]"
 	CHECK(cycles == 8);
 }
 
+TEST_CASE("0x33: Increment reg-SP", "[cpu][inc]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x33;
+	registers.SP = GENERATE(take(5, random(0, 0xFFFF)));
+
+	inc_16bit_test(&registers.SP, 8);
+}
+
 TEST_CASE("0x34: Increment memory(HL)", "[cpu][inc]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x34;
@@ -367,7 +425,7 @@ TEST_CASE("0x34: Increment memory(HL)", "[cpu][inc]") {
 	int value = GENERATE(take(5, random(0, 0xFF)));
 	write_byte(registers.HL, value);
 
-	inc_test(read_byte(registers.HL), 12);
+	inc_8bit_test(read_byte(registers.HL), 12);
 }
 
 TEST_CASE("0x35: Decrement memory(HL)", "[cpu][dec]") {
@@ -412,12 +470,20 @@ TEST_CASE("0x3A: Load from memory(HL) to reg-A, decrement reg-HL", "[cpu][load]"
 	CHECK(cycles == 8);
 }
 
+TEST_CASE("0x3B: Decrement reg-SP", "[cpu][dec]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x3B;
+	registers.SP = GENERATE(take(5, random(0, 0xFFFF)));
+
+	dec_16bit_test(&registers.SP, 8);
+}
+
 TEST_CASE("0x3C: Increment reg-A", "[cpu][inc]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x3C;
 	registers.A = GENERATE(take(5, random(0, 0xFF)));
 
-	inc_test(registers.A, 4);
+	inc_8bit_test(registers.A, 4);
 }
 
 TEST_CASE("0x3D: Decrement reg-A", "[cpu][dec]") {
@@ -2090,7 +2156,7 @@ void cp_a_test(unsigned char valueToCmp, int opCycles)
 	CHECK(is_flag_set(ZERO) == zero_flag_state);
 }
 
-void inc_test(unsigned char valueToInc, int opCycles)
+void inc_8bit_test(unsigned char valueToInc, int opCycles)
 {
 	bool halfcarry_flag_state = (valueToInc & 0x0F) == 0x0F;
 	bool zero_flag_state = (valueToInc+1 & 0xFF) == 0;
@@ -2152,6 +2218,24 @@ void add_sp_test(void)
 	CHECK(is_flag_set(HALFCARRY) == halfcarry_state);
 	CHECK(is_flag_set(ZERO) == false);
 	CHECK(is_flag_set(NEGATIVE) == false);
+}
+
+void inc_16bit_test(unsigned short *regToInc, int opCycles)
+{
+	unsigned short result = *regToInc + 1;
+
+	int cycles = execute_next_instruction();
+	CHECK(*regToInc == result);
+	CHECK(cycles == opCycles);
+}
+
+void dec_16bit_test(unsigned short *regToDec, int opCycles)
+{
+	unsigned short result = *regToDec - 1;
+
+	int cycles = execute_next_instruction();
+	CHECK(*regToDec == result);
+	CHECK(cycles == opCycles);
 }
 
 //endregion

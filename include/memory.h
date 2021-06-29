@@ -13,7 +13,8 @@ extern unsigned char IO[0x80];
 extern unsigned char HRAM[0x7F];
 extern unsigned char interrupt_enable_reg;
 
-void init_memory();
+void init_memory(void);
+void init_random_seed(void);
 
 unsigned char read_byte(unsigned short address);
 unsigned short read_short(unsigned short address);

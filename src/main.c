@@ -61,6 +61,7 @@ int main(int argc, char *argv[])
 
 	init_registers();
 	init_memory();
+	init_random_seed();
 
 	if(SDL_Init(SDL_INIT_VIDEO) != 0) {
 		printf("main: Unable to initialize SDL: %s\n", SDL_GetError());

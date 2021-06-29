@@ -50,9 +50,13 @@ TEST_CASE("Read OAM", "[memory][read][byte]") {
 
 TEST_CASE("Read IO", "[memory][read][byte]") {
 	unsigned short address = GENERATE(take(100, random(0xFF00, 0xFF7F)));
+	if (address == 0xFF04)
+		address++;
+
 	unsigned char value = IO[address - 0xFF00] = GENERATE(take(1, random(0x00, 0xFF)));
 	if(address == 0xFF00)
 		value = get_joypad_state(IO[0]);
+
 	DYNAMIC_SECTION("Read 0x" << std::hex << address) {
 		CHECK(value == read_byte(address));
 	}
@@ -92,7 +96,7 @@ TEST_CASE("Read short - memory", "[memory][read][short]") {
 	// Corner cases
 	if (address == 0xFF44) word &= 0xFF00;
 	else if (address+1 == 0xFF44) word &= 0x00FF;
-	else if (address == 0xFF00 || address == 0xFF46) address++;
+	else if (address == 0xFF00 || address == 0xFF04 || address == 0xFF46) address++;
 
 	write_short(address, word);
 	DYNAMIC_SECTION("Read 0x"<<std::hex<<address<<" & 0x"<<std::hex<<address+1) {
@@ -139,7 +143,7 @@ TEST_CASE("Write byte - memory", "[memory][write][byte]") {
 
 	// Corner cases
 	if (address == 0xFF44) value = 0;
-	else if (address == 0xFF00 || address == 0xFF46) address++;
+	else if (address == 0xFF00 || address == 0xFF04 || address == 0xFF46) address++;
 
 	write_byte(address, value);
 	DYNAMIC_SECTION("Write to 0x" << std::hex << address) {
@@ -175,8 +179,8 @@ TEST_CASE("Write short - memory", "[memory][write][short]") {
 	//Corner cases
 	if(address == 0xFF44) word &= 0xFF00;
 	else if (address+1 == 0xFF44) word &= 0x00FF;
-	else if (address == 0xFF46 || address == 0xFF00) address++;
-	else if (address+1 == 0xFF46 || address+1 == 0xFF00) address += 2;
+	else if (address == 0xFF00 || address == 0xFF04 || address == 0xFF46) address++;
+	else if (address+1 == 0xFF00 || address+1 == 0xFF04 || address+1 == 0xFF46) address += 2;
 
 	write_short(address, word);
 	DYNAMIC_SECTION("Write to 0x"<<std::hex<<address<<" & 0x"<<std::hex<<address+1) {
