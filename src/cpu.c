@@ -4,6 +4,7 @@
 #include "registers.h"
 #include "instructions.h"
 #include "memory.h"
+#include "cb.h"
 
 int (*instructions[256])(void) = {
 /*0x0*/	NULL, ld_bc_nn, ld_bc_a, inc_bc, inc_b, dec_b, ld_b_n, NULL, ld_nnp_sp, add_hl_bc, ld_a_bc, dec_bc, inc_c, dec_c, ld_c_n, NULL,
@@ -967,6 +968,9 @@ int push_bc(void) {
 
 // 0xC6: Add memory(n) to reg-A
 int add_a_n(void) { return add_8bit_vp(read_byte(registers.PC++), &registers.A, 8); }
+
+// 0xCB: Execute CB instructions
+int cb(void) { return execute_cb_instruction(); }
 
 // 0xCE: Add memory(n) (+ carry flag) to reg-A
 int adc_a_n(void) { return adc_8bit_vp(read_byte(registers.PC++), &registers.A, 8); }
