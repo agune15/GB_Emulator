@@ -331,6 +331,85 @@ TEST_CASE("0x26: Load from memory(n) to reg-H", "[cpu][load]") {
 	CHECK(cycles == 8);
 }
 
+TEST_CASE("0x27: Decimal Adjust reg-A", "[cpu][daa]") {
+	registers.PC = 0x100;
+	ROM_banks[registers.PC] = 0x27;
+
+	//TODO: This into a function daa_test_setup
+	// Add/sub previous to DAA
+	int a, b, result;
+	a = GENERATE(take(5, random(0, 0x99)));
+	b = a/2;
+
+	a &= 0x09;
+	b &= 0x09;
+
+	if (a % 2 == 0) {
+		result = a + b;
+
+		if (result > 0x99)
+			set_flag(CARRY);
+		else
+			clear_flag(CARRY);
+
+		if ((a & 0xF + b & 0xF) > 0x09)
+			set_flag(HALFCARRY);
+		else
+			clear_flag(HALFCARRY);
+
+		registers.A = result & 0xFF;
+		clear_flag(NEGATIVE);
+	}
+	else {
+		result = a - b;
+
+		if (b > a)
+			set_flag(CARRY);
+		else
+			clear_flag(CARRY);
+
+		if ((b & 0xF) > (a & 0xF))
+			set_flag(HALFCARRY);
+		else
+			clear_flag(HALFCARRY);
+
+		registers.A = result & 0xFF;
+		set_flag(NEGATIVE);
+	}
+
+	//TODO: This into a function daa_test
+	// DAA
+	bool carry_status = is_flag_set(CARRY), zero_status;
+
+	result = registers.A;
+
+	if (!is_flag_set(NEGATIVE)) {
+		if (is_flag_set(CARRY) || result > 0x99) {
+			result += 0x60;
+			carry_status = true;
+		}
+		if (is_flag_set(HALFCARRY) || (result & 0x09) > 0x09)
+			result += 0x06;
+	}
+	else {
+		if (is_flag_set(CARRY))
+			result -= 0x60;
+		if (is_flag_set(HALFCARRY))
+			result -= 0x06;
+	}
+
+	result &= 0xFF;
+	zero_status = result == 0;
+
+	int cycles = execute_next_instruction();
+	CHECK(registers.A == result);
+	CHECK(cycles == 4);
+
+	CHECK(is_flag_set(ZERO) == zero_status);
+	CHECK(is_flag_set(CARRY) == carry_status);
+	CHECK(is_flag_set(HALFCARRY) == false);
+}
+
 TEST_CASE("0x29: Add reg-HL to reg-HL", "[cpu][add]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x29;

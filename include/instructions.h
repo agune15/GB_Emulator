@@ -36,6 +36,7 @@ int inc_hl(void);
 int inc_h(void);
 int dec_h(void);
 int ld_h_n(void);
+int daa(void);
 int add_hl_hl(void);
 int ldi_a_hl(void);
 int dec_hl(void);
