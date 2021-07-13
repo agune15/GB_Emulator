@@ -3,6 +3,7 @@
 //extern int (*instructions[256])(void);
 
 // Instructions
+int nop(void);
 int ld_bc_nn(void);
 int ld_bc_a(void);
 int inc_bc(void);
@@ -43,6 +44,7 @@ int dec_hl(void);
 int inc_l(void);
 int dec_l(void);
 int ld_l_n(void);
+int cpl_a(void);
 // 0x3-
 int ld_sp_nn(void);
 int ldd_hl_a(void);
@@ -50,12 +52,14 @@ int inc_sp(void);
 int inc_hlp(void);
 int dec_hlp(void);
 int ld_hl_n(void);
+int scf(void);
 int add_hl_sp(void);
 int ldd_a_hl(void);
 int dec_sp(void);
 int inc_a(void);
 int dec_a(void);
 int ld_a_n(void);
+int ccf(void);
 // 0x4-
 int ld_b_b(void);
 int ld_b_c(void);

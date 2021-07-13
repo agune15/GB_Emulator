@@ -20,6 +20,7 @@ void add_hl_test(unsigned short valueToAdd, int opCycles);
 void add_sp_test(void);
 void inc_16bit_test(unsigned short *regToInc, int opCycles);
 void dec_16bit_test(unsigned short *regToDec, int opCycles);
+void daa_test(void);
 
 //region Others
 
@@ -37,6 +38,14 @@ TEST_CASE("Registers initialization", "[CPU tests]") {
 //endregion
 
 //region Instructions
+
+TEST_CASE("0x00: No operation CARRY flag", "[cpu][misc]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x00;
+
+	int cycles = execute_next_instruction();
+	CHECK(cycles == 4);
+}
 
 TEST_CASE("0x01: Load from memory(nn) to reg-BC", "[cpu][load]") {
 	registers.PC = 0x0100;
@@ -335,79 +344,7 @@ TEST_CASE("0x27: Decimal Adjust reg-A", "[cpu][daa]") {
 	registers.PC = 0x100;
 	ROM_banks[registers.PC] = 0x27;
 
-	//TODO: This into a function daa_test_setup
-	// Add/sub previous to DAA
-	int a, b, result;
-	a = GENERATE(take(5, random(0, 0x99)));
-	b = a/2;
-
-	a &= 0x09;
-	b &= 0x09;
-
-	if (a % 2 == 0) {
-		result = a + b;
-
-		if (result > 0x99)
-			set_flag(CARRY);
-		else
-			clear_flag(CARRY);
-
-		if ((a & 0xF + b & 0xF) > 0x09)
-			set_flag(HALFCARRY);
-		else
-			clear_flag(HALFCARRY);
-
-		registers.A = result & 0xFF;
-		clear_flag(NEGATIVE);
-	}
-	else {
-		result = a - b;
-
-		if (b > a)
-			set_flag(CARRY);
-		else
-			clear_flag(CARRY);
-
-		if ((b & 0xF) > (a & 0xF))
-			set_flag(HALFCARRY);
-		else
-			clear_flag(HALFCARRY);
-
-		registers.A = result & 0xFF;
-		set_flag(NEGATIVE);
-	}
-
-	//TODO: This into a function daa_test
-	// DAA
-	bool carry_status = is_flag_set(CARRY), zero_status;
-
-	result = registers.A;
-
-	if (!is_flag_set(NEGATIVE)) {
-		if (is_flag_set(CARRY) || result > 0x99) {
-			result += 0x60;
-			carry_status = true;
-		}
-		if (is_flag_set(HALFCARRY) || (result & 0x09) > 0x09)
-			result += 0x06;
-	}
-	else {
-		if (is_flag_set(CARRY))
-			result -= 0x60;
-		if (is_flag_set(HALFCARRY))
-			result -= 0x06;
-	}
-
-	result &= 0xFF;
-	zero_status = result == 0;
-
-	int cycles = execute_next_instruction();
-	CHECK(registers.A == result);
-	CHECK(cycles == 4);
-
-	CHECK(is_flag_set(ZERO) == zero_status);
-	CHECK(is_flag_set(CARRY) == carry_status);
-	CHECK(is_flag_set(HALFCARRY) == false);
+	daa_test();
 }
 
 TEST_CASE("0x29: Add reg-HL to reg-HL", "[cpu][add]") {
@@ -463,6 +400,19 @@ TEST_CASE("0x2E: Load from memory(n) to reg-L", "[cpu][load]") {
 	int cycles = execute_next_instruction();
 	CHECK(registers.L == value);
 	CHECK(cycles == 8);
+}
+
+TEST_CASE("0x2F: Complement reg-A", "[cpu][misc]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x2F;
+	unsigned char value = registers.A = GENERATE(take(5, random(0, 0xFF)));
+
+	int cycles = execute_next_instruction();
+	CHECK(registers.A == ~value);
+	CHECK(cycles == 4);
+
+	CHECK(is_flag_set(NEGATIVE) == true);
+	CHECK(is_flag_set(HALFCARRY) == true);
 }
 
 TEST_CASE("0x31: Load from memory(nn) to reg-SP", "[cpu][load]") {
@@ -528,6 +478,19 @@ TEST_CASE("0x36: Load from memory(n) to memory(HL)", "[cpu][load]") {
 	CHECK(cycles == 12);
 }
 
+TEST_CASE("0x37: Set CARRY flag", "[cpu][misc]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x37;
+
+	int cycles = execute_next_instruction();
+	CHECK(is_flag_set(CARRY) == true);
+	CHECK(cycles == 4);
+
+	CHECK(is_flag_set(NEGATIVE) == false);
+	CHECK(is_flag_set(HALFCARRY) == false);
+}
+
+
 TEST_CASE("0x39: Add reg-SP to reg-HL", "[cpu][add]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x39;
@@ -581,6 +544,25 @@ TEST_CASE("0x3E: Load from memory(n) to reg-A", "[cpu][load]") {
 	int cycles = execute_next_instruction();
 	CHECK(registers.A == value);
 	CHECK(cycles == 8);
+}
+
+
+TEST_CASE("0x3F: Complement CARRY flag", "[cpu][misc]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x3F;
+	bool carry_flag_set = GENERATE(take(2, random(0, 1)));
+
+	if (carry_flag_set)
+		set_flag(CARRY);
+	else
+		clear_flag(CARRY);
+
+	int cycles = execute_next_instruction();
+	CHECK(is_flag_set(CARRY) == !carry_flag_set);
+	CHECK(cycles == 4);
+
+	CHECK(is_flag_set(NEGATIVE) == false);
+	CHECK(is_flag_set(HALFCARRY) == false);
 }
 
 TEST_CASE("0x40: Load from reg-B to reg-B", "[cpu][load]") {
@@ -2201,8 +2183,7 @@ void or_a_test(unsigned char valueToOr, int opCycles)
 
 	CHECK(is_flag_set(CARRY) == false);
 	CHECK(is_flag_set(HALFCARRY) == false);
-	CHECK(is_flag_set(NEGATIVE) == false);
-	CHECK(is_flag_set(ZERO) == zero_flag_state);
+	CHECK(is_flag_set(NEGATIVE) == false);	CHECK(is_flag_set(ZERO) == zero_flag_state);
 }
 
 void xor_a_test(unsigned char valueToXor, int opCycles)
@@ -2317,5 +2298,96 @@ void dec_16bit_test(unsigned short *regToDec, int opCycles)
 	CHECK(cycles == opCycles);
 }
 
+int daa_test_previousBCDoperation(void);
+void daa_test_run(int bcdOpResult);
+
+void daa_test(void)
+{
+	int bcdOpResult = daa_test_previousBCDoperation();
+	daa_test_run(bcdOpResult);
+}
+
 //endregion
 
+//region Sub-helpers
+
+// DAA
+int daa_test_previousBCDoperation(void)
+{
+	int a, b, result;
+	a = GENERATE(take(5, random(0, 0x99)));
+	b = a/2;
+
+	a &= 0x09;
+	b &= 0x09;
+
+	if (a % 2 == 0) {
+		result = a + b;
+
+		if (result > 0x99)
+			set_flag(CARRY);
+		else
+			clear_flag(CARRY);
+
+		if ((a & 0xF + b & 0xF) > 0x09)
+			set_flag(HALFCARRY);
+		else
+			clear_flag(HALFCARRY);
+
+		registers.A = result & 0xFF;
+		clear_flag(NEGATIVE);
+	}
+	else {
+		result = a - b;
+
+		if (b > a)
+			set_flag(CARRY);
+		else
+			clear_flag(CARRY);
+
+		if ((b & 0xF) > (a & 0xF))
+			set_flag(HALFCARRY);
+		else
+			clear_flag(HALFCARRY);
+
+		registers.A = result & 0xFF;
+		set_flag(NEGATIVE);
+	}
+
+	return result;
+}
+
+void daa_test_run(int bcdOpResult)
+{
+	bool carry_status = is_flag_set(CARRY), zero_status;
+
+	bcdOpResult = registers.A;
+
+	if (!is_flag_set(NEGATIVE)) {
+		if (is_flag_set(CARRY) || bcdOpResult > 0x99) {
+			bcdOpResult += 0x60;
+			carry_status = true;
+		}
+		if (is_flag_set(HALFCARRY) || (bcdOpResult & 0x09) > 0x09)
+			bcdOpResult += 0x06;
+	}
+	else {
+		if (is_flag_set(CARRY))
+			bcdOpResult -= 0x60;
+		if (is_flag_set(HALFCARRY))
+			bcdOpResult -= 0x06;
+	}
+
+	bcdOpResult &= 0xFF;
+	zero_status = bcdOpResult == 0;
+
+	int cycles = execute_next_instruction();
+	CHECK(registers.A == bcdOpResult);
+	CHECK(cycles == 4);
+
+	CHECK(is_flag_set(ZERO) == zero_status);
+	CHECK(is_flag_set(CARRY) == carry_status);
+	CHECK(is_flag_set(HALFCARRY) == false);
+}
+
+//endregion

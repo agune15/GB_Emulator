@@ -5,12 +5,13 @@
 #include "instructions.h"
 #include "memory.h"
 #include "cb.h"
+#include "interrupts.h"
 
 int (*instructions[256])(void) = {
-/*0x0*/	NULL, ld_bc_nn, ld_bc_a, inc_bc, inc_b, dec_b, ld_b_n, NULL, ld_nnp_sp, add_hl_bc, ld_a_bc, dec_bc, inc_c, dec_c, ld_c_n, NULL,
+/*0x0*/	nop, ld_bc_nn, ld_bc_a, inc_bc, inc_b, dec_b, ld_b_n, NULL, ld_nnp_sp, add_hl_bc, ld_a_bc, dec_bc, inc_c, dec_c, ld_c_n, NULL,
 /*0x1*/	NULL, ld_de_nn, ld_de_a, inc_de, inc_d, dec_d, ld_d_n, NULL, NULL, add_hl_de, ld_a_de, dec_de, inc_e, dec_e, ld_e_n, NULL,
-/*0x2*/	NULL, ld_hl_nn, ldi_hl_a, inc_hl, inc_h, dec_h, ld_h_n, daa, NULL, add_hl_hl, ldi_a_hl, dec_hl, inc_l, dec_l, ld_l_n, NULL,
-/*0x3*/	NULL, ld_sp_nn, ldd_hl_a, inc_sp, inc_hlp, dec_hlp, ld_hl_n, NULL, NULL, add_hl_sp, ldd_a_hl, dec_sp, inc_a, dec_a, ld_a_n, NULL,
+/*0x2*/	NULL, ld_hl_nn, ldi_hl_a, inc_hl, inc_h, dec_h, ld_h_n, daa, NULL, add_hl_hl, ldi_a_hl, dec_hl, inc_l, dec_l, ld_l_n, cpl_a,
+/*0x3*/	NULL, ld_sp_nn, ldd_hl_a, inc_sp, inc_hlp, dec_hlp, ld_hl_n, scf, NULL, add_hl_sp, ldd_a_hl, dec_sp, inc_a, dec_a, ld_a_n, ccf,
 /*0x4*/	ld_b_b, ld_b_c, ld_b_d, ld_b_e, ld_b_h, ld_b_l, ld_b_hl, ld_b_a, ld_c_b, ld_c_c, ld_c_d, ld_c_e, ld_c_h, ld_c_l, ld_c_hl, ld_c_a,
 /*0x5*/	ld_d_b, ld_d_c, ld_d_d, ld_d_e, ld_d_h, ld_d_l, ld_d_hl, ld_d_a, ld_e_b, ld_e_c, ld_e_d, ld_e_e, ld_e_h, ld_e_l, ld_e_hl, ld_e_a,
 /*0x6*/	ld_h_b, ld_h_c, ld_h_d, ld_h_e, ld_h_h, ld_h_l, ld_h_hl, ld_h_a, ld_l_b, ld_l_c, ld_l_d, ld_l_e, ld_l_h, ld_l_l, ld_l_hl, ld_l_a,
@@ -422,6 +423,9 @@ int dec_16bit_p(unsigned short *reg, int cycles)
 
 //region Instructions
 
+// 0x00: No operation
+int nop(void) { return 4; }
+
 // 0x01: Load from memory(nn) to reg-BC
 int ld_bc_nn(void) { return load_16bit_nnp(&registers.BC, 12); }
 
@@ -564,6 +568,16 @@ int dec_l(void) { return dec_8bit_p(&registers.L, 4); }
 // 0x2E: Load from memory(n) to reg-L
 int ld_l_n(void) { return load_8bit_vp(read_byte(registers.PC++), &registers.L, 8); }
 
+// 0x2F: Complement reg-A
+int cpl_a(void) {
+	registers.A = ~registers.A;
+
+	set_flag(NEGATIVE);
+	set_flag(HALFCARRY);
+
+	return 4;
+}
+
 // 0x31: Load from memory(nn) to reg-SP
 int ld_sp_nn(void) { return load_16bit_nnp(&registers.SP, 12); }
 
@@ -582,6 +596,16 @@ int dec_hlp(void) { return dec_8bit_a(registers.HL, 12); }
 // 0x36: Load from memory(n) to memory(HL)
 int ld_hl_n(void) { return load_8bit_va(read_byte(registers.PC++), registers.HL, 12); }
 
+// 0x37: Set CARRY flag
+int scf(void) {
+	set_flag(CARRY);
+
+	clear_flag(NEGATIVE);
+	clear_flag(HALFCARRY);
+
+	return 4;
+}
+
 // 0x39: Add reg-SP to reg-HL
 int add_hl_sp(void) { return add_16bit_hl(registers.SP, 8); }
 
@@ -599,6 +623,19 @@ int dec_a(void) { return dec_8bit_p(&registers.A, 4); }
 
 // 0x3E: Load from memory(n) to reg-A
 int ld_a_n(void) { return load_8bit_vp(read_byte(registers.PC++), &registers.A, 8); }
+
+// 0x3F: Complement CARRY flag
+int ccf(void) {
+	if (is_flag_set(CARRY))
+		clear_flag(CARRY);
+	else
+		set_flag(CARRY);
+
+	clear_flag(NEGATIVE);
+	clear_flag(HALFCARRY);
+
+	return 4;
+}
 
 // 0x40: Load from reg-B to reg-B
 int ld_b_b(void) { return 4; }
