@@ -406,9 +406,10 @@ TEST_CASE("0x2F: Complement reg-A", "[cpu][misc]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x2F;
 	unsigned char value = registers.A = GENERATE(take(5, random(0, 0xFF)));
+	value = ~value;
 
 	int cycles = execute_next_instruction();
-	CHECK(registers.A == ~value);
+	CHECK(registers.A == value);
 	CHECK(cycles == 4);
 
 	CHECK(is_flag_set(NEGATIVE) == true);
