@@ -15,7 +15,7 @@ int (*instructions[256])(void) = {
 /*0x4*/	ld_b_b, ld_b_c, ld_b_d, ld_b_e, ld_b_h, ld_b_l, ld_b_hl, ld_b_a, ld_c_b, ld_c_c, ld_c_d, ld_c_e, ld_c_h, ld_c_l, ld_c_hl, ld_c_a,
 /*0x5*/	ld_d_b, ld_d_c, ld_d_d, ld_d_e, ld_d_h, ld_d_l, ld_d_hl, ld_d_a, ld_e_b, ld_e_c, ld_e_d, ld_e_e, ld_e_h, ld_e_l, ld_e_hl, ld_e_a,
 /*0x6*/	ld_h_b, ld_h_c, ld_h_d, ld_h_e, ld_h_h, ld_h_l, ld_h_hl, ld_h_a, ld_l_b, ld_l_c, ld_l_d, ld_l_e, ld_l_h, ld_l_l, ld_l_hl, ld_l_a,
-/*0x7*/	ld_hl_b, ld_hl_c, ld_hl_d, ld_hl_e, ld_hl_h, ld_hl_l, NULL, ld_hl_a, ld_a_b, ld_a_c, ld_a_d, ld_a_e, ld_a_h, ld_a_l, ld_a_hl, ld_a_a,
+/*0x7*/	ld_hl_b, ld_hl_c, ld_hl_d, ld_hl_e, ld_hl_h, ld_hl_l, halt, ld_hl_a, ld_a_b, ld_a_c, ld_a_d, ld_a_e, ld_a_h, ld_a_l, ld_a_hl, ld_a_a,
 /*0x8*/	add_a_b, add_a_c, add_a_d, add_a_e, add_a_h, add_a_l, add_a_hl, add_a_a, adc_a_b, adc_a_c, adc_a_d, adc_a_e, adc_a_h, adc_a_l, adc_a_hl, adc_a_a,
 /*0x9*/	sub_a_b, sub_a_c, sub_a_d, sub_a_e, sub_a_h, sub_a_l, sub_a_hl, sub_a_a, sbc_a_b, sbc_a_c, sbc_a_d, sbc_a_e, sbc_a_h, sbc_a_l, sbc_a_hl, sbc_a_a,
 /*0xA*/	and_a_b, and_a_c, and_a_d, and_a_e, and_a_h, and_a_l, and_a_hl, and_a_a, xor_a_b, xor_a_c, xor_a_d, xor_a_e, xor_a_h, xor_a_l, xor_a_hl, xor_a_a,
@@ -26,6 +26,7 @@ int (*instructions[256])(void) = {
 /*0xF*/	ld_a_ff_n, pop_af, ld_a_ff_c, NULL, NULL, push_af, or_a_n, NULL, ld_hl_sp_n, ld_sp_hl, ld_a_nnp, NULL, NULL, NULL, cp_a_n, NULL,
 };
 
+bool cpu_stopped = false;
 registers_t registers;
 
 // Assign the required initial value for each register
@@ -42,8 +43,19 @@ void init_registers()
 //TODO: Description
 int execute_next_instruction(void)
 {
+	if (cpu_stopped)
+		return 0;
+
 	unsigned char instruction = read_byte(registers.PC++);
 	return (*instructions[instruction])();
+}
+
+//TODO: Region
+
+//TODO: Description
+void resume_cpu(void)
+{
+	cpu_stopped = false;
 }
 
 //region Helpers
@@ -418,6 +430,8 @@ int dec_16bit_p(unsigned short *reg, int cycles)
 
 	return cycles;
 }
+
+//endregion
 
 //endregion
 
@@ -798,6 +812,14 @@ int ld_hl_h(void) { return load_8bit_va(registers.H, registers.HL, 8); }
 
 // 0x75: Load from reg-L to memory(HL)
 int ld_hl_l(void) { return load_8bit_va(registers.L, registers.HL, 8); }
+
+// 0x76: HALT Interrupt
+int halt(void) {
+	if (!interrupt_master_enable)
+		registers.PC++;
+
+	return 4;
+}
 
 // 0x77: Load from reg-A to memory(HL)
 int ld_hl_a(void) { return load_8bit_va(registers.A, registers.HL, 8); }

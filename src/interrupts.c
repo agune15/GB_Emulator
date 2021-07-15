@@ -1,9 +1,4 @@
-/*
- *
- */
-
-#include <stdbool.h>
-
+#include <stdbool.h> //TODO: Could be removed, already in header
 #include "interrupts.h"
 #include "memory.h"
 #include "registers.h"

@@ -118,6 +118,7 @@ int ld_hl_d(void);
 int ld_hl_e(void);
 int ld_hl_h(void);
 int ld_hl_l(void);
+int halt(void);
 int ld_hl_a(void);
 int ld_a_b(void);
 int ld_a_c(void);

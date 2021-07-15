@@ -115,9 +115,11 @@ static void handle_events(void)
 				break;
 			case SDL_KEYDOWN:
 				handle_key_down(&event.key.keysym);
+				resume_cpu();
 				break;
 			case SDL_KEYUP:
 				handle_key_up(&event.key.keysym);
+				resume_cpu();
 				break;
 			default:
 				break;

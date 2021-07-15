@@ -1122,6 +1122,21 @@ TEST_CASE("0x75: Load from reg-L to memory(HL)", "[cpu][load]") {
 	CHECK(cycles == 8);
 }
 
+TEST_CASE("0x76: HALT Interrupt", "[cpu][interrupt]") {
+	int currentPC = registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x76;
+	interrupt_master_enable = GENERATE(take(2, random(0, 1)));
+
+	int cycles = execute_next_instruction();
+
+	if (!interrupt_master_enable)
+		CHECK(read_byte(registers.PC-2) == 0x76);
+	else
+		CHECK(read_byte(registers.PC-1) == 0x76);
+
+	CHECK(cycles == 4);
+}
+
 TEST_CASE("0x77: Load from reg-A to memory(HL)", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x77;
