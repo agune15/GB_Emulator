@@ -171,6 +171,26 @@ TEST_CASE("0x0E: Load from memory(n) to reg-C", "[cpu][load]") {
 	CHECK(cycles == 8);
 }
 
+TEST_CASE("0x10: STOP Interrupt", "[cpu][interrupt]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x10;
+
+	SECTION("CPU running") {
+		int cycles = execute_next_instruction();
+		CHECK(cpu_stopped == true);
+		CHECK(cycles == 4);
+	}
+
+	SECTION("CPU stopped") {
+		int cycles = execute_next_instruction();
+		CHECK(cpu_stopped == true);
+		CHECK(cycles == 0);
+
+		resume_cpu();
+		CHECK(cpu_stopped == false);
+	}
+}
+
 TEST_CASE("0x11: Load from memory(nn) to reg-DE", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x11;
@@ -2030,6 +2050,15 @@ TEST_CASE("0xF2: Load from memory(0xFF00 + reg-C) to reg-A", "[cpu][load]") {
 	CHECK(cycles == 8);
 }
 
+TEST_CASE("0xF3: Disable interrupts", "[cpu][interrupt]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xF3;
+
+	int cycles = execute_next_instruction();
+	CHECK(interrupt_master_enable == false);
+	CHECK(cycles == 4);
+}
+
 TEST_CASE("0xF5: Push reg-AF to stack, decrement SP twice", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0xF5;
@@ -2095,6 +2124,15 @@ TEST_CASE("0xFA: Load from memory address pointed in(nn) to reg-A", "[cpu][load]
 	int cycles = execute_next_instruction();
 	CHECK(registers.A == value);
 	CHECK(cycles == 16);
+}
+
+TEST_CASE("0xFB: Enable interrupts", "[cpu][interrupt]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xFB;
+
+	int cycles = execute_next_instruction();
+	CHECK(interrupt_master_enable == true);
+	CHECK(cycles == 4);
 }
 
 TEST_CASE("0xFE: Compare memory(n) with reg-A", "[cpu][cp]") {

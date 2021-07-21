@@ -9,7 +9,7 @@
 
 int (*instructions[256])(void) = {
 /*0x0*/	nop, ld_bc_nn, ld_bc_a, inc_bc, inc_b, dec_b, ld_b_n, NULL, ld_nnp_sp, add_hl_bc, ld_a_bc, dec_bc, inc_c, dec_c, ld_c_n, NULL,
-/*0x1*/	NULL, ld_de_nn, ld_de_a, inc_de, inc_d, dec_d, ld_d_n, NULL, NULL, add_hl_de, ld_a_de, dec_de, inc_e, dec_e, ld_e_n, NULL,
+/*0x1*/	stop, ld_de_nn, ld_de_a, inc_de, inc_d, dec_d, ld_d_n, NULL, NULL, add_hl_de, ld_a_de, dec_de, inc_e, dec_e, ld_e_n, NULL,
 /*0x2*/	NULL, ld_hl_nn, ldi_hl_a, inc_hl, inc_h, dec_h, ld_h_n, daa, NULL, add_hl_hl, ldi_a_hl, dec_hl, inc_l, dec_l, ld_l_n, cpl_a,
 /*0x3*/	NULL, ld_sp_nn, ldd_hl_a, inc_sp, inc_hlp, dec_hlp, ld_hl_n, scf, NULL, add_hl_sp, ldd_a_hl, dec_sp, inc_a, dec_a, ld_a_n, ccf,
 /*0x4*/	ld_b_b, ld_b_c, ld_b_d, ld_b_e, ld_b_h, ld_b_l, ld_b_hl, ld_b_a, ld_c_b, ld_c_c, ld_c_d, ld_c_e, ld_c_h, ld_c_l, ld_c_hl, ld_c_a,
@@ -23,7 +23,7 @@ int (*instructions[256])(void) = {
 /*0xC*/	NULL, pop_bc, NULL, NULL, NULL, push_bc, add_a_n, NULL, NULL, NULL, NULL, NULL, NULL, NULL, adc_a_n, NULL,
 /*0xD*/	NULL, pop_de, NULL, NULL, NULL, push_de, sub_a_n, NULL, NULL, NULL, NULL, NULL, NULL, NULL, sbc_a_n, NULL,
 /*0xE*/	ld_ff_n_a, pop_hl, ld_ff_c_a, NULL, NULL, push_hl, and_a_n, NULL, add_sp_n, NULL, ld_nnp_a, NULL, NULL, NULL, xor_a_n, NULL,
-/*0xF*/	ld_a_ff_n, pop_af, ld_a_ff_c, NULL, NULL, push_af, or_a_n, NULL, ld_hl_sp_n, ld_sp_hl, ld_a_nnp, NULL, NULL, NULL, cp_a_n, NULL,
+/*0xF*/	ld_a_ff_n, pop_af, ld_a_ff_c, di, NULL, push_af, or_a_n, NULL, ld_hl_sp_n, ld_sp_hl, ld_a_nnp, ei, NULL, NULL, cp_a_n, NULL,
 };
 
 bool cpu_stopped = false;
@@ -40,7 +40,7 @@ void init_registers()
 	registers.PC = 0x100;
 }
 
-//TODO: Description
+// Execute next CPU instruction
 int execute_next_instruction(void)
 {
 	if (cpu_stopped)
@@ -48,14 +48,6 @@ int execute_next_instruction(void)
 
 	unsigned char instruction = read_byte(registers.PC++);
 	return (*instructions[instruction])();
-}
-
-//TODO: Region
-
-//TODO: Description
-void resume_cpu(void)
-{
-	cpu_stopped = false;
 }
 
 //region Helpers
@@ -433,6 +425,18 @@ int dec_16bit_p(unsigned short *reg, int cycles)
 
 //endregion
 
+//region STOP
+
+//TODO: This is a public method (non-local), should it be on top with the other ones?
+
+// Resume the CPU if stopped
+void resume_cpu(void)
+{
+	cpu_stopped = false;
+}
+
+//endregion
+
 //endregion
 
 //region Instructions
@@ -482,6 +486,12 @@ int dec_c(void) { return dec_8bit_p(&registers.C, 4); }
 
 // 0x0E: Load from memory(n) to reg-C
 int ld_c_n(void) { return load_8bit_vp(read_byte(registers.PC++), &registers.C, 8); }
+
+// 0x10: STOP Interrupt
+int stop(void) {
+	cpu_stopped = true;
+	return 4;
+}
 
 // 0x11: Load from memory(nn) to reg-DE
 int ld_de_nn(void) { return load_16bit_nnp(&registers.DE, 12); }
@@ -1147,6 +1157,12 @@ int pop_af(void) {
 // 0xF2: Load from memory(0xFF00 + reg-C) to reg-A
 int ld_a_ff_c(void) { return load_8bit_vp(read_byte(0xFF00 + registers.C), &registers.A, 8); }
 
+// 0xF3: Disable interrupts
+int di(void) {
+	interrupt_master_enable = false;
+	return 4;
+}
+
 // 0xF5: Push reg-AF to stack, decrement SP twice
 int push_af(void) {
 	push_short_stack(registers.AF);
@@ -1191,6 +1207,12 @@ int ld_a_nnp(void) {
 	registers.A = read_byte(read_short(registers.PC));
 	registers.PC += 2;
 	return 16;
+}
+
+// 0xFB: Enable interrupts
+int ei(void) {
+	interrupt_master_enable = true;
+	return 4;
 }
 
 // 0xFE: Compare memory(n) with reg-A
