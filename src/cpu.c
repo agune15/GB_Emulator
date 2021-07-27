@@ -8,8 +8,8 @@
 #include "interrupts.h"
 
 int (*instructions[256])(void) = {
-/*0x0*/	nop, ld_bc_nn, ld_bc_a, inc_bc, inc_b, dec_b, ld_b_n, NULL, ld_nnp_sp, add_hl_bc, ld_a_bc, dec_bc, inc_c, dec_c, ld_c_n, NULL,
-/*0x1*/	stop, ld_de_nn, ld_de_a, inc_de, inc_d, dec_d, ld_d_n, NULL, NULL, add_hl_de, ld_a_de, dec_de, inc_e, dec_e, ld_e_n, NULL,
+/*0x0*/	nop, ld_bc_nn, ld_bc_a, inc_bc, inc_b, dec_b, ld_b_n, rlca, ld_nnp_sp, add_hl_bc, ld_a_bc, dec_bc, inc_c, dec_c, ld_c_n, NULL,
+/*0x1*/	stop, ld_de_nn, ld_de_a, inc_de, inc_d, dec_d, ld_d_n, rla, NULL, add_hl_de, ld_a_de, dec_de, inc_e, dec_e, ld_e_n, NULL,
 /*0x2*/	NULL, ld_hl_nn, ldi_hl_a, inc_hl, inc_h, dec_h, ld_h_n, daa, NULL, add_hl_hl, ldi_a_hl, dec_hl, inc_l, dec_l, ld_l_n, cpl_a,
 /*0x3*/	NULL, ld_sp_nn, ldd_hl_a, inc_sp, inc_hlp, dec_hlp, ld_hl_n, scf, NULL, add_hl_sp, ldd_a_hl, dec_sp, inc_a, dec_a, ld_a_n, ccf,
 /*0x4*/	ld_b_b, ld_b_c, ld_b_d, ld_b_e, ld_b_h, ld_b_l, ld_b_hl, ld_b_a, ld_c_b, ld_c_c, ld_c_d, ld_c_e, ld_c_h, ld_c_l, ld_c_hl, ld_c_a,
@@ -462,6 +462,25 @@ int dec_b(void) { return dec_8bit_p(&registers.B, 4); }
 // 0x06: Load from memory(n) to reg-B
 int ld_b_n(void) { return load_8bit_vp(read_byte(registers.PC++), &registers.B, 8); }
 
+// 0x07: Rotate reg-A left (+ new carry flag), set carry flag with MSB
+int rlca(void) {
+	unsigned char regA_msb = registers.A >> 7;
+
+	registers.A <<= 1;
+	registers.A |= regA_msb;
+
+	if (regA_msb)
+		set_flag(CARRY);
+	else
+		clear_flag(CARRY);
+
+	clear_flag(NEGATIVE);
+	clear_flag(HALFCARRY);
+	clear_flag(ZERO);
+
+	return 4;
+}
+
 // 0x08: Load from reg-SP to memory address pointed in(nn)
 int ld_nnp_sp(void) {
 	write_short(read_short(registers.PC), registers.SP);
@@ -510,6 +529,27 @@ int dec_d(void) { return dec_8bit_p(&registers.D, 4); }
 
 // 0x16: Load from memory(n) to reg-D
 int ld_d_n(void) { return load_8bit_vp(read_byte(registers.PC++), &registers.D, 8); }
+
+// 0x17: Rotate reg-A left (+ old carry flag), set carry flag with MSB
+int rla(void) {
+	unsigned char regA_msb = registers.A >> 7;
+
+	registers.A <<= 1;
+
+	if (is_flag_set(CARRY))
+		registers.A += 1;
+
+	if (regA_msb)
+		set_flag(CARRY);
+	else
+		clear_flag(CARRY);
+
+	clear_flag(NEGATIVE);
+	clear_flag(HALFCARRY);
+	clear_flag(ZERO);
+
+	return 4;
+}
 
 // 0x19: Add reg-DE to reg-HL
 int add_hl_de(void) { return add_16bit_hl(registers.DE, 8); }

@@ -97,11 +97,30 @@ TEST_CASE("0x05: Decrement reg-B", "[cpu][dec]") {
 TEST_CASE("0x06: Load from memory(n) to reg-B", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x06;
-	int value = ROM_banks[registers.PC+1] = GENERATE(take(10, random(0, 0xFF)));
+	int value = ROM_banks[registers.PC+1] = GENERATE(take(5, random(0, 0xFF)));
 
 	int cycles = execute_next_instruction();
 	CHECK(registers.B == value);
 	CHECK(cycles == 8);
+}
+
+TEST_CASE("0x07: Rotate reg-A left (+ new carry flag), set carry flag with MSB", "[cpu][rotate]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x07;
+	unsigned char rot_regA = registers.A = GENERATE(take(5, random(0, 0xFF)));
+
+	bool carry_state = rot_regA >> 7;
+	rot_regA <<= 1;
+	if (carry_state)
+		rot_regA += 1;
+
+	int cycles = execute_next_instruction();
+	CHECK(registers.A == rot_regA);
+	CHECK(is_flag_set(CARRY) == carry_state);
+	CHECK(is_flag_set(NEGATIVE) == false);
+	CHECK(is_flag_set(HALFCARRY) == false);
+	CHECK(is_flag_set(ZERO) == false);
+	CHECK(cycles == 4);
 }
 
 TEST_CASE("0x08: Load from reg-SP to memory address pointed in(nn)", "[cpu][load]") {
@@ -246,6 +265,25 @@ TEST_CASE("0x16: Load from memory(n) to reg-D", "[cpu][load]") {
 	int cycles = execute_next_instruction();
 	CHECK(registers.D == value);
 	CHECK(cycles == 8);
+}
+
+TEST_CASE("0x17: Rotate reg-A left (+ old carry flag), set carry flag with MSB", "[cpu][rotate]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x17;
+	unsigned char rot_regA = registers.A = GENERATE(take(5, random(0, 0xFF)));
+
+	bool carry_state = rot_regA >> 7;
+	rot_regA <<= 1;
+	if (is_flag_set(CARRY))
+		rot_regA += 1;
+
+	int cycles = execute_next_instruction();
+	CHECK(registers.A == rot_regA);
+	CHECK(is_flag_set(CARRY) == carry_state);
+	CHECK(is_flag_set(NEGATIVE) == false);
+	CHECK(is_flag_set(HALFCARRY) == false);
+	CHECK(is_flag_set(ZERO) == false);
+	CHECK(cycles == 4);
 }
 
 TEST_CASE("0x19: Add reg-DE to reg-HL", "[cpu][add]") {
