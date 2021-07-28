@@ -18,6 +18,7 @@ int dec_bc(void);
 int inc_c(void);
 int dec_c(void);
 int ld_c_n(void);
+int rrca(void);
 // 0x1-
 int stop(void);
 int ld_de_nn(void);
@@ -33,6 +34,7 @@ int dec_de(void);
 int inc_e(void);
 int dec_e(void);
 int ld_e_n(void);
+int rra(void);
 // 0x2-
 int ld_hl_nn(void);
 int ldi_hl_a(void);

@@ -8,8 +8,8 @@
 #include "interrupts.h"
 
 int (*instructions[256])(void) = {
-/*0x0*/	nop, ld_bc_nn, ld_bc_a, inc_bc, inc_b, dec_b, ld_b_n, rlca, ld_nnp_sp, add_hl_bc, ld_a_bc, dec_bc, inc_c, dec_c, ld_c_n, NULL,
-/*0x1*/	stop, ld_de_nn, ld_de_a, inc_de, inc_d, dec_d, ld_d_n, rla, NULL, add_hl_de, ld_a_de, dec_de, inc_e, dec_e, ld_e_n, NULL,
+/*0x0*/	nop, ld_bc_nn, ld_bc_a, inc_bc, inc_b, dec_b, ld_b_n, rlca, ld_nnp_sp, add_hl_bc, ld_a_bc, dec_bc, inc_c, dec_c, ld_c_n, rrca,
+/*0x1*/	stop, ld_de_nn, ld_de_a, inc_de, inc_d, dec_d, ld_d_n, rla, NULL, add_hl_de, ld_a_de, dec_de, inc_e, dec_e, ld_e_n, rra,
 /*0x2*/	NULL, ld_hl_nn, ldi_hl_a, inc_hl, inc_h, dec_h, ld_h_n, daa, NULL, add_hl_hl, ldi_a_hl, dec_hl, inc_l, dec_l, ld_l_n, cpl_a,
 /*0x3*/	NULL, ld_sp_nn, ldd_hl_a, inc_sp, inc_hlp, dec_hlp, ld_hl_n, scf, NULL, add_hl_sp, ldd_a_hl, dec_sp, inc_a, dec_a, ld_a_n, ccf,
 /*0x4*/	ld_b_b, ld_b_c, ld_b_d, ld_b_e, ld_b_h, ld_b_l, ld_b_hl, ld_b_a, ld_c_b, ld_c_c, ld_c_d, ld_c_e, ld_c_h, ld_c_l, ld_c_hl, ld_c_a,
@@ -506,6 +506,25 @@ int dec_c(void) { return dec_8bit_p(&registers.C, 4); }
 // 0x0E: Load from memory(n) to reg-C
 int ld_c_n(void) { return load_8bit_vp(read_byte(registers.PC++), &registers.C, 8); }
 
+// 0x0F: Rotate reg-A right (+ new carry flag), set carry flag with LSB
+int rrca(void) {
+	unsigned char regA_lsb = registers.A << 7;
+
+	registers.A >>= 1;
+	registers.A |= regA_lsb;
+
+	if (regA_lsb)
+		set_flag(CARRY);
+	else
+		clear_flag(CARRY);
+
+	clear_flag(NEGATIVE);
+	clear_flag(HALFCARRY);
+	clear_flag(ZERO);
+
+	return 4;
+}
+
 // 0x10: STOP Interrupt
 int stop(void) {
 	cpu_stopped = true;
@@ -568,6 +587,27 @@ int dec_e(void) { return dec_8bit_p(&registers.E, 4); }
 
 // 0x1E: Load from memory(n) to reg-E
 int ld_e_n(void) { return load_8bit_vp(read_byte(registers.PC++), &registers.E, 8); }
+
+// 0x1F: Rotate reg-A right (+ old carry flag), set carry flag with LSB
+int rra(void) {
+	unsigned char regA_lsb = registers.A << 7;
+
+	registers.A >>= 1;
+
+	if (is_flag_set(CARRY))
+		registers.A |= regA_lsb;
+
+	if (regA_lsb)
+		set_flag(CARRY);
+	else
+		clear_flag(CARRY);
+
+	clear_flag(NEGATIVE);
+	clear_flag(HALFCARRY);
+	clear_flag(ZERO);
+
+	return 4;
+}
 
 // 0x21: Load from memory(nn) to reg-HL
 int ld_hl_nn(void) { return load_16bit_nnp(&registers.HL, 12); }

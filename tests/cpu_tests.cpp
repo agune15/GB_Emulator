@@ -190,6 +190,24 @@ TEST_CASE("0x0E: Load from memory(n) to reg-C", "[cpu][load]") {
 	CHECK(cycles == 8);
 }
 
+TEST_CASE("0x0F: Rotate reg-A right (+ new carry flag), set carry flag with LSB", "[cpu][rotate]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x0F;
+	unsigned char rot_regA = registers.A = GENERATE(take(5, random(0, 0xFF)));
+
+	bool carry_state = rot_regA << 7;
+	rot_regA >>= 1;
+	rot_regA |= (rot_regA << 7);
+
+	int cycles = execute_next_instruction();
+	CHECK(registers.A == rot_regA);
+	CHECK(is_flag_set(CARRY) == carry_state);
+	CHECK(is_flag_set(NEGATIVE) == false);
+	CHECK(is_flag_set(HALFCARRY) == false);
+	CHECK(is_flag_set(ZERO) == false);
+	CHECK(cycles == 4);
+}
+
 TEST_CASE("0x10: STOP Interrupt", "[cpu][interrupt]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x10;
@@ -338,6 +356,25 @@ TEST_CASE("0x1E: Load from memory(n) to reg-E", "[cpu][load]") {
 	int cycles = execute_next_instruction();
 	CHECK(registers.E == value);
 	CHECK(cycles == 8);
+}
+
+TEST_CASE("0x1F: Rotate reg-A right (+ old carry flag), set carry flag with LSB", "[cpu][rotate]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x1F;
+	unsigned char rot_regA = registers.A = GENERATE(take(5, random(0, 0xFF)));
+
+	bool carry_state = rot_regA << 7;
+	rot_regA >>= 1;
+	if (is_flag_set(CARRY))
+		rot_regA |= rot_regA << 7;
+
+	int cycles = execute_next_instruction();
+	CHECK(registers.A == rot_regA);
+	CHECK(is_flag_set(CARRY) == carry_state);
+	CHECK(is_flag_set(NEGATIVE) == false);
+	CHECK(is_flag_set(HALFCARRY) == false);
+	CHECK(is_flag_set(ZERO) == false);
+	CHECK(cycles == 4);
 }
 
 TEST_CASE("0x21: Load from memory(nn) to reg-DE", "[cpu][load]") {
