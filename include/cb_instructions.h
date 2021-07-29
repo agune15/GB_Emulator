@@ -1,7 +1,14 @@
 #pragma once
 
 // CB Instructions
-
+int rlc_b(void);
+int rlc_c(void);
+int rlc_d(void);
+int rlc_e(void);
+int rlc_h(void);
+int rlc_l(void);
+int rlc_hl(void);
+int rlc_a(void);
 // 0x1-
 
 // 0x2-

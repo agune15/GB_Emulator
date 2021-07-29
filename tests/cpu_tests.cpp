@@ -21,6 +21,7 @@ void add_sp_test(void);
 void inc_16bit_test(unsigned short *regToInc, int opCycles);
 void dec_16bit_test(unsigned short *regToDec, int opCycles);
 void daa_test(void);
+void rotate_test(unsigned char rot_reg, bool carry_state);
 
 //region Others
 
@@ -114,13 +115,7 @@ TEST_CASE("0x07: Rotate reg-A left (+ new carry flag), set carry flag with MSB",
 	if (carry_state)
 		rot_regA += 1;
 
-	int cycles = execute_next_instruction();
-	CHECK(registers.A == rot_regA);
-	CHECK(is_flag_set(CARRY) == carry_state);
-	CHECK(is_flag_set(NEGATIVE) == false);
-	CHECK(is_flag_set(HALFCARRY) == false);
-	CHECK(is_flag_set(ZERO) == false);
-	CHECK(cycles == 4);
+	rotate_test(rot_regA, carry_state);
 }
 
 TEST_CASE("0x08: Load from reg-SP to memory address pointed in(nn)", "[cpu][load]") {
@@ -195,17 +190,11 @@ TEST_CASE("0x0F: Rotate reg-A right (+ new carry flag), set carry flag with LSB"
 	ROM_banks[registers.PC] = 0x0F;
 	unsigned char rot_regA = registers.A = GENERATE(take(5, random(0, 0xFF)));
 
-	bool carry_state = rot_regA << 7;
+	bool carry_state = (rot_regA << 7) & 0xFF;
 	rot_regA >>= 1;
-	rot_regA |= (rot_regA << 7);
+	rot_regA |= registers.A << 7;
 
-	int cycles = execute_next_instruction();
-	CHECK(registers.A == rot_regA);
-	CHECK(is_flag_set(CARRY) == carry_state);
-	CHECK(is_flag_set(NEGATIVE) == false);
-	CHECK(is_flag_set(HALFCARRY) == false);
-	CHECK(is_flag_set(ZERO) == false);
-	CHECK(cycles == 4);
+	rotate_test(rot_regA, carry_state);
 }
 
 TEST_CASE("0x10: STOP Interrupt", "[cpu][interrupt]") {
@@ -295,13 +284,7 @@ TEST_CASE("0x17: Rotate reg-A left (+ old carry flag), set carry flag with MSB",
 	if (is_flag_set(CARRY))
 		rot_regA += 1;
 
-	int cycles = execute_next_instruction();
-	CHECK(registers.A == rot_regA);
-	CHECK(is_flag_set(CARRY) == carry_state);
-	CHECK(is_flag_set(NEGATIVE) == false);
-	CHECK(is_flag_set(HALFCARRY) == false);
-	CHECK(is_flag_set(ZERO) == false);
-	CHECK(cycles == 4);
+	rotate_test(rot_regA, carry_state);
 }
 
 TEST_CASE("0x19: Add reg-DE to reg-HL", "[cpu][add]") {
@@ -363,18 +346,12 @@ TEST_CASE("0x1F: Rotate reg-A right (+ old carry flag), set carry flag with LSB"
 	ROM_banks[registers.PC] = 0x1F;
 	unsigned char rot_regA = registers.A = GENERATE(take(5, random(0, 0xFF)));
 
-	bool carry_state = rot_regA << 7;
+	bool carry_state = (rot_regA << 7) & 0xFF;
 	rot_regA >>= 1;
 	if (is_flag_set(CARRY))
-		rot_regA |= rot_regA << 7;
+		rot_regA |= registers.A << 7;
 
-	int cycles = execute_next_instruction();
-	CHECK(registers.A == rot_regA);
-	CHECK(is_flag_set(CARRY) == carry_state);
-	CHECK(is_flag_set(NEGATIVE) == false);
-	CHECK(is_flag_set(HALFCARRY) == false);
-	CHECK(is_flag_set(ZERO) == false);
-	CHECK(cycles == 4);
+	rotate_test(rot_regA, carry_state);
 }
 
 TEST_CASE("0x21: Load from memory(nn) to reg-DE", "[cpu][load]") {
@@ -2434,6 +2411,17 @@ void daa_test(void)
 {
 	int bcdOpResult = daa_test_previousBCDoperation();
 	daa_test_run(bcdOpResult);
+}
+
+void rotate_test(unsigned char rot_reg, bool carry_state)
+{
+	int cycles = execute_next_instruction();
+	CHECK(registers.A == rot_reg);
+	CHECK(is_flag_set(CARRY) == carry_state);
+	CHECK(is_flag_set(NEGATIVE) == false);
+	CHECK(is_flag_set(HALFCARRY) == false);
+	CHECK(is_flag_set(ZERO) == false);
+	CHECK(cycles == 4);
 }
 
 //endregion
