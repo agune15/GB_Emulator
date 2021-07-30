@@ -133,7 +133,7 @@ int rlc_l(void) { return rlc(&registers.L, 8); }
 // 0x00: Rotate memory(HL) left (+ new carry flag), set carry flag with MSB
 int rlc_hl(void) {
 	unsigned char value = read_byte(registers.HL);
-	unsigned char msb = read_byte(registers.HL);
+	unsigned char msb = value >> 7;
 
 	value <<= 1;
 	value |= msb;

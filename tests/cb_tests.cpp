@@ -6,38 +6,86 @@ extern "C" {
 
 // Test helpers
 unsigned char swap_test(unsigned char byteToSwap, int opCycles);
-void rotate_test(unsigned char *rot_reg, unsigned char rot_reg_value, bool carry_state, bool zero_state);
+void rotate_test(unsigned char *rot_reg);
 
 //region CB Instructions
 
 TEST_CASE("CB 0x00: Rotate reg-B left (+ new carry flag), set carry flag with MSB", "[cpu][cb][rotate]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x00;
-	unsigned char rot_reg = registers.B = GENERATE(take(5, random(0, 0xFF)));
+	registers.B = GENERATE(take(5, random(0, 0xFF)));
 
-	//TODO: Add to test vvvvvvv
+	rotate_test(&registers.B);
+}
 
-	bool carry_state = rot_reg >> 7;
-	rot_reg <<= 1;
+TEST_CASE("CB 0x01: Rotate reg-C left (+ new carry flag), set carry flag with MSB", "[cpu][cb][rotate]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x01;
+	registers.C = GENERATE(take(5, random(0, 0xFF)));
+
+	rotate_test(&registers.C);
+}
+
+TEST_CASE("CB 0x02: Rotate reg-D left (+ new carry flag), set carry flag with MSB", "[cpu][cb][rotate]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x02;
+	registers.D = GENERATE(take(5, random(0, 0xFF)));
+
+	rotate_test(&registers.D);
+}
+
+TEST_CASE("CB 0x03: Rotate reg-E left (+ new carry flag), set carry flag with MSB", "[cpu][cb][rotate]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x03;
+	registers.E = GENERATE(take(5, random(0, 0xFF)));
+
+	rotate_test(&registers.E);
+}
+
+TEST_CASE("CB 0x04: Rotate reg-H left (+ new carry flag), set carry flag with MSB", "[cpu][cb][rotate]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x04;
+	registers.H = GENERATE(take(5, random(0, 0xFF)));
+
+	rotate_test(&registers.H);
+}
+
+TEST_CASE("CB 0x05: Rotate reg-L left (+ new carry flag), set carry flag with MSB", "[cpu][cb][rotate]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x05;
+	registers.L = GENERATE(take(5, random(0, 0xFF)));
+
+	rotate_test(&registers.L);
+}
+
+TEST_CASE("CB 0x05: Rotate memory(HL) left (+ new carry flag), set carry flag with MSB", "[cpu][cb][rotate]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x06;
+	registers.HL = GENERATE(take(5, random(0x8000, 0xFE9F)));
+	unsigned char rot_value = GENERATE(take(5, random(0, 0xFF)));
+	write_byte(registers.HL, rot_value);
+
+	bool carry_state = rot_value >> 7;
+	rot_value <<= 1;
 	if (carry_state)
-		rot_reg += 1;
-	bool zero_state = rot_reg == 0;
+		rot_value += 1;
+	bool zero_state = rot_value == 0;
 
-	rotate_test(&registers.B, rot_reg, carry_state, zero_state);
+	int cycles = execute_cb_instruction();
+	CHECK(read_byte(registers.HL) == rot_value);
+	CHECK(is_flag_set(CARRY) == carry_state);
+	CHECK(is_flag_set(ZERO) == zero_state);
+	CHECK(is_flag_set(NEGATIVE) == false);
+	CHECK(is_flag_set(HALFCARRY) == false);
+	CHECK(cycles == 16);
 }
 
 TEST_CASE("CB 0x07: Rotate reg-A left (+ new carry flag), set carry flag with MSB", "[cpu][cb][rotate]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x07;
-	unsigned char rot_reg = registers.A = GENERATE(take(5, random(0, 0xFF)));
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
 
-	bool carry_state = rot_reg >> 7;
-	rot_reg <<= 1;
-	if (carry_state)
-		rot_reg += 1;
-	bool zero_state = rot_reg == 0;
-
-	rotate_test(&registers.A, rot_reg, carry_state, zero_state);
+	rotate_test(&registers.A);
 }
 
 TEST_CASE("CB 0x30: Swap reg-B", "[cpu][cb][swap]") {
@@ -136,8 +184,16 @@ unsigned char swap_test(unsigned char byteToSwap, int opCycles)
 	return byteToSwap;
 }
 
-void rotate_test(unsigned char *rot_reg, unsigned char rot_reg_value, bool carry_state, bool zero_state)
+void rotate_test(unsigned char *rot_reg)
 {
+	unsigned char rot_reg_value = *rot_reg;
+
+	bool carry_state = rot_reg_value >> 7;
+	rot_reg_value <<= 1;
+	if (carry_state)
+		rot_reg_value += 1;
+	bool zero_state = rot_reg_value == 0;
+
 	int cycles = execute_cb_instruction();
 	CHECK(*rot_reg == rot_reg_value);
 	CHECK(is_flag_set(CARRY) == carry_state);
