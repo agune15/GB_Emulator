@@ -9,6 +9,14 @@ int rlc_h(void);
 int rlc_l(void);
 int rlc_hl(void);
 int rlc_a(void);
+int rrc_b(void);
+int rrc_c(void);
+int rrc_d(void);
+int rrc_e(void);
+int rrc_h(void);
+int rrc_l(void);
+int rrc_hl(void);
+int rrc_a(void);
 // 0x1-
 int rl_b(void);
 int rl_c(void);
