@@ -1,7 +1,5 @@
 #pragma once
 
-//extern int (*instructions[256])(void);
-
 // Instructions
 int nop(void);
 int ld_bc_nn(void);

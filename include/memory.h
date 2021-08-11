@@ -1,7 +1,3 @@
-/*
- *
- */
-
 #pragma once
 
 extern unsigned char ROM_banks[0x8000];

@@ -1,7 +1,3 @@
-/*
- *
- */
-
 #include <stdbool.h>
 #include "display.h"
 #include "memory.h"

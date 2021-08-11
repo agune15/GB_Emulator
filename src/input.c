@@ -1,7 +1,3 @@
-/*
- *
- */
-
 #include <stdbool.h>
 #include "input.h"
 #include "interrupts.h"

@@ -1,12 +1,3 @@
-/*
- *
- *
- *
- *
- *
- *
- */
-
 #include <stdio.h>
 
 #include "rom.h"

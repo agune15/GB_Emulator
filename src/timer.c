@@ -1,7 +1,3 @@
-/*
- *
- */
-
 #include <stdbool.h>
 #include "timer.h"
 #include "memory.h"

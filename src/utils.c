@@ -1,7 +1,3 @@
-/*
- *
- */
-
 #include <stdbool.h>
 
 // Read a bit from a word

@@ -35,7 +35,7 @@ int rr_l(void);
 int rr_hl(void);
 int rr_a(void);
 // 0x2-
-
+int sla_b(void);
 // 0x3-
 int swap_b(void);
 int swap_c(void);
