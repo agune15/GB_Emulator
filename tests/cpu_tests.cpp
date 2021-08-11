@@ -349,7 +349,7 @@ TEST_CASE("0x1F: Rotate reg-A right (+ old carry flag), set carry flag with LSB"
 	bool carry_state = (rot_regA << 7) & 0xFF;
 	rot_regA >>= 1;
 	if (is_flag_set(CARRY))
-		rot_regA |= registers.A << 7;
+		rot_regA |= 0x80;
 
 	rotate_test(rot_regA, carry_state);
 }

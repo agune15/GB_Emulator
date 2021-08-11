@@ -7,7 +7,7 @@
 
 int (*cb_instructions[256])(void) = {
 /*0x0*/	rlc_b, rlc_c, rlc_d, rlc_e, rlc_h, rlc_l, rlc_hl, rlc_a, rrc_b, rrc_c, rrc_d, rrc_e, rrc_h, rrc_l, rrc_hl, rrc_a,
-/*0x1*/	rl_b, rl_c, rl_d, rl_e, rl_h, rl_l, rl_hl, rl_a, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+/*0x1*/	rl_b, rl_c, rl_d, rl_e, rl_h, rl_l, rl_hl, rl_a, rr_b, rr_c, rr_d, rr_e, rr_h, rr_l, rr_hl, rr_a,
 /*0x2*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0x3*/	swap_b, swap_c, swap_d, swap_e, swap_h, swap_l, swap_hl, swap_a, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0x4*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
@@ -33,7 +33,7 @@ int execute_cb_instruction(void)
 
 //region Helpers
 
-//region 8-bit SWAP
+//region SWAP
 
 // Swap low nibble with high nibble of register
 int swap_8bit_p(unsigned char *reg, int cycles)
@@ -155,6 +155,33 @@ int rrc(unsigned char *reg) {
 	return 8;
 }
 
+// Rotate reg right (+ old carry flag), set carry flag with LSB
+int rr(unsigned char *reg) {
+	unsigned char reg_lsb = *reg << 7;
+
+	*reg >>= 1;
+
+	if (is_flag_set(CARRY))
+		*reg |= 0x80;
+
+	if (reg_lsb)
+		set_flag(CARRY);
+	else
+		clear_flag(CARRY);
+
+	if (*reg)
+		clear_flag(ZERO);
+	else
+		set_flag(ZERO);
+
+	clear_flag(NEGATIVE);
+	clear_flag(HALFCARRY);
+
+	return 8;
+}
+
+//endregion
+
 //endregion
 
 //region CB Instructions
@@ -225,7 +252,30 @@ int rrc_h(void) { return rrc(&registers.H); }
 int rrc_l(void) { return rrc(&registers.L); }
 
 // 0x0E: Rotate memory(HL) right (+ new carry flag), set carry flag with LSB
-int rrc_hl(void) { return 16; }
+int rrc_hl(void) {
+	unsigned char value = read_byte(registers.HL);
+	unsigned char lsb = value << 7;
+
+	value >>= 1;
+	value |= lsb;
+
+	write_byte(registers.HL, value);
+
+	if (lsb)
+		set_flag(CARRY);
+	else
+		clear_flag(CARRY);
+
+	if (value)
+		clear_flag(ZERO);
+	else
+		set_flag(ZERO);
+
+	clear_flag(NEGATIVE);
+	clear_flag(HALFCARRY);
+
+	return 16;
+}
 
 // 0x0F: Rotate reg-A right (+ new carry flag), set carry flag with LSB
 int rrc_a(void) { return rrc(&registers.A); }
@@ -278,6 +328,55 @@ int rl_hl(void) {
 
 // 0x17: Rotate reg-A left (+ old carry flag), set carry flag with MSB
 int rl_a(void) { return rl(&registers.A); }
+
+// 0x18: Rotate reg-B right (+ old carry flag), set carry flag with LSB
+int rr_b(void) { return rr(&registers.B); }
+
+// 0x19: Rotate reg-C right (+ old carry flag), set carry flag with LSB
+int rr_c(void) { return rr(&registers.C); }
+
+// 0x1A: Rotate reg-D right (+ old carry flag), set carry flag with LSB
+int rr_d(void) { return rr(&registers.D); }
+
+// 0x1B: Rotate reg-E right (+ old carry flag), set carry flag with LSB
+int rr_e(void) { return rr(&registers.E); }
+
+// 0x1C: Rotate reg-H right (+ old carry flag), set carry flag with LSB
+int rr_h(void) { return rr(&registers.H); }
+
+// 0x1D: Rotate reg-L right (+ old carry flag), set carry flag with LSB
+int rr_l(void) { return rr(&registers.L); }
+
+// 0x1E: Rotate memory(HL) right (+ old carry flag), set carry flag with LSB
+int rr_hl(void) {
+	unsigned char value = read_byte(registers.HL);
+	unsigned char lsb = value << 7;
+
+	value >>= 1;
+
+	if (is_flag_set(CARRY))
+		value |= 0x80;
+
+	write_byte(registers.HL, value);
+
+	if (lsb)
+		set_flag(CARRY);
+	else
+		clear_flag(CARRY);
+
+	if (value)
+		clear_flag(ZERO);
+	else
+		set_flag(ZERO);
+
+	clear_flag(NEGATIVE);
+	clear_flag(HALFCARRY);
+
+	return 16;
+}
+
+// 0x1F: Rotate reg-A right (+ old carry flag), set carry flag with LSB
+int rr_a(void) { return rr(&registers.A); }
 
 // 0x30: Swap reg-B
 int swap_b(void) { return swap_8bit_p(&registers.B, 8); }

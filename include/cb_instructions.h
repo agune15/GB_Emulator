@@ -26,6 +26,14 @@ int rl_h(void);
 int rl_l(void);
 int rl_hl(void);
 int rl_a(void);
+int rr_b(void);
+int rr_c(void);
+int rr_d(void);
+int rr_e(void);
+int rr_h(void);
+int rr_l(void);
+int rr_hl(void);
+int rr_a(void);
 // 0x2-
 
 // 0x3-

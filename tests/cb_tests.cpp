@@ -9,6 +9,7 @@ unsigned char swap_test(unsigned char byteToSwap, int opCycles);
 void rlc_test(unsigned char *rot_reg);
 void rl_test(unsigned char *rot_reg);
 void rrc_test(unsigned char *rot_reg);
+void rr_test(unsigned char *rot_reg);
 
 //region CB Instructions
 
@@ -98,6 +99,76 @@ TEST_CASE("CB 0x08: Rotate reg-B right (+ new carry flag), set carry flag with L
 	rrc_test(&registers.B);
 }
 
+TEST_CASE("CB 0x09: Rotate reg-C right (+ new carry flag), set carry flag with LSB", "[cpu][cb][rotate]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x09;
+	registers.C = GENERATE(take(5, random(0, 0xFF)));
+
+	rrc_test(&registers.C);
+}
+
+TEST_CASE("CB 0x0A: Rotate reg-D right (+ new carry flag), set carry flag with LSB", "[cpu][cb][rotate]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x0A;
+	registers.D = GENERATE(take(5, random(0, 0xFF)));
+
+	rrc_test(&registers.D);
+}
+
+TEST_CASE("CB 0x0B: Rotate reg-E right (+ new carry flag), set carry flag with LSB", "[cpu][cb][rotate]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x0B;
+	registers.E = GENERATE(take(5, random(0, 0xFF)));
+
+	rrc_test(&registers.E);
+}
+
+TEST_CASE("CB 0x0C: Rotate reg-H right (+ new carry flag), set carry flag with LSB", "[cpu][cb][rotate]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x0C;
+	registers.H = GENERATE(take(5, random(0, 0xFF)));
+
+	rrc_test(&registers.H);
+}
+
+TEST_CASE("CB 0x0D: Rotate reg-L right (+ new carry flag), set carry flag with LSB", "[cpu][cb][rotate]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x0D;
+	registers.L = GENERATE(take(5, random(0, 0xFF)));
+
+	rrc_test(&registers.L);
+}
+
+TEST_CASE("CB 0x0E: Rotate memory(HL) right (+ new carry flag), set carry flag with LSB", "[cpu][cb][rotate]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x0E;
+	registers.HL = GENERATE(take(5, random(0x8000, 0xFE9F)));
+	unsigned char rot_value = GENERATE(take(5, random(0, 0xFF)));
+	write_byte(registers.HL, rot_value);
+
+	bool carry_state = (rot_value << 7) & 0xFF;
+	rot_value >>= 1;
+	if(carry_state)
+		rot_value |= 0x80;
+	bool zero_state = rot_value == 0;
+
+	int cycles = execute_cb_instruction();
+	CHECK(read_byte(registers.HL) == rot_value);
+	CHECK(is_flag_set(CARRY) == carry_state);
+	CHECK(is_flag_set(ZERO) == zero_state);
+	CHECK(is_flag_set(NEGATIVE) == false);
+	CHECK(is_flag_set(HALFCARRY) == false);
+	CHECK(cycles == 16);
+}
+
+TEST_CASE("CB 0x0F: Rotate reg-A right (+ new carry flag), set carry flag with LSB", "[cpu][cb][rotate]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x0F;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+
+	rrc_test(&registers.A);
+}
+
 TEST_CASE("CB 0x10: Rotate reg-B left (+ old carry flag), set carry flag with MSB", "[cpu][cb][rotate]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x10;
@@ -173,6 +244,83 @@ TEST_CASE("CB 0x17: Rotate reg-A left (+ old carry flag), set carry flag with MS
 	registers.A = GENERATE(take(5, random(0, 0xFF)));
 
 	rl_test(&registers.A);
+}
+
+TEST_CASE("CB 0x18: Rotate reg-B right (+ old carry flag), set carry flag with LSB", "[cpu][cb][rotate]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x18;
+	registers.B = GENERATE(take(5, random(0, 0xFF)));
+
+	rr_test(&registers.B);
+}
+
+TEST_CASE("CB 0x19: Rotate reg-C right (+ old carry flag), set carry flag with LSB", "[cpu][cb][rotate]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x19;
+	registers.C = GENERATE(take(5, random(0, 0xFF)));
+
+	rr_test(&registers.C);
+}
+
+TEST_CASE("CB 0x1A: Rotate reg-D right (+ old carry flag), set carry flag with LSB", "[cpu][cb][rotate]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x1A;
+	registers.D = GENERATE(take(5, random(0, 0xFF)));
+
+	rr_test(&registers.D);
+}
+
+TEST_CASE("CB 0x1B: Rotate reg-E right (+ old carry flag), set carry flag with LSB", "[cpu][cb][rotate]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x1B;
+	registers.E = GENERATE(take(5, random(0, 0xFF)));
+
+	rr_test(&registers.E);
+}
+
+TEST_CASE("CB 0x1C: Rotate reg-H right (+ old carry flag), set carry flag with LSB", "[cpu][cb][rotate]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x1C;
+	registers.H = GENERATE(take(5, random(0, 0xFF)));
+	rr_test(&registers.H);
+}
+
+TEST_CASE("CB 0x1D: Rotate reg-L right (+ old carry flag), set carry flag with LSB", "[cpu][cb][rotate]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x1D;
+	registers.L = GENERATE(take(5, random(0, 0xFF)));
+
+	rr_test(&registers.L);
+}
+
+TEST_CASE("CB 0x1E: Rotate memory(HL) right (+ old carry flag), set carry flag with LSB", "[cpu][cb][rotate]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x1E;
+	registers.HL = GENERATE(take(5, random(0x8000, 0xFE9F)));
+	unsigned char rot_value = GENERATE(take(5, random(0, 0xFF)));
+	write_byte(registers.HL, rot_value);
+
+	bool carry_state = (rot_value << 7) & 0xFF;
+	rot_value >>= 1;
+	if (is_flag_set(CARRY))
+		rot_value |= 0x80;
+	bool zero_state = rot_value == 0;
+
+	int cycles = execute_cb_instruction();
+	CHECK(read_byte(registers.HL) == rot_value);
+	CHECK(is_flag_set(CARRY) == carry_state);
+	CHECK(is_flag_set(ZERO) == zero_state);
+	CHECK(is_flag_set(NEGATIVE) == false);
+	CHECK(is_flag_set(HALFCARRY) == false);
+	CHECK(cycles == 16);
+}
+
+TEST_CASE("CB 0x1F: Rotate reg-A right (+ old carry flag), set carry flag with LSB", "[cpu][cb][rotate]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x1F;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+
+	rr_test(&registers.A);
 }
 
 TEST_CASE("CB 0x30: Swap reg-B", "[cpu][cb][swap]") {
@@ -315,7 +463,26 @@ void rrc_test(unsigned char *rot_reg)
 
 	bool carry_state = (rot_reg_value << 7) & 0xFF;
 	rot_reg_value >>= 1;
-	rot_reg_value |= registers.A << 7;
+	rot_reg_value |= *rot_reg << 7;
+	bool zero_state = rot_reg_value == 0;
+
+	int cycles = execute_cb_instruction();
+	CHECK(*rot_reg == rot_reg_value);
+	CHECK(is_flag_set(CARRY) == carry_state);
+	CHECK(is_flag_set(ZERO) == zero_state);
+	CHECK(is_flag_set(NEGATIVE) == false);
+	CHECK(is_flag_set(HALFCARRY) == false);
+	CHECK(cycles == 8);
+}
+
+void rr_test(unsigned char *rot_reg)
+{
+	unsigned char rot_reg_value = *rot_reg;
+
+	bool carry_state = (rot_reg_value << 7) & 0xFF;
+	rot_reg_value >>= 1;
+	if (is_flag_set(CARRY))
+		rot_reg_value |= 0x80;
 	bool zero_state = rot_reg_value == 0;
 
 	int cycles = execute_cb_instruction();

@@ -595,7 +595,7 @@ int rra(void) {
 	registers.A >>= 1;
 
 	if (is_flag_set(CARRY))
-		registers.A |= regA_lsb;
+		registers.A |= 0x80;
 
 	if (regA_lsb)
 		set_flag(CARRY);
