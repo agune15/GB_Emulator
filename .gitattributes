@@ -1,2 +1,2 @@
 catch.hpp linguist-vendored
-*.cmake linguist-vendored=false
+*.cmake linguist-vendored
