@@ -9,7 +9,7 @@ int (*cb_instructions[256])(void) = {
 /*0x0*/	rlc_b, rlc_c, rlc_d, rlc_e, rlc_h, rlc_l, rlc_hl, rlc_a, rrc_b, rrc_c, rrc_d, rrc_e, rrc_h, rrc_l, rrc_hl, rrc_a,
 /*0x1*/	rl_b, rl_c, rl_d, rl_e, rl_h, rl_l, rl_hl, rl_a, rr_b, rr_c, rr_d, rr_e, rr_h, rr_l, rr_hl, rr_a,
 /*0x2*/	sla_b, sla_c, sla_d, sla_e, sla_h, sla_l, sla_hl, sla_a, sra_b, sra_c, sra_d, sra_e, sra_h, sra_l, sra_hl, sra_a,
-/*0x3*/	swap_b, swap_c, swap_d, swap_e, swap_h, swap_l, swap_hl, swap_a, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+/*0x3*/	swap_b, swap_c, swap_d, swap_e, swap_h, swap_l, swap_hl, swap_a, srl_b, srl_c, srl_d, srl_e, srl_h, srl_l, srl_hl, srl_a,
 /*0x4*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0x5*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0x6*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
@@ -214,6 +214,27 @@ int sra(unsigned char *reg)
 		clear_flag(CARRY);
 
 	*reg = (*reg & 0x80) | (*reg >> 1);
+
+	if (*reg)
+		clear_flag(ZERO);
+	else
+		clear_flag(ZERO);
+
+	clear_flag(NEGATIVE);
+	clear_flag(HALFCARRY);
+
+	return 8;
+}
+
+// Shift reg right into carry flag, set MSB to 0
+int srl(unsigned char *reg)
+{
+	if (*reg & 0x01)
+		set_flag(CARRY);
+	else
+		clear_flag(CARRY);
+
+	*reg >>= 1;
 
 	if (*reg)
 		clear_flag(ZERO);
@@ -498,6 +519,8 @@ int sra_hl(void) {
 
 	value = (value & 0x80) | (value >> 1);
 
+	write_byte(registers.HL, value);
+
 	if (value)
 		clear_flag(ZERO);
 	else
@@ -535,6 +558,51 @@ int swap_hl(void) { return swap_8bit_a(registers.HL, 10); }
 
 // 0x37: Swap reg-A
 int swap_a(void) { return swap_8bit_p(&registers.A, 8); }
+
+// 0x38: Shift reg-B right into carry flag, set MSB to 0
+int srl_b(void) { return srl(&registers.B); }
+
+// 0x39: Shift reg-C right into carry flag, set MSB to 0
+int srl_c(void) { return srl(&registers.C); }
+
+// 0x3A: Shift reg-D right into carry flag, set MSB to 0
+int srl_d(void) { return srl(&registers.D); }
+
+// 0x3B: Shift reg-E right into carry flag, set MSB to 0
+int srl_e(void) { return srl(&registers.E); }
+
+// 0x3C: Shift reg-H right into carry flag, set MSB to 0
+int srl_h(void) { return srl(&registers.H); }
+
+// 0x3D: Shift reg-L right into carry flag, set MSB to 0
+int srl_l(void) { return srl(&registers.L); }
+
+// 0x3E: Shift memory(HL) right into carry flag, set MSB to 0
+int srl_hl(void) {
+	unsigned char value = read_byte(registers.HL);
+
+	if (value & 0x01)
+		set_flag(CARRY);
+	else
+		clear_flag(CARRY);
+
+	value >>= 1;
+
+	write_byte(registers.HL, value);
+
+	if (value)
+		clear_flag(ZERO);
+	else
+		clear_flag(ZERO);
+
+	clear_flag(NEGATIVE);
+	clear_flag(HALFCARRY);
+
+	return 16;
+}
+
+// 0x3F: Shift reg-A right into carry flag, set MSB to 0
+int srl_a(void) { return srl(&registers.A); }
 
 //endregion
 
