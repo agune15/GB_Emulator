@@ -13,8 +13,10 @@ void rr_test(unsigned char *rot_reg);
 void sla_test(unsigned char *rot_reg);
 void sra_test(unsigned char *rot_reg);
 void srl_test(unsigned char *rot_reg);
+void test_bit_test(int bit_n, unsigned char *reg);
+void test_bit_hl_test(int bit_n);
 
-//region CB Instructions
+//CB Instructions
 
 TEST_CASE("CB 0x00: Rotate reg-B left (+ new carry flag), set carry flag with MSB", "[cpu][cb][rotate]") {
 	registers.PC = 0x0100;
@@ -628,7 +630,73 @@ TEST_CASE("CB 0x3F: Shift reg-A right into carry flag, set MSB to 0", "[cpu][cb]
 	srl_test(&registers.A);
 }
 
-//region Helpers
+TEST_CASE("CB 0x40: Test bit 0 of reg-B", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x40;
+	registers.B = GENERATE(take(5, random(0, 0xFF)));
+
+	test_bit_test(0, &registers.B);
+}
+
+TEST_CASE("CB 0x41: Test bit 0 of reg-C", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x41;
+	registers.C = GENERATE(take(5, random(0, 0xFF)));
+
+	test_bit_test(0, &registers.C);
+}
+
+TEST_CASE("CB 0x42: Test bit 0 of reg-D", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x42;
+	registers.D = GENERATE(take(5, random(0, 0xFF)));
+
+	test_bit_test(0, &registers.D);
+}
+
+TEST_CASE("CB 0x43: Test bit 0 of reg-E", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x43;
+	registers.E = GENERATE(take(5, random(0, 0xFF)));
+
+	test_bit_test(0, &registers.E);
+}
+
+TEST_CASE("CB 0x44: Test bit 0 of reg-H", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x44;
+	registers.H = GENERATE(take(5, random(0, 0xFF)));
+
+	test_bit_test(0, &registers.H);
+}
+
+TEST_CASE("CB 0x45: Test bit 0 of reg-L", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x45;
+	registers.L = GENERATE(take(5, random(0, 0xFF)));
+
+	test_bit_test(0, &registers.L);
+}
+
+TEST_CASE("CB 0x46: Test bit 0 of memory(HL)", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x46;
+	registers.HL = GENERATE(take(5, random(0x8000, 0xFE9F)));
+	unsigned char value = GENERATE(take(5, random(0, 0xFF)));
+	write_byte(registers.HL, value);
+
+	test_bit_hl_test(0);
+}
+
+TEST_CASE("CB 0x47: Test bit 0 of reg-A", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x47;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+
+	test_bit_test(0, &registers.A);
+}
+
+// Helpers
 
 unsigned char swap_test(unsigned char byteToSwap, int opCycles)
 {
@@ -776,4 +844,24 @@ void srl_test(unsigned char *rot_reg)
 	CHECK(cycles == 8);
 }
 
-//endregion
+void test_bit_test(int bit_n, unsigned char *reg)
+{
+	bool zero_state = (*reg >> bit_n & 1) == 0;
+
+	int cycles = execute_cb_instruction();
+	CHECK(is_flag_set(ZERO) == zero_state);
+	CHECK(is_flag_set(NEGATIVE) == false);
+	CHECK(is_flag_set(HALFCARRY) == true);
+	CHECK(cycles == 8);
+}
+
+void test_bit_hl_test(int bit_n)
+{
+	bool zero_state = (read_byte(registers.HL) >> bit_n & 1) == 0;
+
+	int cycles = execute_cb_instruction();
+	CHECK(is_flag_set(ZERO) == zero_state);
+	CHECK(is_flag_set(NEGATIVE) == false);
+	CHECK(is_flag_set(HALFCARRY) == true);
+	CHECK(cycles == 16);
+}

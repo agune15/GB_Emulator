@@ -10,7 +10,7 @@ int (*cb_instructions[256])(void) = {
 /*0x1*/	rl_b, rl_c, rl_d, rl_e, rl_h, rl_l, rl_hl, rl_a, rr_b, rr_c, rr_d, rr_e, rr_h, rr_l, rr_hl, rr_a,
 /*0x2*/	sla_b, sla_c, sla_d, sla_e, sla_h, sla_l, sla_hl, sla_a, sra_b, sra_c, sra_d, sra_e, sra_h, sra_l, sra_hl, sra_a,
 /*0x3*/	swap_b, swap_c, swap_d, swap_e, swap_h, swap_l, swap_hl, swap_a, srl_b, srl_c, srl_d, srl_e, srl_h, srl_l, srl_hl, srl_a,
-/*0x4*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+/*0x4*/	bit_0_b, bit_0_c, bit_0_d, bit_0_e, bit_0_h, bit_0_l, bit_0_hl, bit_0_a, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0x5*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0x6*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0x7*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
@@ -31,7 +31,7 @@ int execute_cb_instruction(void)
 	return (*cb_instructions[instruction])();
 }
 
-//region Helpers
+// Helpers
 
 //region SWAP
 
@@ -249,9 +249,39 @@ int srl(unsigned char *reg)
 
 //endregion
 
+//region Bit tests
+
+// Test bit of reg
+int test_bit(int bit_n, unsigned char *reg)
+{
+	if (*reg >> bit_n & 1)
+		clear_flag(ZERO);
+	else
+		set_flag(ZERO);
+
+	clear_flag(NEGATIVE);
+	set_flag(HALFCARRY);
+
+	return 8;
+}
+
+// Test bit of memory(HL)
+int test_bit_hl(int bit_n)
+{
+	if (read_byte(registers.HL) >> bit_n & 1)
+		clear_flag(ZERO);
+	else
+		set_flag(ZERO);
+
+	clear_flag(NEGATIVE);
+	set_flag(HALFCARRY);
+
+	return 16;
+}
+
 //endregion
 
-//region CB Instructions
+// CB Instructions
 
 // 0x00: Rotate reg-B left (+ new carry flag), set carry flag with MSB
 int rlc_b(void) { return rlc(&registers.B); }
@@ -604,8 +634,26 @@ int srl_hl(void) {
 // 0x3F: Shift reg-A right into carry flag, set MSB to 0
 int srl_a(void) { return srl(&registers.A); }
 
-//endregion
+// 0x40: Test bit 0 of reg-B
+int bit_0_b(void) { return test_bit(0, &registers.B); }
 
+// 0x41: Test bit 0 of reg-C
+int bit_0_c(void) { return test_bit(0, &registers.C); }
 
+// 0x42: Test bit 0 of reg-D
+int bit_0_d(void) { return test_bit(0, &registers.D); }
 
+// 0x43: Test bit 0 of reg-E
+int bit_0_e(void) { return test_bit(0, &registers.E); }
 
+// 0x44: Test bit 0 of reg-H
+int bit_0_h(void) { return test_bit(0, &registers.H); }
+
+// 0x45: Test bit 0 of reg-L
+int bit_0_l(void) { return test_bit(0, &registers.L); }
+
+// 0x46: Test bit 0 of memory(HL)
+int bit_0_hl(void) { return test_bit_hl(0); }
+
+// 0x47: Test bit 0 of reg-B
+int bit_0_a(void) { return test_bit(0, &registers.A); }

@@ -68,3 +68,12 @@ int srl_h(void);
 int srl_l(void);
 int srl_hl(void);
 int srl_a(void);
+// 0x4-
+int bit_0_b(void);
+int bit_0_c(void);
+int bit_0_d(void);
+int bit_0_e(void);
+int bit_0_h(void);
+int bit_0_l(void);
+int bit_0_hl(void);
+int bit_0_a(void);
