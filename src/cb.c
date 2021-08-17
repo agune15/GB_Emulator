@@ -10,10 +10,10 @@ int (*cb_instructions[256])(void) = {
 /*0x1*/	rl_b, rl_c, rl_d, rl_e, rl_h, rl_l, rl_hl, rl_a, rr_b, rr_c, rr_d, rr_e, rr_h, rr_l, rr_hl, rr_a,
 /*0x2*/	sla_b, sla_c, sla_d, sla_e, sla_h, sla_l, sla_hl, sla_a, sra_b, sra_c, sra_d, sra_e, sra_h, sra_l, sra_hl, sra_a,
 /*0x3*/	swap_b, swap_c, swap_d, swap_e, swap_h, swap_l, swap_hl, swap_a, srl_b, srl_c, srl_d, srl_e, srl_h, srl_l, srl_hl, srl_a,
-/*0x4*/	bit_0_b, bit_0_c, bit_0_d, bit_0_e, bit_0_h, bit_0_l, bit_0_hl, bit_0_a, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-/*0x5*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-/*0x6*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-/*0x7*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+/*0x4*/	bit_0_b, bit_0_c, bit_0_d, bit_0_e, bit_0_h, bit_0_l, bit_0_hl, bit_0_a, bit_1_b, bit_1_c, bit_1_d, bit_1_e, bit_1_h, bit_1_l, bit_1_hl, bit_1_a,
+/*0x5*/	bit_2_b, bit_2_c, bit_2_d, bit_2_e, bit_2_h, bit_2_l, bit_2_hl, bit_2_a, bit_3_b, bit_3_c, bit_3_d, bit_3_e, bit_3_h, bit_3_l, bit_3_hl, bit_3_a,
+/*0x6*/	bit_4_b, bit_4_c, bit_4_d, bit_4_e, bit_4_h, bit_4_l, bit_4_hl, bit_4_a, bit_5_b, bit_5_c, bit_5_d, bit_5_e, bit_5_h, bit_5_l, bit_5_hl, bit_5_a,
+/*0x7*/	bit_6_b, bit_6_c, bit_6_d, bit_6_e, bit_6_h, bit_6_l, bit_6_hl, bit_6_a, bit_7_b, bit_7_c, bit_7_d, bit_7_e, bit_7_h, bit_7_l, bit_7_hl, bit_7_a,
 /*0x8*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0x9*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0xA*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
@@ -278,6 +278,30 @@ int test_bit_hl(int bit_n)
 
 	return 16;
 }
+
+//endregion
+
+//region Bit sets
+
+// Set bit of reg
+int set_bit(int bit_n, unsigned char *reg)
+{
+	*reg |= 1 << bit_n;
+
+	return 8;
+}
+
+// Set bit of memory(HL)
+int set_bit_hl(int bit_n)
+{
+	write_byte(registers.HL, read_byte(registers.HL) || 1 << bit_n);
+
+	return 16;
+}
+
+//endregion
+
+//region Bit resets
 
 //endregion
 
@@ -655,5 +679,273 @@ int bit_0_l(void) { return test_bit(0, &registers.L); }
 // 0x46: Test bit 0 of memory(HL)
 int bit_0_hl(void) { return test_bit_hl(0); }
 
-// 0x47: Test bit 0 of reg-B
+// 0x47: Test bit 0 of reg-A
 int bit_0_a(void) { return test_bit(0, &registers.A); }
+
+// 0x48: Test bit 1 of reg-B
+int bit_1_b(void) { return test_bit(1, &registers.B); }
+
+// 0x49: Test bit 1 of reg-C
+int bit_1_c(void) { return test_bit(1, &registers.C); }
+
+// 0x4A: Test bit 1 of reg-D
+int bit_1_d(void) { return test_bit(1, &registers.D); }
+
+// 0x4B: Test bit 1 of reg-E
+int bit_1_e(void) { return test_bit(1, &registers.E); }
+
+// 0x4C: Test bit 1 of reg-H
+int bit_1_h(void) { return test_bit(1, &registers.H); }
+
+// 0x4D: Test bit 1 of reg-L
+int bit_1_l(void) { return test_bit(1, &registers.L); }
+
+// 0x4E: Test bit 1 of memory(HL)
+int bit_1_hl(void) { return test_bit_hl(1); }
+
+// 0x4F: Test bit 1 of reg-A
+int bit_1_a(void) { return test_bit(1, &registers.A); }
+
+// 0x50: Test bit 2 of reg-B
+int bit_2_b(void) { return test_bit(2, &registers.B); }
+
+// 0x51: Test bit 2 of reg-C
+int bit_2_c(void) { return test_bit(2, &registers.C); }
+
+// 0x52: Test bit 2 of reg-D
+int bit_2_d(void) { return test_bit(2, &registers.D); }
+
+// 0x53: Test bit 2 of reg-E
+int bit_2_e(void) { return test_bit(2, &registers.E); }
+
+// 0x54: Test bit 2 of reg-H
+int bit_2_h(void) { return test_bit(2, &registers.H); }
+
+// 0x55: Test bit 2 of reg-L
+int bit_2_l(void) { return test_bit(2, &registers.L); }
+
+// 0x56: Test bit 2 of memory(HL)
+int bit_2_hl(void) { return test_bit_hl(2); }
+
+// 0x57: Test bit 2 of reg-A
+int bit_2_a(void) { return test_bit(2, &registers.A); }
+
+// 0x58: Test bit 3 of reg-B
+int bit_3_b(void) { return test_bit(3, &registers.B); }
+
+// 0x59: Test bit 3 of reg-C
+int bit_3_c(void) { return test_bit(3, &registers.C); }
+
+// 0x5A: Test bit 3 of reg-D
+int bit_3_d(void) { return test_bit(3, &registers.D); }
+
+// 0x5B: Test bit 3 of reg-E
+int bit_3_e(void) { return test_bit(3, &registers.E); }
+
+// 0x5C: Test bit 3 of reg-H
+int bit_3_h(void) { return test_bit(3, &registers.H); }
+
+// 0x5D: Test bit 3 of reg-L
+int bit_3_l(void) { return test_bit(3, &registers.L); }
+
+// 0x5E: Test bit 3 of memory(HL)
+int bit_3_hl(void) { return test_bit_hl(3); }
+
+// 0x5F: Test bit 3 of reg-A
+int bit_3_a(void) { return test_bit(3, &registers.A); }
+
+// 0x60: Test bit 4 of reg-B
+int bit_4_b(void) { return test_bit(4, &registers.B); }
+
+// 0x61: Test bit 4 of reg-C
+int bit_4_c(void) { return test_bit(4, &registers.C); }
+
+// 0x62: Test bit 4 of reg-D
+int bit_4_d(void) { return test_bit(4, &registers.D); }
+
+// 0x63: Test bit 4 of reg-E
+int bit_4_e(void) { return test_bit(4, &registers.E); }
+
+// 0x64: Test bit 4 of reg-H
+int bit_4_h(void) { return test_bit(4, &registers.H); }
+
+// 0x65: Test bit 4 of reg-L
+int bit_4_l(void) { return test_bit(4, &registers.L); }
+
+// 0x66: Test bit 4 of memory(HL)
+int bit_4_hl(void) { return test_bit_hl(4); }
+
+// 0x67: Test bit 4 of reg-A
+int bit_4_a(void) { return test_bit(4, &registers.A); }
+
+// 0x68: Test bit 5 of reg-B
+int bit_5_b(void) { return test_bit(5, &registers.B); }
+
+// 0x69: Test bit 5 of reg-C
+int bit_5_c(void) { return test_bit(5, &registers.C); }
+
+// 0x6A: Test bit 5 of reg-D
+int bit_5_d(void) { return test_bit(5, &registers.D); }
+
+// 0x6B: Test bit 5 of reg-E
+int bit_5_e(void) { return test_bit(5, &registers.E); }
+
+// 0x6C: Test bit 5 of reg-H
+int bit_5_h(void) { return test_bit(5, &registers.H); }
+
+// 0x6D: Test bit 5 of reg-L
+int bit_5_l(void) { return test_bit(5, &registers.L); }
+
+// 0x6E: Test bit 5 of memory(HL)
+int bit_5_hl(void) { return test_bit_hl(5); }
+
+// 0x6F: Test bit 5 of reg-A
+int bit_5_a(void) { return test_bit(5, &registers.A); }
+
+// 0x70: Test bit 6 of reg-B
+int bit_6_b(void) { return test_bit(6, &registers.B); }
+
+// 0x71: Test bit 6 of reg-C
+int bit_6_c(void) { return test_bit(6, &registers.C); }
+
+// 0x72: Test bit 6 of reg-D
+int bit_6_d(void) { return test_bit(6, &registers.D); }
+
+// 0x73: Test bit 6 of reg-E
+int bit_6_e(void) { return test_bit(6, &registers.E); }
+
+// 0x74: Test bit 6 of reg-H
+int bit_6_h(void) { return test_bit(6, &registers.H); }
+
+// 0x75: Test bit 6 of reg-L
+int bit_6_l(void) { return test_bit(6, &registers.L); }
+
+// 0x76: Test bit 6 of memory(HL)
+int bit_6_hl(void) { return test_bit_hl(6); }
+
+// 0x77: Test bit 6 of reg-A
+int bit_6_a(void) { return test_bit(6, &registers.A); }
+
+// 0x78: Test bit 7 of reg-B
+int bit_7_b(void) { return test_bit(7, &registers.B); }
+
+// 0x79: Test bit 7 of reg-C
+int bit_7_c(void) { return test_bit(7, &registers.C); }
+
+// 0x7A: Test bit 7 of reg-D
+int bit_7_d(void) { return test_bit(7, &registers.D); }
+
+// 0x7B: Test bit 7 of reg-E
+int bit_7_e(void) { return test_bit(7, &registers.E); }
+
+// 0x7C: Test bit 7 of reg-H
+int bit_7_h(void) { return test_bit(7, &registers.H); }
+
+// 0x7D: Test bit 7 of reg-L
+int bit_7_l(void) { return test_bit(7, &registers.L); }
+
+// 0x7E: Test bit 7 of memory(HL)
+int bit_7_hl(void) { return test_bit_hl(7); }
+
+// 0x7F: Test bit 7 of reg-A
+int bit_7_a(void) { return test_bit(7, &registers.A); }
+
+
+
+// 0xC0: Set bit 0 of reg-B
+int set_0_b(void) { return set_bit(0, &registers.B); }
+
+// 0xC1: Set bit 0 of reg-C
+int set_0_c(void) { return set_bit(0, &registers.C); }
+
+// 0xC2: Set bit 0 of reg-D
+int set_0_d(void) { return set_bit(0, &registers.D); }
+
+// 0xC3: Set bit 0 of reg-E
+int set_0_e(void) { return set_bit(0, &registers.E); }
+
+// 0xC4: Set bit 0 of reg-H
+int set_0_h(void) { return set_bit(0, &registers.H); }
+
+// 0xC5: Set bit 0 of reg-L
+int set_0_l(void) { return set_bit(0, &registers.L); }
+
+// 0xC6: Set bit 0 of reg-B
+int set_0_hl(void) { return set_bit_hl(0); }
+
+// 0xC7: Set bit 0 of reg-A
+int set_0_a(void) { return set_bit(0, &registers.A); }
+
+// 0xC8: Set bit 1 of reg-B
+int set_1_b(void) { return set_bit(1, &registers.B); }
+
+// 0xC9: Set bit 1 of reg-C
+int set_1_c(void) { return set_bit(1, &registers.C); }
+
+// 0xCA: Set bit 1 of reg-D
+int set_1_d(void) { return set_bit(1, &registers.D); }
+
+// 0xCB: Set bit 1 of reg-E
+int set_1_e(void) { return set_bit(1, &registers.E); }
+
+// 0xCC: Set bit 1 of reg-H
+int set_1_h(void) { return set_bit(1, &registers.H); }
+
+// 0xCD: Set bit 1 of reg-L
+int set_1_l(void) { return set_bit(1, &registers.L); }
+
+// 0xCE: Set bit 1 of reg-B
+int set_1_hl(void) { return set_bit_hl(1); }
+
+// 0xCF: Set bit 1 of reg-A
+int set_1_a(void) { return set_bit(1, &registers.A); }
+
+// 0xD0: Set bit 2 of reg-B
+int set_2_b(void) { return set_bit(2, &registers.B); }
+
+// 0xD1: Set bit 2 of reg-C
+int set_2_c(void) { return set_bit(2, &registers.C); }
+
+// 0xD2: Set bit 2 of reg-D
+int set_2_d(void) { return set_bit(2, &registers.D); }
+
+// 0xD3: Set bit 2 of reg-E
+int set_2_e(void) { return set_bit(2, &registers.E); }
+
+// 0xD4: Set bit 2 of reg-H
+int set_2_h(void) { return set_bit(2, &registers.H); }
+
+// 0xD5: Set bit 2 of reg-L
+int set_2_l(void) { return set_bit(2, &registers.L); }
+
+// 0xD6: Set bit 2 of reg-B
+int set_2_hl(void) { return set_bit_hl(2); }
+
+// 0xD7: Set bit 2 of reg-A
+int set_2_a(void) { return set_bit(2, &registers.A); }
+
+// 0xD8: Set bit 3 of reg-B
+int set_3_b(void) { return set_bit(3, &registers.B); }
+
+// 0xD9: Set bit 3 of reg-C
+int set_3_c(void) { return set_bit(3, &registers.C); }
+
+// 0xDA: Set bit 3 of reg-D
+int set_3_d(void) { return set_bit(3, &registers.D); }
+
+// 0xDB: Set bit 3 of reg-E
+int set_3_e(void) { return set_bit(3, &registers.E); }
+
+// 0xDC: Set bit 3 of reg-H
+int set_3_h(void) { return set_bit(3, &registers.H); }
+
+// 0xDD: Set bit 3 of reg-L
+int set_3_l(void) { return set_bit(3, &registers.L); }
+
+// 0xDE: Set bit 3 of reg-B
+int set_3_hl(void) { return set_bit_hl(3); }
+
+// 0xDF: Set bit 3 of reg-A
+int set_3_a(void) { return set_bit(3, &registers.A); }
+
+//TODO: continue here
