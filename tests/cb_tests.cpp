@@ -17,6 +17,8 @@ void test_bit_test(int bit_n, unsigned char *reg);
 void test_bit_hl_test(int bit_n);
 void set_bit_test(int bit_n, unsigned char *reg);
 void set_bit_hl_test(int bit_n);
+void reset_bit_test(int bit_n, unsigned char *reg);
+void reset_bit_hl_test(int bit_n);
 
 // Test sub-helpers
 bool is_bit_set(int bit_n, unsigned char word);
@@ -1163,6 +1165,534 @@ TEST_CASE("CB 0x7F: Test bit 7 of reg-A", "[cpu][cb][bit]") {
 	test_bit_test(7, &registers.A);
 }
 
+TEST_CASE("CB 0x80: Reset bit 0 of reg-B", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x80;
+	registers.B = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(0, &registers.B);
+}
+
+TEST_CASE("CB 0x81: Reset bit 0 of reg-C", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x81;
+	registers.C = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(0, &registers.C);
+}
+
+TEST_CASE("CB 0x82: Reset bit 0 of reg-D", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x82;
+	registers.D = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(0, &registers.D);
+}
+
+TEST_CASE("CB 0x83: Reset bit 0 of reg-E", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x83;
+	registers.E = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(0, &registers.E);
+}
+
+TEST_CASE("CB 0x84: Reset bit 0 of reg-H", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x84;
+	registers.H = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(0, &registers.H);
+}
+
+TEST_CASE("CB 0x85: Reset bit 0 of reg-L", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x85;
+	registers.L = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(0, &registers.L);
+}
+
+TEST_CASE("CB 0x86: Reset bit 0 of memory(HL)", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x86;
+	registers.HL = GENERATE(take(5, random(0x8000, 0xFE9F)));
+	unsigned char value = GENERATE(take(5, random(0, 0xFF)));
+	write_byte(registers.HL, value);
+
+	reset_bit_hl_test(0);
+}
+
+TEST_CASE("CB 0x87: Reset bit 0 of reg-A", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x87;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(0, &registers.A);
+}
+
+TEST_CASE("CB 0x88: Reset bit 1 of reg-B", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x88;
+	registers.B = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(1, &registers.B);
+}
+
+TEST_CASE("CB 0x89: Reset bit 1 of reg-C", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x89;
+	registers.C = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(1, &registers.C);
+}
+
+TEST_CASE("CB 0x8A: Reset bit 1 of reg-D", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x8A;
+	registers.D = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(1, &registers.D);
+}
+
+TEST_CASE("CB 0x8B: Reset bit 1 of reg-E", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x8B;
+	registers.E = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(1, &registers.E);
+}
+
+TEST_CASE("CB 0x8C: Reset bit 1 of reg-H", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x8C;
+	registers.H = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(1, &registers.H);
+}
+
+TEST_CASE("CB 0x8D: Reset bit 1 of reg-L", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x8D;
+	registers.L = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(1, &registers.L);
+}
+
+TEST_CASE("CB 0x8E: Reset bit 1 of memory(HL)", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x8E;
+	registers.HL = GENERATE(take(5, random(0x8000, 0xFE9F)));
+	unsigned char value = GENERATE(take(5, random(0, 0xFF)));
+	write_byte(registers.HL, value);
+
+	reset_bit_hl_test(1);
+}
+
+TEST_CASE("CB 0x8F: Reset bit 1 of reg-A", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x8F;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(1, &registers.A);
+}
+
+TEST_CASE("CB 0x90: Reset bit 2 of reg-B", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x90;
+	registers.B = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(2, &registers.B);
+}
+
+TEST_CASE("CB 0x91: Reset bit 2 of reg-C", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x91;
+	registers.C = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(2, &registers.C);
+}
+
+TEST_CASE("CB 0x92: Reset bit 2 of reg-D", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x92;
+	registers.D = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(2, &registers.D);
+}
+
+TEST_CASE("CB 0x93: Reset bit 2 of reg-E", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x93;
+	registers.E = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(2, &registers.E);
+}
+
+TEST_CASE("CB 0x94: Reset bit 2 of reg-H", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x94;
+	registers.H = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(2, &registers.H);
+}
+
+TEST_CASE("CB 0x95: Reset bit 2 of reg-L", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x95;
+	registers.L = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(2, &registers.L);
+}
+
+TEST_CASE("CB 0x96: Reset bit 2 of memory(HL)", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x96;
+	registers.HL = GENERATE(take(5, random(0x8000, 0xFE9F)));
+	unsigned char value = GENERATE(take(5, random(0, 0xFF)));
+	write_byte(registers.HL, value);
+
+	reset_bit_hl_test(2);
+}
+
+TEST_CASE("CB 0x97: Reset bit 2 of reg-A", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x97;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(2, &registers.A);
+}
+
+TEST_CASE("CB 0x98: Reset bit 3 of reg-B", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x98;
+	registers.B = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(3, &registers.B);
+}
+
+TEST_CASE("CB 0x99: Reset bit 3 of reg-C", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x99;
+	registers.C = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(3, &registers.C);
+}
+
+TEST_CASE("CB 0x9A: Reset bit 3 of reg-D", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x9A;
+	registers.D = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(3, &registers.D);
+}
+
+TEST_CASE("CB 0x9B: Reset bit 3 of reg-E", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x9B;
+	registers.E = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(3, &registers.E);
+}
+
+TEST_CASE("CB 0x9C: Reset bit 3 of reg-H", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x9C;
+	registers.H = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(3, &registers.H);
+}
+
+TEST_CASE("CB 0x9D: Reset bit 3 of reg-L", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x9D;
+	registers.L = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(3, &registers.L);
+}
+
+TEST_CASE("CB 0x9E: Reset bit 3 of memory(HL)", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x9E;
+	registers.HL = GENERATE(take(5, random(0x8000, 0xFE9F)));
+	unsigned char value = GENERATE(take(5, random(0, 0xFF)));
+	write_byte(registers.HL, value);
+
+	reset_bit_hl_test(3);
+}
+
+TEST_CASE("CB 0x9F: Reset bit 3 of reg-A", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x9F;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(3, &registers.A);
+}
+
+TEST_CASE("CB 0xA0: Reset bit 4 of reg-B", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xA0;
+	registers.B = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(4, &registers.B);
+}
+
+TEST_CASE("CB 0xA1: Reset bit 4 of reg-C", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xA1;
+	registers.C = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(4, &registers.C);
+}
+
+TEST_CASE("CB 0xA2: Reset bit 4 of reg-D", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xA2;
+	registers.D = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(4, &registers.D);
+}
+
+TEST_CASE("CB 0xA3: Reset bit 4 of reg-E", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xA3;
+	registers.E = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(4, &registers.E);
+}
+
+TEST_CASE("CB 0xA4: Reset bit 4 of reg-H", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xA4;
+	registers.H = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(4, &registers.H);
+}
+
+TEST_CASE("CB 0xA5: Reset bit 4 of reg-L", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xA5;
+	registers.L = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(4, &registers.L);
+}
+
+TEST_CASE("CB 0xA6: Reset bit 4 of memory(HL)", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xA6;
+	registers.HL = GENERATE(take(5, random(0x8000, 0xFE9F)));
+	unsigned char value = GENERATE(take(5, random(0, 0xFF)));
+	write_byte(registers.HL, value);
+
+	reset_bit_hl_test(4);
+}
+
+TEST_CASE("CB 0xA7: Reset bit 4 of reg-A", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xA7;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(4, &registers.A);
+}
+
+TEST_CASE("CB 0xA8: Reset bit 5 of reg-B", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xA8;
+	registers.B = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(5, &registers.B);
+}
+
+TEST_CASE("CB 0xA9: Reset bit 5 of reg-C", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xA9;
+	registers.C = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(5, &registers.C);
+}
+
+TEST_CASE("CB 0xAA: Reset bit 5 of reg-D", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xAA;
+	registers.D = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(5, &registers.D);
+}
+
+TEST_CASE("CB 0xAB: Reset bit 5 of reg-E", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xAB;
+	registers.E = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(5, &registers.E);
+}
+
+TEST_CASE("CB 0xAC: Reset bit 5 of reg-H", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xAC;
+	registers.H = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(5, &registers.H);
+}
+
+TEST_CASE("CB 0xAD: Reset bit 5 of reg-L", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xAD;
+	registers.L = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(5, &registers.L);
+}
+
+TEST_CASE("CB 0xAE: Reset bit 5 of memory(HL)", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xAE;
+	registers.HL = GENERATE(take(5, random(0x8000, 0xFE9F)));
+	unsigned char value = GENERATE(take(5, random(0, 0xFF)));
+	write_byte(registers.HL, value);
+
+	reset_bit_hl_test(5);
+}
+
+TEST_CASE("CB 0xAF: Reset bit 5 of reg-A", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xAF;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(5, &registers.A);
+}
+
+TEST_CASE("CB 0xB0: Reset bit 6 of reg-B", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xB0;
+	registers.B = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(6, &registers.B);
+}
+
+TEST_CASE("CB 0xB1: Reset bit 6 of reg-C", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xB1;
+	registers.C = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(6, &registers.C);
+}
+
+TEST_CASE("CB 0xB2: Reset bit 6 of reg-D", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xB2;
+	registers.D = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(6, &registers.D);
+}
+
+TEST_CASE("CB 0xB3: Reset bit 6 of reg-E", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xB3;
+	registers.E = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(6, &registers.E);
+}
+
+TEST_CASE("CB 0xB4: Reset bit 6 of reg-H", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xB4;
+	registers.H = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(6, &registers.H);
+}
+
+TEST_CASE("CB 0xB5: Reset bit 6 of reg-L", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xB5;
+	registers.L = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(6, &registers.L);
+}
+
+TEST_CASE("CB 0xB6: Reset bit 6 of memory(HL)", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xB6;
+	registers.HL = GENERATE(take(5, random(0x8000, 0xFE9F)));
+	unsigned char value = GENERATE(take(5, random(0, 0xFF)));
+	write_byte(registers.HL, value);
+
+	reset_bit_hl_test(6);
+}
+
+TEST_CASE("CB 0xB7: Reset bit 6 of reg-A", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xB7;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(6, &registers.A);
+}
+
+TEST_CASE("CB 0xB8: Reset bit 7 of reg-B", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xB8;
+	registers.B = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(7, &registers.B);
+}
+
+TEST_CASE("CB 0xB9: Reset bit 7 of reg-C", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xB9;
+	registers.C = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(7, &registers.C);
+}
+
+TEST_CASE("CB 0xBA: Reset bit 7 of reg-D", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xBA;
+	registers.D = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(7, &registers.D);
+}
+
+TEST_CASE("CB 0xBB: Reset bit 7 of reg-E", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xBB;
+	registers.E = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(7, &registers.E);
+}
+
+TEST_CASE("CB 0xBC: Reset bit 7 of reg-H", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xBC;
+	registers.H = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(7, &registers.H);
+}
+
+TEST_CASE("CB 0xBD: Reset bit 7 of reg-L", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xBD;
+	registers.L = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(7, &registers.L);
+}
+
+TEST_CASE("FB 0xBE: Reset bit 7 of memory(HL)", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xBE;
+	registers.HL = GENERATE(take(5, random(0x8000, 0xFE9F)));
+	unsigned char value = GENERATE(take(5, random(0, 0xFF)));
+	write_byte(registers.HL, value);
+
+	reset_bit_hl_test(7);
+}
+
+TEST_CASE("FB 0xBF: Reset bit 7 of reg-A", "[cpu][cb][bit]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xBF;
+	registers.A = GENERATE(take(5, random(0, 0xFF)));
+
+	reset_bit_test(7, &registers.A);
+}
+
 TEST_CASE("CB 0xC0: Set bit 0 of reg-B", "[cpu][cb][bit]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0xC0;
@@ -1872,6 +2402,20 @@ void set_bit_hl_test(int bit_n)
 {
 	int cycles = execute_cb_instruction();
 	CHECK(is_bit_set(bit_n, read_byte(registers.HL)) == true);
+	CHECK(cycles == 16);
+}
+
+void reset_bit_test(int bit_n, unsigned char *reg)
+{
+	int cycles = execute_cb_instruction();
+	CHECK(is_bit_set(bit_n, *reg) == false);
+	CHECK(cycles == 8);
+}
+
+void reset_bit_hl_test(int bit_n)
+{
+	int cycles = execute_cb_instruction();
+	CHECK(is_bit_set(bit_n, read_byte(registers.HL)) == false);
 	CHECK(cycles == 16);
 }
 

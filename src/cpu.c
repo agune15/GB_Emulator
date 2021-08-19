@@ -437,6 +437,19 @@ void resume_cpu(void)
 
 //endregion
 
+//region Jumps
+
+// Jump to address in memory(PC)
+int jump_nn(void)
+{
+	unsigned short address = read_short(registers.PC);
+	registers.PC += 2;
+	registers.PC = address;
+	return 12;
+}
+
+//endregion
+
 //endregion
 
 //region Instructions

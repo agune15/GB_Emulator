@@ -14,10 +14,10 @@ int (*cb_instructions[256])(void) = {
 /*0x5*/	bit_2_b, bit_2_c, bit_2_d, bit_2_e, bit_2_h, bit_2_l, bit_2_hl, bit_2_a, bit_3_b, bit_3_c, bit_3_d, bit_3_e, bit_3_h, bit_3_l, bit_3_hl, bit_3_a,
 /*0x6*/	bit_4_b, bit_4_c, bit_4_d, bit_4_e, bit_4_h, bit_4_l, bit_4_hl, bit_4_a, bit_5_b, bit_5_c, bit_5_d, bit_5_e, bit_5_h, bit_5_l, bit_5_hl, bit_5_a,
 /*0x7*/	bit_6_b, bit_6_c, bit_6_d, bit_6_e, bit_6_h, bit_6_l, bit_6_hl, bit_6_a, bit_7_b, bit_7_c, bit_7_d, bit_7_e, bit_7_h, bit_7_l, bit_7_hl, bit_7_a,
-/*0x8*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-/*0x9*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-/*0xA*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-/*0xB*/ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+/*0x8*/	res_0_b, res_0_c, res_0_d, res_0_e, res_0_h, res_0_l, res_0_hl, res_0_a, res_1_b, res_1_c, res_1_d, res_1_e, res_1_h, res_1_l, res_1_hl, res_1_a,
+/*0x9*/	res_2_b, res_2_c, res_2_d, res_2_e, res_2_h, res_2_l, res_2_hl, res_2_a, res_3_b, res_3_c, res_3_d, res_3_e, res_3_h, res_3_l, res_3_hl, res_3_a,
+/*0xA*/	res_4_b, res_4_c, res_4_d, res_4_e, res_4_h, res_4_l, res_4_hl, res_4_a, res_5_b, res_5_c, res_5_d, res_5_e, res_5_h, res_5_l, res_5_hl, res_5_a,
+/*0xB*/ res_6_b, res_6_c, res_6_d, res_6_e, res_6_h, res_6_l, res_6_hl, res_6_a, res_7_b, res_7_c, res_7_d, res_7_e, res_7_h, res_7_l, res_7_hl, res_7_a,
 /*0xC*/	set_0_b, set_0_c, set_0_d, set_0_e, set_0_h, set_0_l, set_0_hl, set_0_a, set_1_b, set_1_c, set_1_d, set_1_e, set_1_h, set_1_l, set_1_hl, set_1_a,
 /*0xD*/	set_2_b, set_2_c, set_2_d, set_2_e, set_2_h, set_2_l, set_2_hl, set_2_a, set_3_b, set_3_c, set_3_d, set_3_e, set_3_h, set_3_l, set_3_hl, set_3_a,
 /*0xE*/	set_4_b, set_4_c, set_4_d, set_4_e, set_4_h, set_4_l, set_4_hl, set_4_a, set_5_b, set_5_c, set_5_d, set_5_e, set_5_h, set_5_l, set_5_hl, set_5_a,
@@ -866,7 +866,197 @@ int bit_7_hl(void) { return test_bit_hl(7); }
 // 0x7F: Test bit 7 of reg-A
 int bit_7_a(void) { return test_bit(7, &registers.A); }
 
+// 0x80: Reset bit 0 of reg-B
+int res_0_b(void) { return res_bit(0, &registers.B); }
 
+// 0x81: Reset bit 0 of reg-C
+int res_0_c(void) { return res_bit(0, &registers.C); }
+
+// 0x82: Reset bit 0 of reg-D
+int res_0_d(void) { return res_bit(0, &registers.D); }
+
+// 0x83: Reset bit 0 of reg-E
+int res_0_e(void) { return res_bit(0, &registers.E); }
+
+// 0x84: Reset bit 0 of reg-H
+int res_0_h(void) { return res_bit(0, &registers.H); }
+
+// 0x85: Reset bit 0 of reg-L
+int res_0_l(void) { return res_bit(0, &registers.L); }
+
+// 0x86: Reset bit 0 of memory(HL)
+int res_0_hl(void) { return res_bit_hl(0); }
+
+// 0x87: Reset bit 0 of reg-A
+int res_0_a(void) { return res_bit(0, &registers.A); }
+
+// 0x88: Reset bit 1 of reg-B
+int res_1_b(void) { return res_bit(1, &registers.B); }
+
+// 0x89: Reset bit 1 of reg-C
+int res_1_c(void) { return res_bit(1, &registers.C); }
+
+// 0x8A: Reset bit 1 of reg-D
+int res_1_d(void) { return res_bit(1, &registers.D); }
+
+// 0x8B: Reset bit 1 of reg-E
+int res_1_e(void) { return res_bit(1, &registers.E); }
+
+// 0x8C: Reset bit 1 of reg-H
+int res_1_h(void) { return res_bit(1, &registers.H); }
+
+// 0x8D: Reset bit 1 of reg-L
+int res_1_l(void) { return res_bit(1, &registers.L); }
+
+// 0x8E: Reset bit 1 of memory(HL)
+int res_1_hl(void) { return res_bit_hl(1); }
+
+// 0x8F: Reset bit 1 of reg-A
+int res_1_a(void) { return res_bit(1, &registers.A); }
+
+// 0x90: Reset bit 2 of reg-B
+int res_2_b(void) { return res_bit(2, &registers.B); }
+
+// 0x91: Reset bit 2 of reg-C
+int res_2_c(void) { return res_bit(2, &registers.C); }
+
+// 0x92: Reset bit 2 of reg-D
+int res_2_d(void) { return res_bit(2, &registers.D); }
+
+// 0x93: Reset bit 2 of reg-E
+int res_2_e(void) { return res_bit(2, &registers.E); }
+
+// 0x94: Reset bit 2 of reg-H
+int res_2_h(void) { return res_bit(2, &registers.H); }
+
+// 0x95: Reset bit 2 of reg-L
+int res_2_l(void) { return res_bit(2, &registers.L); }
+
+// 0x96: Reset bit 2 of memory(HL)
+int res_2_hl(void) { return res_bit_hl(2); }
+
+// 0x97: Reset bit 2 of reg-A
+int res_2_a(void) { return res_bit(2, &registers.A); }
+
+// 0x98: Reset bit 3 of reg-B
+int res_3_b(void) { return res_bit(3, &registers.B); }
+
+// 0x99: Reset bit 3 of reg-C
+int res_3_c(void) { return res_bit(3, &registers.C); }
+
+// 0x9A: Reset bit 3 of reg-D
+int res_3_d(void) { return res_bit(3, &registers.D); }
+
+// 0x9B: Reset bit 3 of reg-E
+int res_3_e(void) { return res_bit(3, &registers.E); }
+
+// 0x9C: Reset bit 3 of reg-H
+int res_3_h(void) { return res_bit(3, &registers.H); }
+
+// 0x9D: Reset bit 3 of reg-L
+int res_3_l(void) { return res_bit(3, &registers.L); }
+
+// 0x9E: Reset bit 3 of memory(HL)
+int res_3_hl(void) { return res_bit_hl(3); }
+
+// 0x9F: Reset bit 3 of reg-A
+int res_3_a(void) { return res_bit(3, &registers.A); }
+
+// 0xA0: Reset bit 4 of reg-B
+int res_4_b(void) { return res_bit(4, &registers.B); }
+
+// 0xA1: Reset bit 4 of reg-C
+int res_4_c(void) { return res_bit(4, &registers.C); }
+
+// 0xA2: Reset bit 4 of reg-D
+int res_4_d(void) { return res_bit(4, &registers.D); }
+
+// 0xA3: Reset bit 4 of reg-E
+int res_4_e(void) { return res_bit(4, &registers.E); }
+
+// 0xA4: Reset bit 4 of reg-H
+int res_4_h(void) { return res_bit(4, &registers.H); }
+
+// 0xA5: Reset bit 4 of reg-L
+int res_4_l(void) { return res_bit(4, &registers.L); }
+
+// 0xA6: Set bit 4 of memory(HL)
+int res_4_hl(void) { return res_bit_hl(4); }
+
+// 0xA7: Reset bit 4 of reg-A
+int res_4_a(void) { return res_bit(4, &registers.A); }
+
+// 0xA8: Reset bit 5 of reg-B
+int res_5_b(void) { return res_bit(5, &registers.B); }
+
+// 0xA9: Reset bit 5 of reg-C
+int res_5_c(void) { return res_bit(5, &registers.C); }
+
+// 0xAA: Reset bit 5 of reg-D
+int res_5_d(void) { return res_bit(5, &registers.D); }
+
+// 0xAB: Reset bit 5 of reg-E
+int res_5_e(void) { return res_bit(5, &registers.E); }
+
+// 0xAC: Reset bit 5 of reg-H
+int res_5_h(void) { return res_bit(5, &registers.H); }
+
+// 0xAD: Reset bit 5 of reg-L
+int res_5_l(void) { return res_bit(5, &registers.L); }
+
+// 0xAE: Reset bit 5 of memory(HL)
+int res_5_hl(void) { return res_bit_hl(5); }
+
+// 0xAF: Reset bit 5 of reg-A
+int res_5_a(void) { return res_bit(5, &registers.A); }
+
+// 0xB0: Reset bit 6 of reg-B
+int res_6_b(void) { return res_bit(6, &registers.B); }
+
+// 0xB1: Reset bit 6 of reg-C
+int res_6_c(void) { return res_bit(6, &registers.C); }
+
+// 0xB2: Reset bit 6 of reg-D
+int res_6_d(void) { return res_bit(6, &registers.D); }
+
+// 0xB3: Reset bit 6 of reg-E
+int res_6_e(void) { return res_bit(6, &registers.E); }
+
+// 0xB4: Reset bit 6 of reg-H
+int res_6_h(void) { return res_bit(6, &registers.H); }
+
+// 0xB5: Reset bit 6 of reg-L
+int res_6_l(void) { return res_bit(6, &registers.L); }
+
+// 0xB6: Reset bit 6 of memory(HL)
+int res_6_hl(void) { return res_bit_hl(6); }
+
+// 0xB7: Reset bit 6 of reg-A
+int res_6_a(void) { return res_bit(6, &registers.A); }
+
+// 0xB8: Reset bit 7 of reg-B
+int res_7_b(void) { return res_bit(7, &registers.B); }
+
+// 0xB9: Reset bit 7 of reg-C
+int res_7_c(void) { return res_bit(7, &registers.C); }
+
+// 0xBA: Reset bit 7 of reg-D
+int res_7_d(void) { return res_bit(7, &registers.D); }
+
+// 0xBB: Reset bit 7 of reg-E
+int res_7_e(void) { return res_bit(7, &registers.E); }
+
+// 0xBC: Reset bit 7 of reg-H
+int res_7_h(void) { return res_bit(7, &registers.H); }
+
+// 0xBD: Reset bit 7 of reg-L
+int res_7_l(void) { return res_bit(7, &registers.L); }
+
+// 0xBE: Reset bit 7 of memory(HL)
+int res_7_hl(void) { return res_bit_hl(7); }
+
+// 0xBF: Reset bit 7 of reg-A
+int res_7_a(void) { return res_bit(7, &registers.A); }
 
 // 0xC0: Set bit 0 of reg-B
 int set_0_b(void) { return set_bit(0, &registers.B); }
