@@ -23,6 +23,10 @@ void dec_16bit_test(unsigned short *regToDec, int opCycles);
 void daa_test(void);
 void rotate_test(unsigned char rot_reg, bool carry_state);
 
+// Test sub-helpers
+int daa_test_previousBCDoperation(void);
+void daa_test_run(int bcdOpResult);
+
 //region Others
 
 TEST_CASE("Registers initialization", "[CPU tests]") {
@@ -2403,9 +2407,6 @@ void dec_16bit_test(unsigned short *regToDec, int opCycles)
 	CHECK(*regToDec == result);
 	CHECK(cycles == opCycles);
 }
-
-int daa_test_previousBCDoperation(void);
-void daa_test_run(int bcdOpResult);
 
 void daa_test(void)
 {

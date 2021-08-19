@@ -18,10 +18,10 @@ int (*cb_instructions[256])(void) = {
 /*0x9*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0xA*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 /*0xB*/ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-/*0xC*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-/*0xD*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-/*0xE*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-/*0xF*/	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+/*0xC*/	set_0_b, set_0_c, set_0_d, set_0_e, set_0_h, set_0_l, set_0_hl, set_0_a, set_1_b, set_1_c, set_1_d, set_1_e, set_1_h, set_1_l, set_1_hl, set_1_a,
+/*0xD*/	set_2_b, set_2_c, set_2_d, set_2_e, set_2_h, set_2_l, set_2_hl, set_2_a, set_3_b, set_3_c, set_3_d, set_3_e, set_3_h, set_3_l, set_3_hl, set_3_a,
+/*0xE*/	set_4_b, set_4_c, set_4_d, set_4_e, set_4_h, set_4_l, set_4_hl, set_4_a, set_5_b, set_5_c, set_5_d, set_5_e, set_5_h, set_5_l, set_5_hl, set_5_a,
+/*0xF*/	set_6_b, set_6_c, set_6_d, set_6_e, set_6_h, set_6_l, set_6_hl, set_6_a, set_7_b, set_7_c, set_7_d, set_7_e, set_7_h, set_7_l, set_7_hl, set_7_a,
 };
 
 //TODO: Description
@@ -294,7 +294,7 @@ int set_bit(int bit_n, unsigned char *reg)
 // Set bit of memory(HL)
 int set_bit_hl(int bit_n)
 {
-	write_byte(registers.HL, read_byte(registers.HL) || 1 << bit_n);
+	write_byte(registers.HL, read_byte(registers.HL) | 1 << bit_n);
 
 	return 16;
 }
@@ -302,6 +302,22 @@ int set_bit_hl(int bit_n)
 //endregion
 
 //region Bit resets
+
+// Reset bit of reg
+int res_bit(int bit_n, unsigned char *reg)
+{
+	*reg &= ~(1 << bit_n);
+
+	return 8;
+}
+
+// Reset bit of memory(HL)
+int res_bit_hl(int bit_n)
+{
+	write_byte(registers.HL, read_byte(registers.HL) & ~(1 << bit_n));
+
+	return 16;
+}
 
 //endregion
 
@@ -870,7 +886,7 @@ int set_0_h(void) { return set_bit(0, &registers.H); }
 // 0xC5: Set bit 0 of reg-L
 int set_0_l(void) { return set_bit(0, &registers.L); }
 
-// 0xC6: Set bit 0 of reg-B
+// 0xC6: Set bit 0 of memory(HL)
 int set_0_hl(void) { return set_bit_hl(0); }
 
 // 0xC7: Set bit 0 of reg-A
@@ -894,7 +910,7 @@ int set_1_h(void) { return set_bit(1, &registers.H); }
 // 0xCD: Set bit 1 of reg-L
 int set_1_l(void) { return set_bit(1, &registers.L); }
 
-// 0xCE: Set bit 1 of reg-B
+// 0xCE: Set bit 1 of memory(HL)
 int set_1_hl(void) { return set_bit_hl(1); }
 
 // 0xCF: Set bit 1 of reg-A
@@ -918,7 +934,7 @@ int set_2_h(void) { return set_bit(2, &registers.H); }
 // 0xD5: Set bit 2 of reg-L
 int set_2_l(void) { return set_bit(2, &registers.L); }
 
-// 0xD6: Set bit 2 of reg-B
+// 0xD6: Set bit 2 of memory(HL)
 int set_2_hl(void) { return set_bit_hl(2); }
 
 // 0xD7: Set bit 2 of reg-A
@@ -942,10 +958,104 @@ int set_3_h(void) { return set_bit(3, &registers.H); }
 // 0xDD: Set bit 3 of reg-L
 int set_3_l(void) { return set_bit(3, &registers.L); }
 
-// 0xDE: Set bit 3 of reg-B
+// 0xDE: Set bit 3 of memory(HL)
 int set_3_hl(void) { return set_bit_hl(3); }
 
 // 0xDF: Set bit 3 of reg-A
 int set_3_a(void) { return set_bit(3, &registers.A); }
 
-//TODO: continue here
+// 0xE0: Set bit 4 of reg-B
+int set_4_b(void) { return set_bit(4, &registers.B); }
+
+// 0xE1: Set bit 4 of reg-C
+int set_4_c(void) { return set_bit(4, &registers.C); }
+
+// 0xE2: Set bit 4 of reg-D
+int set_4_d(void) { return set_bit(4, &registers.D); }
+
+// 0xE3: Set bit 4 of reg-E
+int set_4_e(void) { return set_bit(4, &registers.E); }
+
+// 0xE4: Set bit 4 of reg-H
+int set_4_h(void) { return set_bit(4, &registers.H); }
+
+// 0xE5: Set bit 4 of reg-L
+int set_4_l(void) { return set_bit(4, &registers.L); }
+
+// 0xE6: Set bit 4 of memory(HL)
+int set_4_hl(void) { return set_bit_hl(4); }
+
+// 0xE7: Set bit 4 of reg-A
+int set_4_a(void) { return set_bit(4, &registers.A); }
+
+// 0xE8: Set bit 5 of reg-B
+int set_5_b(void) { return set_bit(5, &registers.B); }
+
+// 0xE9: Set bit 5 of reg-C
+int set_5_c(void) { return set_bit(5, &registers.C); }
+
+// 0xEA: Set bit 5 of reg-D
+int set_5_d(void) { return set_bit(5, &registers.D); }
+
+// 0xEB: Set bit 5 of reg-E
+int set_5_e(void) { return set_bit(5, &registers.E); }
+
+// 0xEC: Set bit 5 of reg-H
+int set_5_h(void) { return set_bit(5, &registers.H); }
+
+// 0xED: Set bit 5 of reg-L
+int set_5_l(void) { return set_bit(5, &registers.L); }
+
+// 0xEE: Set bit 5 of memory(HL)
+int set_5_hl(void) { return set_bit_hl(5); }
+
+// 0xEF: Set bit 5 of reg-A
+int set_5_a(void) { return set_bit(5, &registers.A); }
+
+// 0xF0: Set bit 6 of reg-B
+int set_6_b(void) { return set_bit(6, &registers.B); }
+
+// 0xF1: Set bit 6 of reg-C
+int set_6_c(void) { return set_bit(6, &registers.C); }
+
+// 0xF2: Set bit 6 of reg-D
+int set_6_d(void) { return set_bit(6, &registers.D); }
+
+// 0xF3: Set bit 6 of reg-E
+int set_6_e(void) { return set_bit(6, &registers.E); }
+
+// 0xF4: Set bit 6 of reg-H
+int set_6_h(void) { return set_bit(6, &registers.H); }
+
+// 0xF5: Set bit 6 of reg-L
+int set_6_l(void) { return set_bit(6, &registers.L); }
+
+// 0xF6: Set bit 6 of memory(HL)
+int set_6_hl(void) { return set_bit_hl(6); }
+
+// 0xF7: Set bit 6 of reg-A
+int set_6_a(void) { return set_bit(6, &registers.A); }
+
+// 0xF8: Set bit 7 of reg-B
+int set_7_b(void) { return set_bit(7, &registers.B); }
+
+// 0xF9: Set bit 7 of reg-C
+int set_7_c(void) { return set_bit(7, &registers.C); }
+
+// 0xFA: Set bit 7 of reg-D
+int set_7_d(void) { return set_bit(7, &registers.D); }
+
+// 0xFB: Set bit 7 of reg-E
+int set_7_e(void) { return set_bit(7, &registers.E); }
+
+// 0xFC: Set bit 7 of reg-H
+int set_7_h(void) { return set_bit(7, &registers.H); }
+
+// 0xFD: Set bit 7 of reg-L
+int set_7_l(void) { return set_bit(7, &registers.L); }
+
+// 0xFE: Set bit 7 of memory(HL)
+int set_7_hl(void) { return set_bit_hl(7); }
+
+// 0xFF: Set bit 7 of reg-A
+int set_7_a(void) { return set_bit(7, &registers.A); }
