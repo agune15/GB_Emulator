@@ -63,7 +63,7 @@ TEST_CASE("Set button flag", "[input]") {
 
 TEST_CASE("Clear button flag", "[input]") {
 	for(int button = 0; button <= START; button++) {
-		clear_button_flag((buttons_t)button);
+		reset_button_flag((buttons_t) button);
 		CHECK(is_button_pressed((buttons_t)button) == true);
 	}
 }

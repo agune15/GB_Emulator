@@ -44,13 +44,13 @@ int swap_8bit_p(unsigned char *reg, int cycles)
 	*reg |= swapped_low_nib;
 
 	if (*reg)
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 	else
 		set_flag(ZERO);
 
-	clear_flag(NEGATIVE);
-	clear_flag(HALFCARRY);
-	clear_flag(CARRY);
+	reset_flag(NEGATIVE);
+	reset_flag(HALFCARRY);
+	reset_flag(CARRY);
 
 	return cycles;
 }
@@ -67,13 +67,13 @@ int swap_8bit_a(unsigned short address, int cycles)
 	write_byte(address, byte);
 
 	if (byte)
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 	else
 		set_flag(ZERO);
 
-	clear_flag(NEGATIVE);
-	clear_flag(HALFCARRY);
-	clear_flag(CARRY);
+	reset_flag(NEGATIVE);
+	reset_flag(HALFCARRY);
+	reset_flag(CARRY);
 
 	return cycles;
 }
@@ -93,15 +93,15 @@ int rlc(unsigned char *reg)
 	if (reg_msb)
 		set_flag(CARRY);
 	else
-		clear_flag(CARRY);
+		reset_flag(CARRY);
 
 	if (*reg)
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 	else
 		set_flag(ZERO);
 
-	clear_flag(NEGATIVE);
-	clear_flag(HALFCARRY);
+	reset_flag(NEGATIVE);
+	reset_flag(HALFCARRY);
 
 	return 8;
 }
@@ -119,15 +119,15 @@ int rl(unsigned char *reg)
 	if(reg_msb)
 		set_flag(CARRY);
 	else
-		clear_flag(CARRY);
+		reset_flag(CARRY);
 
 	if(*reg)
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 	else
 		set_flag(ZERO);
 
-	clear_flag(NEGATIVE);
-	clear_flag(HALFCARRY);
+	reset_flag(NEGATIVE);
+	reset_flag(HALFCARRY);
 
 	return 8;
 }
@@ -142,15 +142,15 @@ int rrc(unsigned char *reg) {
 	if (reg_lsb)
 		set_flag(CARRY);
 	else
-		clear_flag(CARRY);
+		reset_flag(CARRY);
 
 	if (*reg)
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 	else
 		set_flag(ZERO);
 
-	clear_flag(NEGATIVE);
-	clear_flag(HALFCARRY);
+	reset_flag(NEGATIVE);
+	reset_flag(HALFCARRY);
 
 	return 8;
 }
@@ -167,15 +167,15 @@ int rr(unsigned char *reg) {
 	if (reg_lsb)
 		set_flag(CARRY);
 	else
-		clear_flag(CARRY);
+		reset_flag(CARRY);
 
 	if (*reg)
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 	else
 		set_flag(ZERO);
 
-	clear_flag(NEGATIVE);
-	clear_flag(HALFCARRY);
+	reset_flag(NEGATIVE);
+	reset_flag(HALFCARRY);
 
 	return 8;
 }
@@ -190,17 +190,17 @@ int sla(unsigned char *reg)
 	if (*reg & 0x80)
 		set_flag(CARRY);
 	else
-		clear_flag(CARRY);
+		reset_flag(CARRY);
 
 	*reg <<= 1;
 
 	if (*reg)
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 	else
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 
-	clear_flag(NEGATIVE);
-	clear_flag(HALFCARRY);
+	reset_flag(NEGATIVE);
+	reset_flag(HALFCARRY);
 
 	return 8;
 }
@@ -211,17 +211,17 @@ int sra(unsigned char *reg)
 	if (*reg & 0x01)
 		set_flag(CARRY);
 	else
-		clear_flag(CARRY);
+		reset_flag(CARRY);
 
 	*reg = (*reg & 0x80) | (*reg >> 1);
 
 	if (*reg)
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 	else
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 
-	clear_flag(NEGATIVE);
-	clear_flag(HALFCARRY);
+	reset_flag(NEGATIVE);
+	reset_flag(HALFCARRY);
 
 	return 8;
 }
@@ -232,17 +232,17 @@ int srl(unsigned char *reg)
 	if (*reg & 0x01)
 		set_flag(CARRY);
 	else
-		clear_flag(CARRY);
+		reset_flag(CARRY);
 
 	*reg >>= 1;
 
 	if (*reg)
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 	else
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 
-	clear_flag(NEGATIVE);
-	clear_flag(HALFCARRY);
+	reset_flag(NEGATIVE);
+	reset_flag(HALFCARRY);
 
 	return 8;
 }
@@ -255,11 +255,11 @@ int srl(unsigned char *reg)
 int test_bit(int bit_n, unsigned char *reg)
 {
 	if (*reg >> bit_n & 1)
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 	else
 		set_flag(ZERO);
 
-	clear_flag(NEGATIVE);
+	reset_flag(NEGATIVE);
 	set_flag(HALFCARRY);
 
 	return 8;
@@ -269,11 +269,11 @@ int test_bit(int bit_n, unsigned char *reg)
 int test_bit_hl(int bit_n)
 {
 	if (read_byte(registers.HL) >> bit_n & 1)
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 	else
 		set_flag(ZERO);
 
-	clear_flag(NEGATIVE);
+	reset_flag(NEGATIVE);
 	set_flag(HALFCARRY);
 
 	return 16;
@@ -354,15 +354,15 @@ int rlc_hl(void) {
 	if (msb)
 		set_flag(CARRY);
 	else
-		clear_flag(CARRY);
+		reset_flag(CARRY);
 
 	if (value)
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 	else
 		set_flag(ZERO);
 
-	clear_flag(NEGATIVE);
-	clear_flag(HALFCARRY);
+	reset_flag(NEGATIVE);
+	reset_flag(HALFCARRY);
 
 	return 16;
 }
@@ -401,15 +401,15 @@ int rrc_hl(void) {
 	if (lsb)
 		set_flag(CARRY);
 	else
-		clear_flag(CARRY);
+		reset_flag(CARRY);
 
 	if (value)
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 	else
 		set_flag(ZERO);
 
-	clear_flag(NEGATIVE);
-	clear_flag(HALFCARRY);
+	reset_flag(NEGATIVE);
+	reset_flag(HALFCARRY);
 
 	return 16;
 }
@@ -450,15 +450,15 @@ int rl_hl(void) {
 	if (msb)
 		set_flag(CARRY);
 	else
-		clear_flag(CARRY);
+		reset_flag(CARRY);
 
 	if (value)
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 	else
 		set_flag(ZERO);
 
-	clear_flag(NEGATIVE);
-	clear_flag(HALFCARRY);
+	reset_flag(NEGATIVE);
+	reset_flag(HALFCARRY);
 
 	return 16;
 }
@@ -499,15 +499,15 @@ int rr_hl(void) {
 	if (lsb)
 		set_flag(CARRY);
 	else
-		clear_flag(CARRY);
+		reset_flag(CARRY);
 
 	if (value)
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 	else
 		set_flag(ZERO);
 
-	clear_flag(NEGATIVE);
-	clear_flag(HALFCARRY);
+	reset_flag(NEGATIVE);
+	reset_flag(HALFCARRY);
 
 	return 16;
 }
@@ -540,19 +540,19 @@ int sla_hl(void) {
 	if (value & 0x80)
 		set_flag(CARRY);
 	else
-		clear_flag(CARRY);
+		reset_flag(CARRY);
 
 	value <<= 1;
 
 	write_byte(registers.HL, value);
 
 	if (value)
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 	else
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 
-	clear_flag(NEGATIVE);
-	clear_flag(HALFCARRY);
+	reset_flag(NEGATIVE);
+	reset_flag(HALFCARRY);
 
 	return 16;
 }
@@ -585,19 +585,19 @@ int sra_hl(void) {
 	if (value & 0x01)
 		set_flag(CARRY);
 	else
-		clear_flag(CARRY);
+		reset_flag(CARRY);
 
 	value = (value & 0x80) | (value >> 1);
 
 	write_byte(registers.HL, value);
 
 	if (value)
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 	else
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 
-	clear_flag(NEGATIVE);
-	clear_flag(HALFCARRY);
+	reset_flag(NEGATIVE);
+	reset_flag(HALFCARRY);
 
 	return 16;
 }
@@ -654,19 +654,19 @@ int srl_hl(void) {
 	if (value & 0x01)
 		set_flag(CARRY);
 	else
-		clear_flag(CARRY);
+		reset_flag(CARRY);
 
 	value >>= 1;
 
 	write_byte(registers.HL, value);
 
 	if (value)
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 	else
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 
-	clear_flag(NEGATIVE);
-	clear_flag(HALFCARRY);
+	reset_flag(NEGATIVE);
+	reset_flag(HALFCARRY);
 
 	return 16;
 }

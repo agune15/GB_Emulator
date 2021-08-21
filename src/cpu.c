@@ -20,7 +20,7 @@ int (*instructions[256])(void) = {
 /*0x9*/	sub_a_b, sub_a_c, sub_a_d, sub_a_e, sub_a_h, sub_a_l, sub_a_hl, sub_a_a, sbc_a_b, sbc_a_c, sbc_a_d, sbc_a_e, sbc_a_h, sbc_a_l, sbc_a_hl, sbc_a_a,
 /*0xA*/	and_a_b, and_a_c, and_a_d, and_a_e, and_a_h, and_a_l, and_a_hl, and_a_a, xor_a_b, xor_a_c, xor_a_d, xor_a_e, xor_a_h, xor_a_l, xor_a_hl, xor_a_a,
 /*0xB*/ or_a_b, or_a_c, or_a_d, or_a_e, or_a_h, or_a_l, or_a_hl, or_a_a, cp_a_b, cp_a_c, cp_a_d, cp_a_e, cp_a_h, cp_a_l, cp_a_hl, cp_a_a,
-/*0xC*/	NULL, pop_bc, NULL, NULL, NULL, push_bc, add_a_n, NULL, NULL, NULL, NULL, NULL, NULL, NULL, adc_a_n, NULL,
+/*0xC*/	NULL, pop_bc, jp_nz_nn, jp_nn, NULL, push_bc, add_a_n, NULL, NULL, NULL, jp_z_nn, cb, NULL, NULL, adc_a_n, NULL,
 /*0xD*/	NULL, pop_de, NULL, NULL, NULL, push_de, sub_a_n, NULL, NULL, NULL, NULL, NULL, NULL, NULL, sbc_a_n, NULL,
 /*0xE*/	ld_ff_n_a, pop_hl, ld_ff_c_a, NULL, NULL, push_hl, and_a_n, NULL, add_sp_n, NULL, ld_nnp_a, NULL, NULL, NULL, xor_a_n, NULL,
 /*0xF*/	ld_a_ff_n, pop_af, ld_a_ff_c, di, NULL, push_af, or_a_n, NULL, ld_hl_sp_n, ld_sp_hl, ld_a_nnp, ei, NULL, NULL, cp_a_n, NULL,
@@ -66,8 +66,8 @@ void set_flag(flags_t flag)
 	registers.F |= (1 << flag);
 }
 
-// Clear/reset a flag
-void clear_flag(flags_t flag)
+// Reset a flag
+void reset_flag(flags_t flag)
 {
 	registers.F &= ~(1 << flag);
 }
@@ -122,27 +122,27 @@ int add_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
 	if (result > 0xFF)
 		set_flag(CARRY);
 	else
-		clear_flag(CARRY);
+		reset_flag(CARRY);
 
 	int low_nibble_add = (*reg & 0x0F) + (value & 0x0F);
 	if (low_nibble_add > 0x0F)
 		set_flag(HALFCARRY);
 	else
-		clear_flag(HALFCARRY);
+		reset_flag(HALFCARRY);
 
 	*reg = (unsigned char)(result & 0xFF);
 
 	if (*reg)
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 	else
 		set_flag(ZERO);
 
-	clear_flag(NEGATIVE);
+	reset_flag(NEGATIVE);
 
 	return cycles;
 }
 
-// Add byte (+ carry flag) to register
+// Add byte (+ C-flag) to register
 int adc_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
 {
 	value += (is_flag_set(CARRY)) ? 1 : 0;
@@ -162,24 +162,24 @@ int sub_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
 	if (value > *reg)
 		set_flag(CARRY);
 	else
-		clear_flag(CARRY);
+		reset_flag(CARRY);
 
 	if ((value & 0x0F) > (*reg & 0x0F))
 		set_flag(HALFCARRY);
 	else
-		clear_flag(HALFCARRY);
+		reset_flag(HALFCARRY);
 
 	*reg -= value;
 
 	if (*reg)
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 	else
 		set_flag(ZERO);
 
 	return cycles;
 }
 
-// Subtract byte (+ carry flag) from register
+// Subtract byte (+ C-flag) from register
 int sbc_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
 {
 	value += (is_flag_set(CARRY)) ? 1 : 0;
@@ -199,13 +199,13 @@ int and_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
 	*reg &= value;
 
 	if (*reg)
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 	else
 		set_flag(ZERO);
 
-	clear_flag(NEGATIVE);
+	reset_flag(NEGATIVE);
 	set_flag(HALFCARRY);
-	clear_flag(CARRY);
+	reset_flag(CARRY);
 
 	return cycles;
 }
@@ -220,13 +220,13 @@ int or_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
 	*reg |= value;
 
 	if (*reg)
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 	else
 		set_flag(ZERO);
 
-	clear_flag(NEGATIVE);
-	clear_flag(HALFCARRY);
-	clear_flag(CARRY);
+	reset_flag(NEGATIVE);
+	reset_flag(HALFCARRY);
+	reset_flag(CARRY);
 
 	return cycles;
 }
@@ -241,13 +241,13 @@ int xor_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
 	*reg ^= value;
 
 	if (*reg)
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 	else
 		set_flag(ZERO);
 
-	clear_flag(NEGATIVE);
-	clear_flag(HALFCARRY);
-	clear_flag(CARRY);
+	reset_flag(NEGATIVE);
+	reset_flag(HALFCARRY);
+	reset_flag(CARRY);
 
 	return cycles;
 }
@@ -264,17 +264,17 @@ int cp_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
 	if (value == *reg)
 		set_flag(ZERO);
 	else
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 
 	if (value > *reg)
 		set_flag(CARRY);
 	else
-		clear_flag(CARRY);
+		reset_flag(CARRY);
 
 	if ((value & 0x0F) > (*reg & 0x0F))
 		set_flag(HALFCARRY);
 	else
-		clear_flag(HALFCARRY);
+		reset_flag(HALFCARRY);
 
 	return cycles;
 }
@@ -289,16 +289,16 @@ int inc_8bit_p(unsigned char *reg, int cycles)
 	if ((*reg & 0x0F) == 0x0F)
 		set_flag(HALFCARRY);
 	else
-		clear_flag(HALFCARRY);
+		reset_flag(HALFCARRY);
 
 	(*reg)++;
 
 	if (*reg)
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 	else
 		set_flag(ZERO);
 
-	clear_flag(NEGATIVE);
+	reset_flag(NEGATIVE);
 
 	return cycles;
 }
@@ -310,17 +310,17 @@ int inc_8bit_a(unsigned short address, int cycles) {
 	if ((byte & 0x0F) == 0x0F)
 		set_flag(HALFCARRY);
 	else
-		clear_flag(HALFCARRY);
+		reset_flag(HALFCARRY);
 
 	byte++;
 	write_byte(address, byte);
 
 	if (byte)
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 	else
 		set_flag(ZERO);
 
-	clear_flag(NEGATIVE);
+	reset_flag(NEGATIVE);
 
 	return cycles;
 }
@@ -333,14 +333,14 @@ int inc_8bit_a(unsigned short address, int cycles) {
 int dec_8bit_p(unsigned char *reg, int cycles)
 {
 	if (*reg & 0x0F)
-		clear_flag(HALFCARRY);
+		reset_flag(HALFCARRY);
 	else
 		set_flag(HALFCARRY);
 
 	(*reg)--;
 
 	if (*reg)
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 	else
 		set_flag(ZERO);
 
@@ -355,7 +355,7 @@ int dec_8bit_a(unsigned short address, int cycles)
 	unsigned char byte = read_byte(address);
 
 	if (byte & 0x0F)
-		clear_flag(HALFCARRY);
+		reset_flag(HALFCARRY);
 	else
 		set_flag(HALFCARRY);
 
@@ -363,7 +363,7 @@ int dec_8bit_a(unsigned short address, int cycles)
 	write_byte(address, byte);
 
 	if (byte)
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 	else
 		set_flag(ZERO);
 
@@ -384,7 +384,7 @@ int add_16bit_hl(unsigned short value, int cycles)
 	if ((registers.HL & 0x0FFF + result & 0x0FFF) > 0x0FFF)
 		set_flag(HALFCARRY);
 	else
-		clear_flag(HALFCARRY);
+		reset_flag(HALFCARRY);
 
 	registers.HL = (unsigned short)(result & 0xFFFF);
 
@@ -392,10 +392,10 @@ int add_16bit_hl(unsigned short value, int cycles)
 		set_flag(CARRY);
 	}
 	else {
-		clear_flag(CARRY);
+		reset_flag(CARRY);
 	}
 
-	clear_flag(NEGATIVE);
+	reset_flag(NEGATIVE);
 
 	return cycles;
 }
@@ -439,7 +439,7 @@ void resume_cpu(void)
 
 //region Jumps
 
-// Jump to address in memory(PC)
+// Jump to address in memory(nn)
 int jump_nn(void)
 {
 	unsigned short address = read_short(registers.PC);
@@ -475,7 +475,7 @@ int dec_b(void) { return dec_8bit_p(&registers.B, 4); }
 // 0x06: Load from memory(n) to reg-B
 int ld_b_n(void) { return load_8bit_vp(read_byte(registers.PC++), &registers.B, 8); }
 
-// 0x07: Rotate reg-A left (+ new carry flag), set carry flag with MSB
+// 0x07: Rotate reg-A left (+ new C-flag), set C-flag with MSB
 int rlca(void) {
 	unsigned char regA_msb = registers.A >> 7;
 
@@ -485,11 +485,11 @@ int rlca(void) {
 	if (regA_msb)
 		set_flag(CARRY);
 	else
-		clear_flag(CARRY);
+		reset_flag(CARRY);
 
-	clear_flag(NEGATIVE);
-	clear_flag(HALFCARRY);
-	clear_flag(ZERO);
+	reset_flag(NEGATIVE);
+	reset_flag(HALFCARRY);
+	reset_flag(ZERO);
 
 	return 4;
 }
@@ -519,7 +519,7 @@ int dec_c(void) { return dec_8bit_p(&registers.C, 4); }
 // 0x0E: Load from memory(n) to reg-C
 int ld_c_n(void) { return load_8bit_vp(read_byte(registers.PC++), &registers.C, 8); }
 
-// 0x0F: Rotate reg-A right (+ new carry flag), set carry flag with LSB
+// 0x0F: Rotate reg-A right (+ new C-flag), set C-flag with LSB
 int rrca(void) {
 	unsigned char regA_lsb = registers.A << 7;
 
@@ -529,11 +529,11 @@ int rrca(void) {
 	if (regA_lsb)
 		set_flag(CARRY);
 	else
-		clear_flag(CARRY);
+		reset_flag(CARRY);
 
-	clear_flag(NEGATIVE);
-	clear_flag(HALFCARRY);
-	clear_flag(ZERO);
+	reset_flag(NEGATIVE);
+	reset_flag(HALFCARRY);
+	reset_flag(ZERO);
 
 	return 4;
 }
@@ -562,7 +562,7 @@ int dec_d(void) { return dec_8bit_p(&registers.D, 4); }
 // 0x16: Load from memory(n) to reg-D
 int ld_d_n(void) { return load_8bit_vp(read_byte(registers.PC++), &registers.D, 8); }
 
-// 0x17: Rotate reg-A left (+ old carry flag), set carry flag with MSB
+// 0x17: Rotate reg-A left (+ old C-flag), set C-flag with MSB
 int rla(void) {
 	unsigned char regA_msb = registers.A >> 7;
 
@@ -574,11 +574,11 @@ int rla(void) {
 	if (regA_msb)
 		set_flag(CARRY);
 	else
-		clear_flag(CARRY);
+		reset_flag(CARRY);
 
-	clear_flag(NEGATIVE);
-	clear_flag(HALFCARRY);
-	clear_flag(ZERO);
+	reset_flag(NEGATIVE);
+	reset_flag(HALFCARRY);
+	reset_flag(ZERO);
 
 	return 4;
 }
@@ -601,7 +601,7 @@ int dec_e(void) { return dec_8bit_p(&registers.E, 4); }
 // 0x1E: Load from memory(n) to reg-E
 int ld_e_n(void) { return load_8bit_vp(read_byte(registers.PC++), &registers.E, 8); }
 
-// 0x1F: Rotate reg-A right (+ old carry flag), set carry flag with LSB
+// 0x1F: Rotate reg-A right (+ old C-flag), set C-flag with LSB
 int rra(void) {
 	unsigned char regA_lsb = registers.A << 7;
 
@@ -613,11 +613,11 @@ int rra(void) {
 	if (regA_lsb)
 		set_flag(CARRY);
 	else
-		clear_flag(CARRY);
+		reset_flag(CARRY);
 
-	clear_flag(NEGATIVE);
-	clear_flag(HALFCARRY);
-	clear_flag(ZERO);
+	reset_flag(NEGATIVE);
+	reset_flag(HALFCARRY);
+	reset_flag(ZERO);
 
 	return 4;
 }
@@ -658,11 +658,11 @@ int daa(void) {
 	}
 
 	if (registers.A)
-		clear_flag(ZERO);
+		reset_flag(ZERO);
 	else
 		set_flag(ZERO);
 
-	clear_flag(HALFCARRY);
+	reset_flag(HALFCARRY);
 
 	return 4;
 }
@@ -713,12 +713,12 @@ int dec_hlp(void) { return dec_8bit_a(registers.HL, 12); }
 // 0x36: Load from memory(n) to memory(HL)
 int ld_hl_n(void) { return load_8bit_va(read_byte(registers.PC++), registers.HL, 12); }
 
-// 0x37: Set CARRY flag
+// 0x37: Set C-flag
 int scf(void) {
 	set_flag(CARRY);
 
-	clear_flag(NEGATIVE);
-	clear_flag(HALFCARRY);
+	reset_flag(NEGATIVE);
+	reset_flag(HALFCARRY);
 
 	return 4;
 }
@@ -741,15 +741,15 @@ int dec_a(void) { return dec_8bit_p(&registers.A, 4); }
 // 0x3E: Load from memory(n) to reg-A
 int ld_a_n(void) { return load_8bit_vp(read_byte(registers.PC++), &registers.A, 8); }
 
-// 0x3F: Complement CARRY flag
+// 0x3F: Complement C-flag
 int ccf(void) {
 	if (is_flag_set(CARRY))
-		clear_flag(CARRY);
+		reset_flag(CARRY);
 	else
 		set_flag(CARRY);
 
-	clear_flag(NEGATIVE);
-	clear_flag(HALFCARRY);
+	reset_flag(NEGATIVE);
+	reset_flag(HALFCARRY);
 
 	return 4;
 }
@@ -975,28 +975,28 @@ int add_a_hl(void) { return add_8bit_vp(read_byte(registers.HL), &registers.A, 8
 // 0x87: Add reg-A to reg-A
 int add_a_a(void) { return add_8bit_vp(registers.A, &registers.A, 4); }
 
-// 0x88: Add reg-B (+ carry flag) to reg-A
+// 0x88: Add reg-B (+ C-flag) to reg-A
 int adc_a_b(void) { return adc_8bit_vp(registers.B, &registers.A, 4); }
 
-// 0x89: Add reg-C (+ carry flag) to reg-A
+// 0x89: Add reg-C (+ C-flag) to reg-A
 int adc_a_c(void) { return adc_8bit_vp(registers.C, &registers.A, 4); }
 
-// 0x8A: Add reg-D (+ carry flag) to reg-A
+// 0x8A: Add reg-D (+ C-flag) to reg-A
 int adc_a_d(void) { return adc_8bit_vp(registers.D, &registers.A, 4); }
 
-// 0x8B: Add reg-E (+ carry flag) to reg-A
+// 0x8B: Add reg-E (+ C-flag) to reg-A
 int adc_a_e(void) { return adc_8bit_vp(registers.E, &registers.A, 4); }
 
-// 0x8C: Add reg-H (+ carry flag) to reg-A
+// 0x8C: Add reg-H (+ C-flag) to reg-A
 int adc_a_h(void) { return adc_8bit_vp(registers.H, &registers.A, 4); }
 
-// 0x8D: Add reg-L (+ carry flag) to reg-A
+// 0x8D: Add reg-L (+ C-flag) to reg-A
 int adc_a_l(void) { return adc_8bit_vp(registers.L, &registers.A, 4); }
 
-// 0x8E: Add memory(HL) (+ carry flag) to reg-A
+// 0x8E: Add memory(HL) (+ C-flag) to reg-A
 int adc_a_hl(void) { return adc_8bit_vp(read_byte(registers.HL), &registers.A, 8); }
 
-// 0x8F: Add reg-A (+ carry flag) to reg-A
+// 0x8F: Add reg-A (+ C-flag) to reg-A
 int adc_a_a(void) { return adc_8bit_vp(registers.A, &registers.A, 4); }
 
 // 0x90: Subtract reg-B from reg-A
@@ -1023,28 +1023,28 @@ int sub_a_hl(void) { return sub_8bit_vp(read_byte(registers.HL), &registers.A, 8
 // 0x97: Subtract reg-A from reg-A
 int sub_a_a(void) { return sub_8bit_vp(registers.A, &registers.A, 4); }
 
-// 0x98: Subtract reg-B (+ carry flag) from reg-A
+// 0x98: Subtract reg-B (+ C-flag) from reg-A
 int sbc_a_b(void) { return sbc_8bit_vp(registers.B, &registers.A, 4); }
 
-// 0x99: Subtract reg-C (+ carry flag) from reg-A
+// 0x99: Subtract reg-C (+ C-flag) from reg-A
 int sbc_a_c(void) { return sbc_8bit_vp(registers.C, &registers.A, 4); }
 
-// 0x9A: Subtract reg-D (+ carry flag) from reg-A
+// 0x9A: Subtract reg-D (+ C-flag) from reg-A
 int sbc_a_d(void) { return sbc_8bit_vp(registers.D, &registers.A, 4); }
 
-// 0x9B: Subtract reg-E (+ carry flag) from reg-A
+// 0x9B: Subtract reg-E (+ C-flag) from reg-A
 int sbc_a_e(void) { return sbc_8bit_vp(registers.E, &registers.A, 4); }
 
-// 0x9C: Subtract reg-H (+ carry flag) from reg-A
+// 0x9C: Subtract reg-H (+ C-flag) from reg-A
 int sbc_a_h(void) { return sbc_8bit_vp(registers.H, &registers.A, 4); }
 
-// 0x9D: Subtract reg-L (+ carry flag) from reg-A
+// 0x9D: Subtract reg-L (+ C-flag) from reg-A
 int sbc_a_l(void) { return sbc_8bit_vp(registers.L, &registers.A, 4); }
 
-// 0x9E: Subtract memory(HL) (+ carry flag) from reg-A
+// 0x9E: Subtract memory(HL) (+ C-flag) from reg-A
 int sbc_a_hl(void) { return sbc_8bit_vp(read_byte(registers.HL), &registers.A, 8); }
 
-// 0x9F: Subtract reg-A (+ carry flag) from reg-A
+// 0x9F: Subtract reg-A (+ C-flag) from reg-A
 int sbc_a_a(void) { return sbc_8bit_vp(registers.A, &registers.A, 4); }
 
 // 0xA0: Logical AND, reg-B & reg-A, result in reg-A
@@ -1149,6 +1149,19 @@ int pop_bc(void) {
 	return 12;
 }
 
+// 0xC2: Jump to address in memory(nn) if Z-flag is not set
+int jp_nz_nn(void) {
+	if (!is_flag_set(ZERO))
+		return jump_nn() + 4;
+	else {
+		registers.PC += 2;
+		return 12;
+	}
+}
+
+// 0xC3: Jump to address in memory(nn)
+int jp_nn(void) { return jump_nn(); }
+
 // 0xC5: Push reg-BC to stack, decrement SP twice
 int push_bc(void) {
 	push_short_stack(registers.BC);
@@ -1158,10 +1171,20 @@ int push_bc(void) {
 // 0xC6: Add memory(n) to reg-A
 int add_a_n(void) { return add_8bit_vp(read_byte(registers.PC++), &registers.A, 8); }
 
+// 0xCA: Jump to address in memory(nn) if Z-flag is set
+int jp_z_nn(void) {
+	if (is_flag_set(ZERO))
+		return jump_nn() + 4;
+	else {
+		registers.PC += 2;
+		return 12;
+	}
+}
+
 // 0xCB: Execute CB instructions
 int cb(void) { return execute_cb_instruction(); }
 
-// 0xCE: Add memory(n) (+ carry flag) to reg-A
+// 0xCE: Add memory(n) (+ C-flag) to reg-A
 int adc_a_n(void) { return adc_8bit_vp(read_byte(registers.PC++), &registers.A, 8); }
 
 // 0xD1: Pop from stack to reg-DE, increment SP twice
@@ -1179,7 +1202,7 @@ int push_de(void) {
 // 0xD6: Subtract memory(n) from reg-A
 int sub_a_n(void) { return sub_8bit_vp(read_byte(registers.PC++), &registers.A, 8); }
 
-// 0xDE: Subtract memory(n) (+ carry flag) from reg-A
+// 0xDE: Subtract memory(n) (+ C-flag) from reg-A
 int sbc_a_n(void) { return sbc_8bit_vp(read_byte(registers.PC++), &registers.A, 8); }
 
 // 0xE0: Load from reg-A to memory(0xFF00 + n)
@@ -1211,17 +1234,17 @@ int add_sp_n(void) {
 	if ((registers.SP & 0xFF + value) > 0xFF)
 		set_flag(CARRY);
 	else
-		clear_flag(CARRY);
+		reset_flag(CARRY);
 
 	if ((registers.SP & 0x0F + value & 0x0F) > 0x0F)
 		set_flag(HALFCARRY);
 	else
-		clear_flag(HALFCARRY);
+		reset_flag(HALFCARRY);
 
 	registers.SP = (unsigned short)(result & 0xFFFF);
 
-	clear_flag(ZERO);
-	clear_flag(NEGATIVE);
+	reset_flag(ZERO);
+	reset_flag(NEGATIVE);
 
 	return 16;
 }
@@ -1273,16 +1296,16 @@ int ld_hl_sp_n(void) {
 	if(addition > 0xFFFF)
 		set_flag(CARRY);
 	else
-		clear_flag(CARRY);
+		reset_flag(CARRY);
 
 	int low_nibble_add = (registers.SP & 0x0F) + (operand & 0x0F);
 	if (low_nibble_add > 0x0F)
 		set_flag(HALFCARRY);
 	else
-		clear_flag(HALFCARRY);
+		reset_flag(HALFCARRY);
 
-	clear_flag(ZERO);
-	clear_flag(NEGATIVE);
+	reset_flag(ZERO);
+	reset_flag(NEGATIVE);
 
 	registers.HL = (unsigned short)(addition & 0xFFFF);
 

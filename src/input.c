@@ -7,7 +7,7 @@ unsigned char buttons_state = 0xFF;
 
 static bool is_button_pressed(buttons_t button);
 static void set_button_flag(buttons_t button);
-static void clear_button_flag(buttons_t button);
+static void reset_button_flag(buttons_t button);
 static bool is_standard_selected(void);
 static bool is_direction_selected(void);
 
@@ -15,7 +15,7 @@ static bool is_direction_selected(void);
 void joypad_button_down(buttons_t button)
 {
 	bool already_pressed = is_button_pressed(button);
-	clear_button_flag(button);
+	reset_button_flag(button);
 
 	if(already_pressed)
 		return;
@@ -63,8 +63,8 @@ static void set_button_flag(buttons_t button)
 	buttons_state |= (1 << button);
 }
 
-// Clear button flag in buttons_state
-static void clear_button_flag(buttons_t button)
+// Reset button flag in buttons_state
+static void reset_button_flag(buttons_t button)
 {
 	buttons_state &= ~(1 << button);
 }

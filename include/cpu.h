@@ -12,4 +12,4 @@ void resume_cpu(void);
 
 bool is_flag_set(flags_t flag);
 void set_flag(flags_t flag);
-void clear_flag(flags_t flag);
+void reset_flag(flags_t flag);

@@ -201,8 +201,12 @@ int cp_a_hl(void);
 int cp_a_a(void);
 // 0xC-
 int pop_bc(void);
+int jp_nz_nn(void);
+int jp_nn(void);
 int push_bc(void);
 int add_a_n(void);
+int jp_z_nn(void);
+int cb(void);
 int adc_a_n(void);
 // 0xD-
 int pop_de(void);

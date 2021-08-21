@@ -19,7 +19,7 @@ static bool is_LCD_enabled(void);
 static bool is_mode_interrupt_enabled(unsigned char mode);
 static void set_LCD_mode(unsigned char mode);
 static void set_coincidence_flag(void);
-static void clear_coincidence_flag(void);
+static void reset_coincidence_flag(void);
 static bool is_coincidence_interrupt_enabled(void);
 
 // Update display with current instruction cycles
@@ -92,7 +92,7 @@ void update_coincidence_flag(void)
 			request_interrupt(LCD);
 	}
 	else
-		clear_coincidence_flag();
+		reset_coincidence_flag();
 }
 
 // Update display's scanline with given cycles
@@ -146,8 +146,8 @@ static void set_coincidence_flag(void)
 	status |= (1 << 2);
 }
 
-// Clear coincidence flag in status
-static void clear_coincidence_flag(void)
+// Reset coincidence flag in status
+static void reset_coincidence_flag(void)
 {
 	status &= ~(1 << 2);
 }
