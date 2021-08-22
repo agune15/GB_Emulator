@@ -197,7 +197,7 @@ int sla(unsigned char *reg)
 	if (*reg)
 		reset_flag(ZERO);
 	else
-		reset_flag(ZERO);
+		set_flag(ZERO);
 
 	reset_flag(NEGATIVE);
 	reset_flag(HALFCARRY);
@@ -218,7 +218,7 @@ int sra(unsigned char *reg)
 	if (*reg)
 		reset_flag(ZERO);
 	else
-		reset_flag(ZERO);
+		set_flag(ZERO);
 
 	reset_flag(NEGATIVE);
 	reset_flag(HALFCARRY);
@@ -549,7 +549,7 @@ int sla_hl(void) {
 	if (value)
 		reset_flag(ZERO);
 	else
-		reset_flag(ZERO);
+		set_flag(ZERO);
 
 	reset_flag(NEGATIVE);
 	reset_flag(HALFCARRY);

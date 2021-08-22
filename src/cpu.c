@@ -9,9 +9,9 @@
 
 int (*instructions[256])(void) = {
 /*0x0*/	nop, ld_bc_nn, ld_bc_a, inc_bc, inc_b, dec_b, ld_b_n, rlca, ld_nnp_sp, add_hl_bc, ld_a_bc, dec_bc, inc_c, dec_c, ld_c_n, rrca,
-/*0x1*/	stop, ld_de_nn, ld_de_a, inc_de, inc_d, dec_d, ld_d_n, rla, NULL, add_hl_de, ld_a_de, dec_de, inc_e, dec_e, ld_e_n, rra,
-/*0x2*/	NULL, ld_hl_nn, ldi_hl_a, inc_hl, inc_h, dec_h, ld_h_n, daa, NULL, add_hl_hl, ldi_a_hl, dec_hl, inc_l, dec_l, ld_l_n, cpl_a,
-/*0x3*/	NULL, ld_sp_nn, ldd_hl_a, inc_sp, inc_hlp, dec_hlp, ld_hl_n, scf, NULL, add_hl_sp, ldd_a_hl, dec_sp, inc_a, dec_a, ld_a_n, ccf,
+/*0x1*/	stop, ld_de_nn, ld_de_a, inc_de, inc_d, dec_d, ld_d_n, rla, jr_n, add_hl_de, ld_a_de, dec_de, inc_e, dec_e, ld_e_n, rra,
+/*0x2*/	jr_nz_n, ld_hl_nn, ldi_hl_a, inc_hl, inc_h, dec_h, ld_h_n, daa, jr_z_n, add_hl_hl, ldi_a_hl, dec_hl, inc_l, dec_l, ld_l_n, cpl_a,
+/*0x3*/	jr_nc_n, ld_sp_nn, ldd_hl_a, inc_sp, inc_hlp, dec_hlp, ld_hl_n, scf, jr_c_n, add_hl_sp, ldd_a_hl, dec_sp, inc_a, dec_a, ld_a_n, ccf,
 /*0x4*/	ld_b_b, ld_b_c, ld_b_d, ld_b_e, ld_b_h, ld_b_l, ld_b_hl, ld_b_a, ld_c_b, ld_c_c, ld_c_d, ld_c_e, ld_c_h, ld_c_l, ld_c_hl, ld_c_a,
 /*0x5*/	ld_d_b, ld_d_c, ld_d_d, ld_d_e, ld_d_h, ld_d_l, ld_d_hl, ld_d_a, ld_e_b, ld_e_c, ld_e_d, ld_e_e, ld_e_h, ld_e_l, ld_e_hl, ld_e_a,
 /*0x6*/	ld_h_b, ld_h_c, ld_h_d, ld_h_e, ld_h_h, ld_h_l, ld_h_hl, ld_h_a, ld_l_b, ld_l_c, ld_l_d, ld_l_e, ld_l_h, ld_l_l, ld_l_hl, ld_l_a,
@@ -448,13 +448,13 @@ int jump_nn(void)
 	return 12;
 }
 
-/*
-// Add memory(n) to
+// Jump to current address + memory(n)
 int jump_n(void)
 {
-
+	signed char add_address = (signed char) read_byte(registers.PC++);
+	registers.PC += add_address;
+	return 8;
 }
- */
 
 //endregion
 
@@ -591,7 +591,8 @@ int rla(void) {
 	return 4;
 }
 
-// 0x18:
+// 0x18: Jump to current address + memory(n)
+int jr_n(void) { return jump_n(); }
 
 // 0x19: Add reg-DE to reg-HL
 int add_hl_de(void) { return add_16bit_hl(registers.DE, 8); }
@@ -630,6 +631,16 @@ int rra(void) {
 	reset_flag(ZERO);
 
 	return 4;
+}
+
+// 0x20: Jump to current address + memory(n) if Z-flag is not set
+int jr_nz_n(void) {
+	if (!is_flag_set(ZERO))
+		return jump_n() + 4;
+	else {
+		registers.PC++;
+		return 8;
+	}
 }
 
 // 0x21: Load from memory(nn) to reg-HL
@@ -677,6 +688,16 @@ int daa(void) {
 	return 4;
 }
 
+// 0x28: Jump to current address + memory(n) if Z-flag is set
+int jr_z_n(void) {
+	if (is_flag_set(ZERO))
+		return jump_n() + 4;
+	else {
+		registers.PC++;
+		return 8;
+	}
+}
+
 // 0x29: Add reg-HL to reg-HL
 int add_hl_hl(void) { return add_16bit_hl(registers.HL, 8); }
 
@@ -705,6 +726,16 @@ int cpl_a(void) {
 	return 4;
 }
 
+// 0x30: Jump to current address + memory(n) if C-flag is not set
+int jr_nc_n(void) {
+	if (!is_flag_set(CARRY))
+		return jump_n() + 4;
+	else {
+		registers.PC++;
+		return 8;
+	}
+}
+
 // 0x31: Load from memory(nn) to reg-SP
 int ld_sp_nn(void) { return load_16bit_nnp(&registers.SP, 12); }
 
@@ -731,6 +762,16 @@ int scf(void) {
 	reset_flag(HALFCARRY);
 
 	return 4;
+}
+
+// 0x38: Jump to current address + memory(n) if C-flag is set
+int jr_c_n(void) {
+	if (is_flag_set(CARRY))
+		return jump_n() + 4;
+	else {
+		registers.PC++;
+		return 8;
+	}
 }
 
 // 0x39: Add reg-SP to reg-HL
