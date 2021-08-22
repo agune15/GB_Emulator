@@ -21,8 +21,8 @@ int (*instructions[256])(void) = {
 /*0xA*/	and_a_b, and_a_c, and_a_d, and_a_e, and_a_h, and_a_l, and_a_hl, and_a_a, xor_a_b, xor_a_c, xor_a_d, xor_a_e, xor_a_h, xor_a_l, xor_a_hl, xor_a_a,
 /*0xB*/ or_a_b, or_a_c, or_a_d, or_a_e, or_a_h, or_a_l, or_a_hl, or_a_a, cp_a_b, cp_a_c, cp_a_d, cp_a_e, cp_a_h, cp_a_l, cp_a_hl, cp_a_a,
 /*0xC*/	NULL, pop_bc, jp_nz_nn, jp_nn, NULL, push_bc, add_a_n, NULL, NULL, NULL, jp_z_nn, cb, NULL, NULL, adc_a_n, NULL,
-/*0xD*/	NULL, pop_de, NULL, NULL, NULL, push_de, sub_a_n, NULL, NULL, NULL, NULL, NULL, NULL, NULL, sbc_a_n, NULL,
-/*0xE*/	ld_ff_n_a, pop_hl, ld_ff_c_a, NULL, NULL, push_hl, and_a_n, NULL, add_sp_n, NULL, ld_nnp_a, NULL, NULL, NULL, xor_a_n, NULL,
+/*0xD*/	NULL, pop_de, jp_nc_nn, NULL, NULL, push_de, sub_a_n, NULL, NULL, NULL, jp_c_nn, NULL, NULL, NULL, sbc_a_n, NULL,
+/*0xE*/	ld_ff_n_a, pop_hl, ld_ff_c_a, NULL, NULL, push_hl, and_a_n, NULL, add_sp_n, jp_hl, ld_nnp_a, NULL, NULL, NULL, xor_a_n, NULL,
 /*0xF*/	ld_a_ff_n, pop_af, ld_a_ff_c, di, NULL, push_af, or_a_n, NULL, ld_hl_sp_n, ld_sp_hl, ld_a_nnp, ei, NULL, NULL, cp_a_n, NULL,
 };
 
@@ -448,6 +448,14 @@ int jump_nn(void)
 	return 12;
 }
 
+/*
+// Add memory(n) to
+int jump_n(void)
+{
+
+}
+ */
+
 //endregion
 
 //endregion
@@ -582,6 +590,8 @@ int rla(void) {
 
 	return 4;
 }
+
+// 0x18:
 
 // 0x19: Add reg-DE to reg-HL
 int add_hl_de(void) { return add_16bit_hl(registers.DE, 8); }
@@ -1193,6 +1203,16 @@ int pop_de(void) {
 	return 12;
 }
 
+// 0xD2: Jump to address in memory(nn) if C-flag is not set
+int jp_nc_nn(void) {
+	if (!is_flag_set(CARRY))
+		return jump_nn() + 4;
+	else {
+		registers.PC += 2;
+		return 12;
+	}
+}
+
 // 0xD5: Push reg-DE to stack, decrement SP twice
 int push_de(void) {
 	push_short_stack(registers.DE);
@@ -1201,6 +1221,16 @@ int push_de(void) {
 
 // 0xD6: Subtract memory(n) from reg-A
 int sub_a_n(void) { return sub_8bit_vp(read_byte(registers.PC++), &registers.A, 8); }
+
+// 0xDA: Jump to address in memory(nn) if C-flag is set
+int jp_c_nn(void) {
+	if (is_flag_set(CARRY))
+		return jump_nn() + 4;
+	else {
+		registers.PC += 2;
+		return 12;
+	}
+}
 
 // 0xDE: Subtract memory(n) (+ C-flag) from reg-A
 int sbc_a_n(void) { return sbc_8bit_vp(read_byte(registers.PC++), &registers.A, 8); }
@@ -1247,6 +1277,12 @@ int add_sp_n(void) {
 	reset_flag(NEGATIVE);
 
 	return 16;
+}
+
+// 0xE9: Jump to address in reg-HL
+int jp_hl(void) {
+	registers.PC = registers.HL;
+	return 4;
 }
 
 // 0xEA: Load from reg-A to memory address pointed in(nn)

@@ -26,6 +26,7 @@ int inc_d(void);
 int dec_d(void);
 int ld_d_n(void);
 int rla(void);
+int jr_n(void);
 int add_hl_de(void);
 int ld_a_de(void);
 int dec_de(void);
@@ -210,8 +211,10 @@ int cb(void);
 int adc_a_n(void);
 // 0xD-
 int pop_de(void);
+int jp_nc_nn(void);
 int push_de(void);
 int sub_a_n(void);
+int jp_c_nn(void);
 int sbc_a_n(void);
 // 0xE-
 int ld_ff_n_a(void);
@@ -220,6 +223,7 @@ int ld_ff_c_a(void);
 int push_hl(void);
 int and_a_n(void);
 int add_sp_n(void);
+int jp_hl(void);
 int ld_nnp_a(void);
 int xor_a_n(void);
 // 0xF-
