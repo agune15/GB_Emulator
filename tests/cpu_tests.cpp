@@ -26,10 +26,8 @@ void rotate_test(unsigned char rot_reg, bool carry_state);
 // Test sub-helpers
 int daa_test_previousBCDoperation(void);
 void daa_test_run(int bcdOpResult);
-void jp_zero_test_setup(bool zero_flag_set);
-void jp_carry_test_setup(bool carry_flag_set);
-void jr_zero_test_setup(bool zero_flag_set);
-void jr_carry_test_setup(bool carry_flag_set);
+void jump_zero_test_setup(bool zero_flag_set);
+void jump_carry_test_setup(bool carry_flag_set);
 
 //region Others
 
@@ -374,6 +372,25 @@ TEST_CASE("0x1F: Rotate reg-A right (+ old C-flag), set C-flag with LSB", "[cpu]
 	rotate_test(rot_regA, carry_state);
 }
 
+TEST_CASE("0x20: Jump to current address + memory(n) if Z-flag is not set", "[cpu][jump]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x20;
+	signed char add_address = ROM_banks[registers.PC+1] = GENERATE(take(5, random(0, 0xFF)));
+	unsigned short jump_address = registers.PC+2 + add_address;
+
+	bool zero_flag_set = GENERATE(take(2, random(0, 1)));
+	jump_zero_test_setup(zero_flag_set);
+
+	int cycles = execute_next_instruction();
+
+	if (!zero_flag_set) {
+		CHECK(registers.PC == jump_address);
+		CHECK(cycles == 12);
+	}
+	else
+		CHECK(cycles == 8);
+}
+
 TEST_CASE("0x21: Load from memory(nn) to reg-DE", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0x21;
@@ -437,6 +454,25 @@ TEST_CASE("0x27: Decimal Adjust reg-A", "[cpu][daa]") {
 	ROM_banks[registers.PC] = 0x27;
 
 	daa_test();
+}
+
+TEST_CASE("0x28: Jump to current address + memory(n) if Z-flag is set", "[cpu][jump]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x28;
+	signed char add_address = ROM_banks[registers.PC+1] = GENERATE(take(5, random(0, 0xFF)));
+	unsigned short jump_address = registers.PC+2 + add_address;
+
+	bool zero_flag_set = GENERATE(take(2, random(0, 1)));
+	jump_zero_test_setup(zero_flag_set);
+
+	int cycles = execute_next_instruction();
+
+	if (zero_flag_set) {
+		CHECK(registers.PC == jump_address);
+		CHECK(cycles == 12);
+	}
+	else
+		CHECK(cycles == 8);
 }
 
 TEST_CASE("0x29: Add reg-HL to reg-HL", "[cpu][add]") {
@@ -506,6 +542,25 @@ TEST_CASE("0x2F: Complement reg-A", "[cpu][misc]") {
 
 	CHECK(is_flag_set(NEGATIVE) == true);
 	CHECK(is_flag_set(HALFCARRY) == true);
+}
+
+TEST_CASE("0x30: Jump to current address + memory(n) if C-flag is not set", "[cpu][jump]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x30;
+	signed char add_address = ROM_banks[registers.PC+1] = GENERATE(take(5, random(0, 0xFF)));
+	unsigned short jump_address = registers.PC+2 + add_address;
+
+	bool carry_flag_set = GENERATE(take(2, random(0, 1)));
+	jump_carry_test_setup(carry_flag_set);
+
+	int cycles = execute_next_instruction();
+
+	if (!carry_flag_set) {
+		CHECK(registers.PC == jump_address);
+		CHECK(cycles == 12);
+	}
+	else
+		CHECK(cycles == 8);
 }
 
 TEST_CASE("0x31: Load from memory(nn) to reg-SP", "[cpu][load]") {
@@ -583,6 +638,24 @@ TEST_CASE("0x37: Set C-flag", "[cpu][misc]") {
 	CHECK(is_flag_set(HALFCARRY) == false);
 }
 
+TEST_CASE("0x38: Jump to current address + memory(n) if C-flag is set", "[cpu][jump]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0x38;
+	signed char add_address = ROM_banks[registers.PC+1] = GENERATE(take(5, random(0, 0xFF)));
+	unsigned short jump_address = registers.PC+2 + add_address;
+
+	bool carry_flag_set = GENERATE(take(2, random(0, 1)));
+	jump_carry_test_setup(carry_flag_set);
+
+	int cycles = execute_next_instruction();
+
+	if (carry_flag_set) {
+		CHECK(registers.PC == jump_address);
+		CHECK(cycles == 12);
+	}
+	else
+		CHECK(cycles == 8);
+}
 
 TEST_CASE("0x39: Add reg-SP to reg-HL", "[cpu][add]") {
 	registers.PC = 0x0100;
@@ -1921,17 +1994,17 @@ TEST_CASE("0xC1: Pop from stack to reg-BC, increment SP twice", "[cpu][load]") {
 TEST_CASE("0xC2: Jump to address in memory(nn) if Z-flag is not set", "[cpu][jump]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0xC2;
-	unsigned short value = GENERATE(take(5, random(0x0000, 0xFFFF)));
-	ROM_banks[registers.PC+1] = value & 0x00FF;
-	ROM_banks[registers.PC+2] = (value & 0xFF00) >> 8;
-	bool zero_flag_set = GENERATE(take(2, random(0, 1)));
+	unsigned short jump_address = GENERATE(take(5, random(0x0000, 0xFFFF)));
+	ROM_banks[registers.PC+1] = jump_address & 0x00FF;
+	ROM_banks[registers.PC+2] = (jump_address & 0xFF00) >> 8;
 
-	jp_zero_test_setup(zero_flag_set);
+	bool zero_flag_set = GENERATE(take(2, random(0, 1)));
+	jump_zero_test_setup(zero_flag_set);
 
 	int cycles = execute_next_instruction();
 
 	if (!zero_flag_set) {
-		CHECK(registers.PC == value);
+		CHECK(registers.PC == jump_address);
 		CHECK(cycles == 16);
 	}
 	else
@@ -1948,6 +2021,27 @@ TEST_CASE("0xC3: Jump to address in memory(nn)", "[cpu][jump]") {
 	int cycles = execute_next_instruction();
 	CHECK(registers.PC == value);
 	CHECK(cycles == 12);
+}
+
+TEST_CASE("0xC4: Push next instruction address to stack and jump to address in memory(nn) if Z-flag is not set", "[cpu][call]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xC4;
+	unsigned short jump_address = GENERATE(take(5, random(0x0000, 0xFFFF)));
+	ROM_banks[registers.PC+1] = jump_address & 0x00FF;
+	ROM_banks[registers.PC+2] = (jump_address & 0xFF00) >> 8;
+
+	bool zero_flag_set = GENERATE(take(2, random(0, 1)));
+	jump_zero_test_setup(zero_flag_set);
+
+	int cycles = execute_next_instruction();
+
+	if (!zero_flag_set) {
+		CHECK(registers.PC == jump_address);
+		CHECK(pop_short_stack() == 0x0103);
+		CHECK(cycles == 24);
+	}
+	else
+		CHECK(cycles == 12);
 }
 
 TEST_CASE("0xC5: Push reg-BC to stack, decrement SP twice", "[cpu][load]") {
@@ -1971,24 +2065,71 @@ TEST_CASE("0xC6: Add memory(n) to reg-A", "[cpu][add]") {
 	add_a_test(read_byte(registers.PC+1), 8);
 }
 
+
+TEST_CASE("0xC7: Push current address to stack and jump to address 0x0000", "[cpu][restart]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xC7;
+	unsigned short jump_address = GENERATE(take(5, random(0x0000, 0xFFFF)));
+
+	//TODO: This inside a function
+	int cycles = execute_next_instruction();
+	CHECK(registers.PC == 0x0000);
+	CHECK(pop_short_stack() == 0x0101);
+	CHECK(cycles == 32);
+}
+
 TEST_CASE("0xCA: Jump to address in memory(nn) if Z-flag is set", "[cpu][jump]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0xCA;
-	unsigned short value = GENERATE(take(5, random(0x0000, 0xFFFF)));
-	ROM_banks[registers.PC+1] = value & 0x00FF;
-	ROM_banks[registers.PC+2] = (value & 0xFF00) >> 8;
-	bool zero_flag_set = GENERATE(take(2, random(0, 1)));
+	unsigned short jump_address = GENERATE(take(5, random(0x0000, 0xFFFF)));
+	ROM_banks[registers.PC+1] = jump_address & 0x00FF;
+	ROM_banks[registers.PC+2] = (jump_address & 0xFF00) >> 8;
 
-	jp_zero_test_setup(zero_flag_set);
+	bool zero_flag_set = GENERATE(take(2, random(0, 1)));
+	jump_zero_test_setup(zero_flag_set);
 
 	int cycles = execute_next_instruction();
 
 	if (zero_flag_set) {
-		CHECK(registers.PC == value);
+		CHECK(registers.PC == jump_address);
 		CHECK(cycles == 16);
 	}
 	else
 		CHECK(cycles == 12);
+}
+
+TEST_CASE("0xCC: Push next instruction address to stack and jump to address in memory(nn) if Z-flag is set", "[cpu][call]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xCC;
+	unsigned short jump_address = GENERATE(take(5, random(0x0000, 0xFFFF)));
+	ROM_banks[registers.PC+1] = jump_address & 0x00FF;
+	ROM_banks[registers.PC+2] = (jump_address & 0xFF00) >> 8;
+
+	bool zero_flag_set = GENERATE(take(2, random(0, 1)));
+	jump_zero_test_setup(zero_flag_set);
+
+	int cycles = execute_next_instruction();
+
+	if (zero_flag_set) {
+		CHECK(registers.PC == jump_address);
+		CHECK(pop_short_stack() == 0x0103);
+		CHECK(cycles == 24);
+	}
+	else
+		CHECK(cycles == 12);
+}
+
+TEST_CASE("0xCD: Push next instruction address to stack and jump to address in memory(nn)", "[cpu][call]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xCD;
+	unsigned short jump_address = GENERATE(take(5, random(0x0000, 0xFFFF)));
+	ROM_banks[registers.PC+1] = jump_address & 0x00FF;
+	ROM_banks[registers.PC+2] = (jump_address & 0xFF00) >> 8;
+
+	int cycles = execute_next_instruction();
+	CHECK(registers.PC == jump_address);
+	CHECK(pop_short_stack() == 0x0103);
+	CHECK(cycles == 12);
 }
 
 TEST_CASE("0xCE: Add memory(n) (+ C-flag) to reg-A", "[cpu][add]") {
@@ -1998,6 +2139,17 @@ TEST_CASE("0xCE: Add memory(n) (+ C-flag) to reg-A", "[cpu][add]") {
 	registers.A = GENERATE(take(5, random(0, 0xFF)));
 
 	adc_a_test(read_byte(registers.PC+1), 8);
+}
+
+TEST_CASE("0xCF: Push current address to stack and jump to address 0x0008", "[cpu][restart]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xC7;
+	unsigned short jump_address = GENERATE(take(5, random(0x0000, 0xFFFF)));
+
+	int cycles = execute_next_instruction();
+	CHECK(registers.PC == 0x0008);
+	CHECK(pop_short_stack() == 0x0101);
+	CHECK(cycles == 32);
 }
 
 TEST_CASE("0xD1: Pop from stack to reg-DE, increment SP twice", "[cpu][load]") {
@@ -2015,18 +2167,39 @@ TEST_CASE("0xD1: Pop from stack to reg-DE, increment SP twice", "[cpu][load]") {
 TEST_CASE("0xD2: Jump to address in memory(nn) if C-flag is not set", "[cpu][jump]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0xD2;
-	unsigned short value = GENERATE(take(5, random(0x0000, 0xFFFF)));
-	ROM_banks[registers.PC+1] = value & 0x00FF;
-	ROM_banks[registers.PC+2] = (value & 0xFF00) >> 8;
-	bool carry_flag_set = GENERATE(take(2, random(0, 1)));
+	unsigned short jump_address = GENERATE(take(5, random(0x0000, 0xFFFF)));
+	ROM_banks[registers.PC+1] = jump_address & 0x00FF;
+	ROM_banks[registers.PC+2] = (jump_address & 0xFF00) >> 8;
 
-	jp_carry_test_setup(carry_flag_set);
+	bool carry_flag_set = GENERATE(take(2, random(0, 1)));
+	jump_carry_test_setup(carry_flag_set);
 
 	int cycles = execute_next_instruction();
 
 	if (!carry_flag_set) {
-		CHECK(registers.PC == value);
+		CHECK(registers.PC == jump_address);
 		CHECK(cycles == 16);
+	}
+	else
+		CHECK(cycles == 12);
+}
+
+TEST_CASE("0xD4: Push next instruction address to stack and jump to address in memory(nn) if C-flag is not set", "[cpu][call]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xD4;
+	unsigned short jump_address = GENERATE(take(5, random(0x0000, 0xFFFF)));
+	ROM_banks[registers.PC+1] = jump_address & 0x00FF;
+	ROM_banks[registers.PC+2] = (jump_address & 0xFF00) >> 8;
+
+	bool carry_flag_state = GENERATE(take(2, random(0, 1)));
+	jump_carry_test_setup(carry_flag_state);
+
+	int cycles = execute_next_instruction();
+
+	if (!carry_flag_state) {
+		CHECK(registers.PC == jump_address);
+		CHECK(pop_short_stack() == 0x0103);
+		CHECK(cycles == 24);
 	}
 	else
 		CHECK(cycles == 12);
@@ -2056,18 +2229,39 @@ TEST_CASE("0xD6: Subtract memory(n) from reg-A", "[cpu][sub]") {
 TEST_CASE("0xDA: Jump to address in memory(nn) if C-flag is set", "[cpu][jump]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0xDA;
-	unsigned short value = GENERATE(take(5, random(0x0000, 0xFFFF)));
-	ROM_banks[registers.PC+1] = value & 0x00FF;
-	ROM_banks[registers.PC+2] = (value & 0xFF00) >> 8;
-	bool carry_flag_set = GENERATE(take(2, random(0, 1)));
+	unsigned short jump_address = GENERATE(take(5, random(0x0000, 0xFFFF)));
+	ROM_banks[registers.PC+1] = jump_address & 0x00FF;
+	ROM_banks[registers.PC+2] = (jump_address & 0xFF00) >> 8;
 
-	jp_carry_test_setup(carry_flag_set);
+	bool carry_flag_set = GENERATE(take(2, random(0, 1)));
+	jump_carry_test_setup(carry_flag_set);
 
 	int cycles = execute_next_instruction();
 
 	if (carry_flag_set) {
-		CHECK(registers.PC == value);
+		CHECK(registers.PC == jump_address);
 		CHECK(cycles == 16);
+	}
+	else
+		CHECK(cycles == 12);
+}
+
+TEST_CASE("0xDC: Push next instruction address to stack and jump to address in memory(nn) if C-flag is set", "[cpu][call]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xDC;
+	unsigned short jump_address = GENERATE(take(5, random(0x0000, 0xFFFF)));
+	ROM_banks[registers.PC+1] = jump_address & 0x00FF;
+	ROM_banks[registers.PC+2] = (jump_address & 0xFF00) >> 8;
+
+	bool carry_flag_state = GENERATE(take(2, random(0, 1)));
+	jump_carry_test_setup(carry_flag_state);
+
+	int cycles = execute_next_instruction();
+
+	if (carry_flag_state) {
+		CHECK(registers.PC == jump_address);
+		CHECK(pop_short_stack() == 0x0103);
+		CHECK(cycles == 24);
 	}
 	else
 		CHECK(cycles == 12);
@@ -2629,7 +2823,7 @@ void daa_test_run(int bcdOpResult)
 
 // Jump Z-flag
 
-void jp_zero_test_setup(bool zero_flag_set)
+void jump_zero_test_setup(bool zero_flag_set)
 {
 	if (zero_flag_set)
 		set_flag(ZERO);
@@ -2639,7 +2833,7 @@ void jp_zero_test_setup(bool zero_flag_set)
 
 // Jump C-flag
 
-void jp_carry_test_setup(bool carry_flag_set)
+void jump_carry_test_setup(bool carry_flag_set)
 {
 	if (carry_flag_set)
 		set_flag(CARRY);
