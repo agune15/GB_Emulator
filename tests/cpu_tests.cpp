@@ -22,6 +22,7 @@ void inc_16bit_test(unsigned short *regToInc, int opCycles);
 void dec_16bit_test(unsigned short *regToDec, int opCycles);
 void daa_test(void);
 void rotate_test(unsigned char rot_reg, bool carry_state);
+void restart_test(unsigned short jump_address);
 
 // Test sub-helpers
 int daa_test_previousBCDoperation(void);
@@ -2065,17 +2066,11 @@ TEST_CASE("0xC6: Add memory(n) to reg-A", "[cpu][add]") {
 	add_a_test(read_byte(registers.PC+1), 8);
 }
 
-
 TEST_CASE("0xC7: Push current address to stack and jump to address 0x0000", "[cpu][restart]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0xC7;
-	unsigned short jump_address = GENERATE(take(5, random(0x0000, 0xFFFF)));
 
-	//TODO: This inside a function
-	int cycles = execute_next_instruction();
-	CHECK(registers.PC == 0x0000);
-	CHECK(pop_short_stack() == 0x0101);
-	CHECK(cycles == 32);
+	restart_test(0x0000);
 }
 
 TEST_CASE("0xCA: Jump to address in memory(nn) if Z-flag is set", "[cpu][jump]") {
@@ -2143,13 +2138,9 @@ TEST_CASE("0xCE: Add memory(n) (+ C-flag) to reg-A", "[cpu][add]") {
 
 TEST_CASE("0xCF: Push current address to stack and jump to address 0x0008", "[cpu][restart]") {
 	registers.PC = 0x0100;
-	ROM_banks[registers.PC] = 0xC7;
-	unsigned short jump_address = GENERATE(take(5, random(0x0000, 0xFFFF)));
+	ROM_banks[registers.PC] = 0xCF;
 
-	int cycles = execute_next_instruction();
-	CHECK(registers.PC == 0x0008);
-	CHECK(pop_short_stack() == 0x0101);
-	CHECK(cycles == 32);
+	restart_test(0x0008);
 }
 
 TEST_CASE("0xD1: Pop from stack to reg-DE, increment SP twice", "[cpu][load]") {
@@ -2226,6 +2217,13 @@ TEST_CASE("0xD6: Subtract memory(n) from reg-A", "[cpu][sub]") {
 	sub_a_test(read_byte(registers.PC+1), 8);
 }
 
+TEST_CASE("0xD7: Push current address to stack and jump to address 0x0010", "[cpu][restart]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xD7;
+
+	restart_test(0x0010);
+}
+
 TEST_CASE("0xDA: Jump to address in memory(nn) if C-flag is set", "[cpu][jump]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0xDA;
@@ -2274,6 +2272,13 @@ TEST_CASE("0xDE: Subtract memory(n) (+ C-flag) from reg-A", "[cpu][sub]") {
 	registers.A = GENERATE(take(5, random(0, 0xFF)));
 
 	sbc_a_test(read_byte(registers.PC+1), 8);
+}
+
+TEST_CASE("0xDF: Push current address to stack and jump to address 0x0018", "[cpu][restart]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xDF;
+
+	restart_test(0x0018);
 }
 
 TEST_CASE("0xE0: Load from reg-A to memory(0xFF00 + n)", "[cpu][load]") {
@@ -2336,6 +2341,13 @@ TEST_CASE("0xE6: Logical AND, memory(n) & reg-A, result in reg-A", "[cpu][and]")
 	and_a_test(read_byte(registers.PC+1), 8);
 }
 
+TEST_CASE("0xE7: Push current address to stack and jump to address 0x0020", "[cpu][restart]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xE7;
+
+	restart_test(0x0020);
+}
+
 TEST_CASE("0xE8: Add memory(n) to reg-SP", "[cpu][add]") {
 	registers.PC = 0x100;
 	ROM_banks[registers.PC] = 0xE8;
@@ -2375,6 +2387,13 @@ TEST_CASE("0xEE: Logical XOR, memory(n) ^ reg-A, result in reg-A", "[cpu][xor]")
 	registers.A = GENERATE(take(5, random(0, 0xFF)));
 
 	xor_a_test(read_byte(registers.PC+1), 8);
+}
+
+TEST_CASE("0xEF: Push current address to stack and jump to address 0x0028", "[cpu][restart]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xEF;
+
+	restart_test(0x0028);
 }
 
 TEST_CASE("0xF0: Load from memory(0xFF00 + n) to reg-A", "[cpu][load]") {
@@ -2448,6 +2467,13 @@ TEST_CASE("0xF6: Logical OR, memory(n) | reg-A, result in reg-A", "[cpu][or]") {
 	or_a_test(read_byte(registers.PC+1), 8);
 }
 
+TEST_CASE("0xF7: Push current address to stack and jump to address 0x0030", "[cpu][restart]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xF7;
+
+	restart_test(0x0030);
+}
+
 TEST_CASE("0xF8: Load from reg-SP + (signed)memory(n) to reg-HL", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0xF8;
@@ -2510,6 +2536,13 @@ TEST_CASE("0xFE: Compare memory(n) with reg-A", "[cpu][cp]") {
 	registers.A = GENERATE(take(5, random(0, 0xFF)));
 
 	cp_a_test(read_byte(registers.PC+1), 8);
+}
+
+TEST_CASE("0xFF: Push current address to stack and jump to address 0x0038", "[cpu][restart]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xFF;
+
+	restart_test(0x0038);
 }
 
 //endregion
@@ -2735,6 +2768,16 @@ void rotate_test(unsigned char rot_reg, bool carry_state)
 	CHECK(is_flag_set(HALFCARRY) == false);
 	CHECK(is_flag_set(ZERO) == false);
 	CHECK(cycles == 4);
+}
+
+void restart_test(unsigned short jump_address)
+{
+	registers.SP = 0xFFFE;
+
+	int cycles = execute_next_instruction();
+	CHECK(registers.PC == jump_address);
+	CHECK(pop_short_stack() == 0x0101);
+	CHECK(cycles == 32);
 }
 
 //endregion
