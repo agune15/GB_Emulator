@@ -23,6 +23,7 @@ void dec_16bit_test(unsigned short *regToDec, int opCycles);
 void daa_test(void);
 void rotate_test(unsigned char rot_reg, bool carry_state);
 void restart_test(unsigned short jump_address);
+void return_test(unsigned short jump_address);
 
 // Test sub-helpers
 int daa_test_previousBCDoperation(void);
@@ -2071,6 +2072,19 @@ TEST_CASE("0xC7: Push current address to stack and jump to address 0x0000", "[cp
 	ROM_banks[registers.PC] = 0xC7;
 
 	restart_test(0x0000);
+}
+
+TEST_CASE("0xC9: Push next instruction address to stack and jump to address in memory(nn) if Z-flag is not set", "[cpu][call]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xC9;
+	unsigned short jump_address = GENERATE(take(5, random(0x0000, 0xFFFF)));
+
+	registers.SP = 0xFFFE;
+	push_short_stack(jump_address);
+
+	int cycles = execute_next_instruction();
+	CHECK(registers.PC == jump_address);
+	CHECK(cycles == 8);
 }
 
 TEST_CASE("0xCA: Jump to address in memory(nn) if Z-flag is set", "[cpu][jump]") {

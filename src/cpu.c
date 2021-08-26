@@ -20,8 +20,8 @@ int (*instructions[256])(void) = {
 /*0x9*/	sub_a_b, sub_a_c, sub_a_d, sub_a_e, sub_a_h, sub_a_l, sub_a_hl, sub_a_a, sbc_a_b, sbc_a_c, sbc_a_d, sbc_a_e, sbc_a_h, sbc_a_l, sbc_a_hl, sbc_a_a,
 /*0xA*/	and_a_b, and_a_c, and_a_d, and_a_e, and_a_h, and_a_l, and_a_hl, and_a_a, xor_a_b, xor_a_c, xor_a_d, xor_a_e, xor_a_h, xor_a_l, xor_a_hl, xor_a_a,
 /*0xB*/ or_a_b, or_a_c, or_a_d, or_a_e, or_a_h, or_a_l, or_a_hl, or_a_a, cp_a_b, cp_a_c, cp_a_d, cp_a_e, cp_a_h, cp_a_l, cp_a_hl, cp_a_a,
-/*0xC*/	NULL, pop_bc, jp_nz_nn, jp_nn, call_nz_nn, push_bc, add_a_n, rst_0, NULL, NULL, jp_z_nn, cb, call_z_nn, call_nn, adc_a_n, rst_8,
-/*0xD*/	NULL, pop_de, jp_nc_nn, NULL, call_nc_nn, push_de, sub_a_n, rst_10, NULL, NULL, jp_c_nn, NULL, call_c_nn, NULL, sbc_a_n, rst_18,
+/*0xC*/	ret_nz, pop_bc, jp_nz_nn, jp_nn, call_nz_nn, push_bc, add_a_n, rst_0, ret_z, ret, jp_z_nn, cb, call_z_nn, call_nn, adc_a_n, rst_8,
+/*0xD*/	ret_nc, pop_de, jp_nc_nn, NULL, call_nc_nn, push_de, sub_a_n, rst_10, ret_c, NULL, jp_c_nn, NULL, call_c_nn, NULL, sbc_a_n, rst_18,
 /*0xE*/	ld_ff_n_a, pop_hl, ld_ff_c_a, NULL, NULL, push_hl, and_a_n, rst_20, add_sp_n, jp_hl, ld_nnp_a, NULL, NULL, NULL, xor_a_n, rst_28,
 /*0xF*/	ld_a_ff_n, pop_af, ld_a_ff_c, di, NULL, push_af, or_a_n, rst_30, ld_hl_sp_n, ld_sp_hl, ld_a_nnp, ei, NULL, NULL, cp_a_n, rst_38,
 };
@@ -476,6 +476,13 @@ int restart(unsigned short address)
 
 	return 32;
 }
+
+//endregion
+
+//region Returns
+
+// Pop two bytes from stack and jump to that address (Implemented in instruction 0xC9)
+int ret(void);
 
 //endregion
 
@@ -1215,6 +1222,14 @@ int cp_a_hl(void) { return cp_8bit_vp(read_byte(registers.HL), &registers.A, 8);
 // 0xBF: Compare reg-A with reg-A
 int cp_a_a(void) { return cp_8bit_vp(registers.A, &registers.A, 4); }
 
+// 0xC0: Pop two bytes from stack and jump to that address if Z-flag is not set
+int ret_nz(void) {
+	if (!is_flag_set(ZERO))
+		return ret() + 12;
+	else
+		return 8;
+}
+
 // 0xC1: Pop from stack to reg-BC, increment SP twice
 int pop_bc(void) {
 	registers.BC = pop_short_stack();
@@ -1255,6 +1270,21 @@ int add_a_n(void) { return add_8bit_vp(read_byte(registers.PC++), &registers.A, 
 
 // 0xC7: Push current address to stack and jump to address 0x0000
 int rst_0(void) { return restart(0x0000); }
+
+// 0xC8: Pop two bytes from stack and jump to that address if Z-flag is set
+int ret_z(void) {
+	if (is_flag_set(ZERO))
+		return ret() + 12;
+	else
+		return 8;
+}
+
+// 0xC9: Pop two bytes from stack and jump to that address
+int ret(void) {
+	registers.PC = pop_short_stack();
+
+	return 8;
+}
 
 // 0xCA: Jump to address in memory(nn) if Z-flag is set
 int jp_z_nn(void) {
@@ -1297,6 +1327,14 @@ int adc_a_n(void) { return adc_8bit_vp(read_byte(registers.PC++), &registers.A, 
 // 0xCF: Push current address to stack and jump to address 0x0008
 int rst_8(void) { return restart(0x0008); }
 
+// 0xD0: Pop two bytes from stack and jump to that address if C-flag is not set
+int ret_nc(void) {
+	if (!is_flag_set(CARRY))
+		return ret() + 12;
+	else
+		return 8;
+}
+
 // 0xD1: Pop from stack to reg-DE, increment SP twice
 int pop_de(void) {
 	registers.DE = pop_short_stack();
@@ -1334,6 +1372,14 @@ int sub_a_n(void) { return sub_8bit_vp(read_byte(registers.PC++), &registers.A, 
 
 // 0xD7: Push current address to stack and jump to address 0x0010
 int rst_10(void) { return restart(0x0010); }
+
+// 0xD8: Pop two bytes from stack and jump to that address if C-flag is set
+int ret_c(void) {
+	if (is_flag_set(CARRY))
+		return ret() + 12;
+	else
+		return 8;
+}
 
 // 0xDA: Jump to address in memory(nn) if C-flag is set
 int jp_c_nn(void) {
