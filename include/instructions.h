@@ -230,6 +230,7 @@ int push_de(void);
 int sub_a_n(void);
 int rst_10(void);
 int ret_c(void);
+int reti(void);
 int jp_c_nn(void);
 int call_c_nn(void);
 int sbc_a_n(void);

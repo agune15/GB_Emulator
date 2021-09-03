@@ -21,7 +21,7 @@ int (*instructions[256])(void) = {
 /*0xA*/	and_a_b, and_a_c, and_a_d, and_a_e, and_a_h, and_a_l, and_a_hl, and_a_a, xor_a_b, xor_a_c, xor_a_d, xor_a_e, xor_a_h, xor_a_l, xor_a_hl, xor_a_a,
 /*0xB*/ or_a_b, or_a_c, or_a_d, or_a_e, or_a_h, or_a_l, or_a_hl, or_a_a, cp_a_b, cp_a_c, cp_a_d, cp_a_e, cp_a_h, cp_a_l, cp_a_hl, cp_a_a,
 /*0xC*/	ret_nz, pop_bc, jp_nz_nn, jp_nn, call_nz_nn, push_bc, add_a_n, rst_0, ret_z, ret, jp_z_nn, cb, call_z_nn, call_nn, adc_a_n, rst_8,
-/*0xD*/	ret_nc, pop_de, jp_nc_nn, NULL, call_nc_nn, push_de, sub_a_n, rst_10, ret_c, NULL, jp_c_nn, NULL, call_c_nn, NULL, sbc_a_n, rst_18,
+/*0xD*/	ret_nc, pop_de, jp_nc_nn, NULL, call_nc_nn, push_de, sub_a_n, rst_10, ret_c, reti, jp_c_nn, NULL, call_c_nn, NULL, sbc_a_n, rst_18,
 /*0xE*/	ld_ff_n_a, pop_hl, ld_ff_c_a, NULL, NULL, push_hl, and_a_n, rst_20, add_sp_n, jp_hl, ld_nnp_a, NULL, NULL, NULL, xor_a_n, rst_28,
 /*0xF*/	ld_a_ff_n, pop_af, ld_a_ff_c, di, NULL, push_af, or_a_n, rst_30, ld_hl_sp_n, ld_sp_hl, ld_a_nnp, ei, NULL, NULL, cp_a_n, rst_38,
 };
@@ -1379,6 +1379,15 @@ int ret_c(void) {
 		return ret() + 12;
 	else
 		return 8;
+}
+
+// 0xD9: Pop two bytes from stack and jump to that address, then enable interrupts
+int reti(void) {
+	ret();
+
+	interrupt_master_enable = true;
+
+	return 8;
 }
 
 // 0xDA: Jump to address in memory(nn) if C-flag is set

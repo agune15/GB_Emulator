@@ -2053,6 +2053,8 @@ TEST_CASE("0xC4: Push next instruction address to stack and jump to address in m
 	ROM_banks[registers.PC+1] = jump_address & 0x00FF;
 	ROM_banks[registers.PC+2] = (jump_address & 0xFF00) >> 8;
 
+	registers.SP = 0xFFFE;
+
 	bool zero_flag_set = GENERATE(take(2, random(0, 1)));
 	jump_zero_test_setup(zero_flag_set);
 
@@ -2156,6 +2158,8 @@ TEST_CASE("0xCC: Push next instruction address to stack and jump to address in m
 	ROM_banks[registers.PC+1] = jump_address & 0x00FF;
 	ROM_banks[registers.PC+2] = (jump_address & 0xFF00) >> 8;
 
+	registers.SP = 0xFFFE;
+
 	bool zero_flag_set = GENERATE(take(2, random(0, 1)));
 	jump_zero_test_setup(zero_flag_set);
 
@@ -2176,6 +2180,8 @@ TEST_CASE("0xCD: Push next instruction address to stack and jump to address in m
 	unsigned short jump_address = GENERATE(take(5, random(0x0000, 0xFFFF)));
 	ROM_banks[registers.PC+1] = jump_address & 0x00FF;
 	ROM_banks[registers.PC+2] = (jump_address & 0xFF00) >> 8;
+
+	registers.SP = 0xFFFE;
 
 	int cycles = execute_next_instruction();
 	CHECK(registers.PC == jump_address);
@@ -2259,6 +2265,8 @@ TEST_CASE("0xD4: Push next instruction address to stack and jump to address in m
 	ROM_banks[registers.PC+1] = jump_address & 0x00FF;
 	ROM_banks[registers.PC+2] = (jump_address & 0xFF00) >> 8;
 
+	registers.SP = 0xFFFE;
+
 	bool carry_flag_state = GENERATE(take(2, random(0, 1)));
 	jump_carry_test_setup(carry_flag_state);
 
@@ -2322,6 +2330,20 @@ TEST_CASE("0xD8: Pop two bytes from stack and jump to that address if C-flag is 
 		CHECK(cycles == 8);
 }
 
+TEST_CASE("0xD9: Pop two bytes from stack and jump to that address, then enable interrupts", "[cpu][return]") {
+	registers.PC = 0x0100;
+	ROM_banks[registers.PC] = 0xD9;
+	unsigned short jump_address = GENERATE(take(5, random(0x0000, 0xFFFF)));
+
+	registers.SP = 0xFFFE;
+	push_short_stack(jump_address);
+
+	int cycles = execute_next_instruction();
+	CHECK(registers.PC == jump_address);
+	CHECK(interrupt_master_enable == true);
+	CHECK(cycles == 8);
+}
+
 TEST_CASE("0xDA: Jump to address in memory(nn) if C-flag is set", "[cpu][jump]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0xDA;
@@ -2348,6 +2370,8 @@ TEST_CASE("0xDC: Push next instruction address to stack and jump to address in m
 	unsigned short jump_address = GENERATE(take(5, random(0x0000, 0xFFFF)));
 	ROM_banks[registers.PC+1] = jump_address & 0x00FF;
 	ROM_banks[registers.PC+2] = (jump_address & 0xFF00) >> 8;
+
+	registers.SP = 0xFFFE;
 
 	bool carry_flag_state = GENERATE(take(2, random(0, 1)));
 	jump_carry_test_setup(carry_flag_state);
