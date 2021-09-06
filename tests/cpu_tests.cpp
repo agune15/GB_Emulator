@@ -6,6 +6,7 @@ extern "C" {
 };
 
 // Test helpers
+void load_8bit_toReg_test(unsigned char valueToLoad, unsigned char *reg, int opCycles);
 void add_a_test(unsigned char valueToAdd, int opCycles);
 void adc_a_test(unsigned char valueToAdd, int opCycles);
 void sub_a_test(unsigned char valueToSub, int opCycles);
@@ -108,9 +109,7 @@ TEST_CASE("0x06: Load from memory(n) to reg-B", "[cpu][load]") {
 	ROM_banks[registers.PC] = 0x06;
 	int value = ROM_banks[registers.PC+1] = GENERATE(take(5, random(0, 0xFF)));
 
-	int cycles = execute_next_instruction();
-	CHECK(registers.B == value);
-	CHECK(cycles == 8);
+	load_8bit_toReg_test(value, &registers.B, 8);
 }
 
 TEST_CASE("0x07: Rotate reg-A left (+ new C-flag), set C-flag with MSB", "[cpu][rotate]") {
@@ -188,9 +187,7 @@ TEST_CASE("0x0E: Load from memory(n) to reg-C", "[cpu][load]") {
 	ROM_banks[registers.PC] = 0x0E;
 	int value = ROM_banks[registers.PC+1] = GENERATE(take(5, random(0, 0xFF)));
 
-	int cycles = execute_next_instruction();
-	CHECK(registers.C == value);
-	CHECK(cycles == 8);
+	load_8bit_toReg_test(value, &registers.C, 8);
 }
 
 TEST_CASE("0x0F: Rotate reg-A right (+ new C-flag), set C-flag with LSB", "[cpu][rotate]") {
@@ -277,9 +274,7 @@ TEST_CASE("0x16: Load from memory(n) to reg-D", "[cpu][load]") {
 	ROM_banks[registers.PC] = 0x16;
 	int value = ROM_banks[registers.PC+1] = GENERATE(take(5, random(0, 0xFF)));
 
-	int cycles = execute_next_instruction();
-	CHECK(registers.D == value);
-	CHECK(cycles == 8);
+	load_8bit_toReg_test(value, &registers.D, 8);
 }
 
 TEST_CASE("0x17: Rotate reg-A left (+ old C-flag), set C-flag with MSB", "[cpu][rotate]") {
@@ -356,9 +351,7 @@ TEST_CASE("0x1E: Load from memory(n) to reg-E", "[cpu][load]") {
 	ROM_banks[registers.PC] = 0x1E;
 	int value = ROM_banks[registers.PC+1] = GENERATE(take(5, random(0, 0xFF)));
 
-	int cycles = execute_next_instruction();
-	CHECK(registers.E == value);
-	CHECK(cycles == 8);
+	load_8bit_toReg_test(value, &registers.E, 8);
 }
 
 TEST_CASE("0x1F: Rotate reg-A right (+ old C-flag), set C-flag with LSB", "[cpu][rotate]") {
@@ -446,9 +439,7 @@ TEST_CASE("0x26: Load from memory(n) to reg-H", "[cpu][load]") {
 	ROM_banks[registers.PC] = 0x26;
 	int value = ROM_banks[registers.PC+1] = GENERATE(take(5, random(0, 0xFF)));
 
-	int cycles = execute_next_instruction();
-	CHECK(registers.H == value);
-	CHECK(cycles == 8);
+	load_8bit_toReg_test(value, &registers.H, 8);
 }
 
 TEST_CASE("0x27: Decimal Adjust reg-A", "[cpu][daa]") {
@@ -527,9 +518,7 @@ TEST_CASE("0x2E: Load from memory(n) to reg-L", "[cpu][load]") {
 	ROM_banks[registers.PC] = 0x2E;
 	int value = ROM_banks[registers.PC+1] = GENERATE(take(5, random(0, 0xFF)));
 
-	int cycles = execute_next_instruction();
-	CHECK(registers.L == value);
-	CHECK(cycles == 8);
+	load_8bit_toReg_test(value, &registers.L, 8);
 }
 
 TEST_CASE("0x2F: Complement reg-A", "[cpu][misc]") {
@@ -709,9 +698,7 @@ TEST_CASE("0x3E: Load from memory(n) to reg-A", "[cpu][load]") {
 	ROM_banks[registers.PC] = 0x3E;
 	int value = ROM_banks[registers.PC+1] = GENERATE(take(5, random(0, 0xFF)));
 
-	int cycles = execute_next_instruction();
-	CHECK(registers.A == value);
-	CHECK(cycles == 8);
+	load_8bit_toReg_test(value, &registers.A, 8);
 }
 
 
@@ -2670,6 +2657,13 @@ TEST_CASE("0xFF: Push current address to stack and jump to address 0x0038", "[cp
 //endregion
 
 //region Helpers
+
+void load_8bit_toReg_test(unsigned char valueToLoad, unsigned char *reg, int opCycles)
+{
+	int cycles = execute_next_instruction();
+	CHECK(*reg == valueToLoad);
+	CHECK(cycles == opCycles);
+}
 
 void add_a_test(unsigned char valueToAdd, int opCycles)
 {
