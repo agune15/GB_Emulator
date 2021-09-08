@@ -50,6 +50,12 @@ int execute_next_instruction(void)
 	return (*instructions[instruction])();
 }
 
+// Resume the CPU if stopped
+void resume_cpu(void)
+{
+	cpu_stopped = false;
+}
+
 //region Helpers
 
 //region Flags
@@ -74,7 +80,7 @@ void reset_flag(flags_t flag)
 
 //endregion
 
-//region 8-bit loads
+//region Loads
 
 // Load byte into register
 int load_8bit_reg(unsigned char value, unsigned char *reg, int cycles)
@@ -90,12 +96,8 @@ int load_8bit_mem(unsigned char value, unsigned short address, int cycles)
 	return cycles;
 }
 
-//endregion
-
-//region 16-bit loads
-
 // Load short from memory(nn) into register
-int load_16bit_nnp(unsigned short *reg, int cycles)
+int load_16bit_nn_reg(unsigned short *reg, int cycles)
 {
 	*reg = read_short(registers.PC);
 	registers.PC += 2;
@@ -104,10 +106,10 @@ int load_16bit_nnp(unsigned short *reg, int cycles)
 
 //endregion
 
-//region 8-bit adds
+//region Adds
 
 // Add byte to register
-int add_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
+int add_8bit_reg(unsigned char value, unsigned char *reg, int cycles)
 {
 	unsigned int result = *reg + value;
 
@@ -135,19 +137,43 @@ int add_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
 }
 
 // Add byte (+ C-flag) to register
-int adc_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
+int adc_8bit_reg(unsigned char value, unsigned char *reg, int cycles)
 {
 	value += (is_flag_set(CARRY)) ? 1 : 0;
 
-	return add_8bit_vp(value, reg, cycles);
+	return add_8bit_reg(value, reg, cycles);
+}
+
+// Add short to reg-HL
+int add_16bit_hl(unsigned short value, int cycles)
+{
+	unsigned long result = value + registers.HL;
+
+	if ((registers.HL & 0x0FFF + result & 0x0FFF) > 0x0FFF)
+		set_flag(HALFCARRY);
+	else
+		reset_flag(HALFCARRY);
+
+	registers.HL = (unsigned short)(result & 0xFFFF);
+
+	if (result > 0xFFFF) {
+		set_flag(CARRY);
+	}
+	else {
+		reset_flag(CARRY);
+	}
+
+	reset_flag(NEGATIVE);
+
+	return cycles;
 }
 
 //endregion
 
-//region 8-bit subs
+//region Subtracts
 
 // Subtract byte from register
-int sub_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
+int sub_reg(unsigned char value, unsigned char *reg, int cycles)
 {
 	set_flag(NEGATIVE);
 
@@ -172,21 +198,21 @@ int sub_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
 }
 
 // Subtract byte (+ C-flag) from register
-int sbc_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
+int sbc_reg(unsigned char value, unsigned char *reg, int cycles)
 {
 	value += (is_flag_set(CARRY)) ? 1 : 0;
 
-	return sub_8bit_vp(value, reg, cycles);
+	return sub_reg(value, reg, cycles);
 }
 
 //end region
 
 //endregion
 
-//region 8-bit AND
+//region AND
 
-//TODO:
-int and_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
+// Logical AND between byte and register
+int and_reg(unsigned char value, unsigned char *reg, int cycles)
 {
 	*reg &= value;
 
@@ -204,10 +230,10 @@ int and_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
 
 //endregion
 
-//region 8-bit OR
+//region OR
 
-//TODO:
-int or_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
+// Logical OR between byte and register
+int or_reg(unsigned char value, unsigned char *reg, int cycles)
 {
 	*reg |= value;
 
@@ -225,10 +251,10 @@ int or_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
 
 //endregion
 
-//region 8-bit XOR
+//region XOR
 
-//TODO:
-int xor_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
+// Logical XOR between byte and register
+int xor_reg(unsigned char value, unsigned char *reg, int cycles)
 {
 	*reg ^= value;
 
@@ -246,10 +272,10 @@ int xor_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
 
 //endregion
 
-//region 8-bit CP
+//region Compare
 
-//TODO:
-int cp_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
+// Compare byte with register
+int cp_reg(unsigned char value, unsigned char *reg, int cycles)
 {
 	set_flag(NEGATIVE);
 
@@ -273,7 +299,7 @@ int cp_8bit_vp(unsigned char value, unsigned char *reg, int cycles)
 
 //endregion
 
-//region 8-bit INC
+//region Increments
 
 // Increment register
 int inc_8bit_p(unsigned char *reg, int cycles)
@@ -317,12 +343,20 @@ int inc_8bit_a(unsigned short address, int cycles) {
 	return cycles;
 }
 
+// Increment 16-bit register
+int inc_16bit_p(unsigned short *reg, int cycles)
+{
+	(*reg)++;
+
+	return cycles;
+}
+
 //endregion
 
-//region 8-bit DEC
+//region Decrements
 
 // Decrement register
-int dec_8bit_p(unsigned char *reg, int cycles)
+int dec_8bit_reg(unsigned char *reg, int cycles)
 {
 	if (*reg & 0x0F)
 		reset_flag(HALFCARRY);
@@ -342,7 +376,7 @@ int dec_8bit_p(unsigned char *reg, int cycles)
 }
 
 // Decrement byte from address
-int dec_8bit_a(unsigned short address, int cycles)
+int dec_8bit_mem(unsigned short address, int cycles)
 {
 	unsigned char byte = read_byte(address);
 
@@ -364,67 +398,12 @@ int dec_8bit_a(unsigned short address, int cycles)
 	return cycles;
 }
 
-//endregion
-
-//region 16-bit ADD
-
-// Add short to reg-HL
-int add_16bit_hl(unsigned short value, int cycles)
-{
-	unsigned long result = value + registers.HL;
-
-	if ((registers.HL & 0x0FFF + result & 0x0FFF) > 0x0FFF)
-		set_flag(HALFCARRY);
-	else
-		reset_flag(HALFCARRY);
-
-	registers.HL = (unsigned short)(result & 0xFFFF);
-
-	if (result > 0xFFFF) {
-		set_flag(CARRY);
-	}
-	else {
-		reset_flag(CARRY);
-	}
-
-	reset_flag(NEGATIVE);
-
-	return cycles;
-}
-
-
-//endregion
-
-//region 16-bit INC
-
-int inc_16bit_p(unsigned short *reg, int cycles)
-{
-	(*reg)++;
-
-	return cycles;
-}
-
-//endregion
-
-//region 16-bit DEC
-
-int dec_16bit_p(unsigned short *reg, int cycles)
+// Decrement 16-bit register
+int dec_16bit_reg(unsigned short *reg, int cycles)
 {
 	(*reg)--;
 
 	return cycles;
-}
-
-//endregion
-
-//region STOP
-
-//TODO: This is a public method (non-local), should it be on top with the other ones?
-
-// Resume the CPU if stopped
-void resume_cpu(void)
-{
-	cpu_stopped = false;
 }
 
 //endregion
@@ -486,7 +465,7 @@ int ret(void);
 int nop(void) { return 4; }
 
 // 0x01: Load from memory(nn) to reg-BC
-int ld_bc_nn(void) { return load_16bit_nnp(&registers.BC, 12); }
+int ld_bc_nn(void) { return load_16bit_nn_reg(&registers.BC, 12); }
 
 // 0x02: Load from reg-A to memory(BC)
 int ld_bc_a(void) { return load_8bit_mem(registers.A, registers.BC, 8); }
@@ -498,7 +477,7 @@ int inc_bc(void) { return inc_16bit_p(&registers.BC, 8); }
 int inc_b(void) { return inc_8bit_p(&registers.B, 4); }
 
 // 0x05: Decrement reg-B
-int dec_b(void) { return dec_8bit_p(&registers.B, 4); }
+int dec_b(void) { return dec_8bit_reg(&registers.B, 4); }
 
 // 0x06: Load from memory(n) to reg-B
 int ld_b_n(void) { return load_8bit_reg(read_byte(registers.PC++), &registers.B, 8); }
@@ -522,7 +501,7 @@ int rlca(void) {
 	return 4;
 }
 
-// 0x08: Load from reg-SP to memory address pointed in(nn)
+// 0x08: Load from reg-SP to memory address pointed in memory(nn)
 int ld_nnp_sp(void) {
 	write_short(read_short(registers.PC), registers.SP);
 	registers.PC += 2;
@@ -536,13 +515,13 @@ int add_hl_bc(void) { return add_16bit_hl(registers.BC, 8); }
 int ld_a_bc(void) { return load_8bit_reg(read_byte(registers.BC), &registers.A, 8); }
 
 // 0x0B: Decrement reg-BC
-int dec_bc(void) { return dec_16bit_p(&registers.BC, 8); }
+int dec_bc(void) { return dec_16bit_reg(&registers.BC, 8); }
 
 // 0x0C: Increment reg-C
 int inc_c(void) { return inc_8bit_p(&registers.C, 4); }
 
 // 0x0D: Decrement reg-C
-int dec_c(void) { return dec_8bit_p(&registers.C, 4); }
+int dec_c(void) { return dec_8bit_reg(&registers.C, 4); }
 
 // 0x0E: Load from memory(n) to reg-C
 int ld_c_n(void) { return load_8bit_reg(read_byte(registers.PC++), &registers.C, 8); }
@@ -573,7 +552,7 @@ int stop(void) {
 }
 
 // 0x11: Load from memory(nn) to reg-DE
-int ld_de_nn(void) { return load_16bit_nnp(&registers.DE, 12); }
+int ld_de_nn(void) { return load_16bit_nn_reg(&registers.DE, 12); }
 
 // 0x12: Load from reg-A to memory(DE)
 int ld_de_a(void) { return load_8bit_mem(registers.A, registers.DE, 8); }
@@ -585,7 +564,7 @@ int inc_de(void) { return inc_16bit_p(&registers.DE, 8); }
 int inc_d(void) { return inc_8bit_p(&registers.D, 4); }
 
 // 0x15: Decrement reg-D
-int dec_d(void) { return dec_8bit_p(&registers.D, 4); }
+int dec_d(void) { return dec_8bit_reg(&registers.D, 4); }
 
 // 0x16: Load from memory(n) to reg-D
 int ld_d_n(void) { return load_8bit_reg(read_byte(registers.PC++), &registers.D, 8); }
@@ -621,13 +600,13 @@ int add_hl_de(void) { return add_16bit_hl(registers.DE, 8); }
 int ld_a_de(void) { return load_8bit_reg(read_byte(registers.DE), &registers.A, 8); }
 
 // 0x1B: Decrement reg-DE
-int dec_de(void) { return dec_16bit_p(&registers.DE, 8); }
+int dec_de(void) { return dec_16bit_reg(&registers.DE, 8); }
 
 // 0x1C: Increment reg-E
 int inc_e(void) { return inc_8bit_p(&registers.E, 4); }
 
 // 0x1D: Decrement reg-E
-int dec_e(void) { return dec_8bit_p(&registers.E, 4); }
+int dec_e(void) { return dec_8bit_reg(&registers.E, 4); }
 
 // 0x1E: Load from memory(n) to reg-E
 int ld_e_n(void) { return load_8bit_reg(read_byte(registers.PC++), &registers.E, 8); }
@@ -664,7 +643,7 @@ int jr_nz_n(void) {
 }
 
 // 0x21: Load from memory(nn) to reg-HL
-int ld_hl_nn(void) { return load_16bit_nnp(&registers.HL, 12); }
+int ld_hl_nn(void) { return load_16bit_nn_reg(&registers.HL, 12); }
 
 // 0x22: Load from reg-A to memory(HL), increment reg-HL
 int ldi_hl_a(void) { return load_8bit_mem(registers.A, registers.HL++, 8); }
@@ -676,7 +655,7 @@ int inc_hl(void) { return inc_16bit_p(&registers.HL, 8); }
 int inc_h(void) { return inc_8bit_p(&registers.H, 4); }
 
 // 0x25: Decrement reg-H
-int dec_h(void) { return dec_8bit_p(&registers.H, 4); }
+int dec_h(void) { return dec_8bit_reg(&registers.H, 4); }
 
 // 0x26: Load from memory(n) to reg-H
 int ld_h_n(void) { return load_8bit_reg(read_byte(registers.PC++), &registers.H, 8); }
@@ -725,13 +704,13 @@ int add_hl_hl(void) { return add_16bit_hl(registers.HL, 8); }
 int ldi_a_hl(void) { return load_8bit_reg(read_byte(registers.HL++), &registers.A, 8); }
 
 // 0x2B: Decrement reg-HL
-int dec_hl(void) { return dec_16bit_p(&registers.HL, 8); }
+int dec_hl(void) { return dec_16bit_reg(&registers.HL, 8); }
 
 // 0x2C: Increment reg-L
 int inc_l(void) { return inc_8bit_p(&registers.L, 4); }
 
 // 0x2D: Decrement reg-L
-int dec_l(void) { return dec_8bit_p(&registers.L, 4); }
+int dec_l(void) { return dec_8bit_reg(&registers.L, 4); }
 
 // 0x2E: Load from memory(n) to reg-L
 int ld_l_n(void) { return load_8bit_reg(read_byte(registers.PC++), &registers.L, 8); }
@@ -757,7 +736,7 @@ int jr_nc_n(void) {
 }
 
 // 0x31: Load from memory(nn) to reg-SP
-int ld_sp_nn(void) { return load_16bit_nnp(&registers.SP, 12); }
+int ld_sp_nn(void) { return load_16bit_nn_reg(&registers.SP, 12); }
 
 // 0x32: Load from reg-A to memory(HL), decrement reg-HL
 int ldd_hl_a(void) { return load_8bit_mem(registers.A, registers.HL--, 8); }
@@ -769,7 +748,7 @@ int inc_sp(void) { return inc_16bit_p(&registers.SP, 8); }
 int inc_hlp(void) { return inc_8bit_a(registers.HL, 12); }
 
 // 0x35: Decrement memory(HL)
-int dec_hlp(void) { return dec_8bit_a(registers.HL, 12); }
+int dec_hlp(void) { return dec_8bit_mem(registers.HL, 12); }
 
 // 0x36: Load from memory(n) to memory(HL)
 int ld_hl_n(void) { return load_8bit_mem(read_byte(registers.PC++), registers.HL, 12); }
@@ -801,13 +780,13 @@ int add_hl_sp(void) { return add_16bit_hl(registers.SP, 8); }
 int ldd_a_hl(void) { return load_8bit_reg(read_byte(registers.HL--), &registers.A, 8); }
 
 // 0x3B: Decrement reg-SP
-int dec_sp(void) { return dec_16bit_p(&registers.SP, 8); }
+int dec_sp(void) { return dec_16bit_reg(&registers.SP, 8); }
 
 // 0x3C: Increment reg-A
 int inc_a(void) { return inc_8bit_p(&registers.A, 4); }
 
 // 0x3D: Decrement reg-A
-int dec_a(void) { return dec_8bit_p(&registers.A, 4); }
+int dec_a(void) { return dec_8bit_reg(&registers.A, 4); }
 
 // 0x3E: Load from memory(n) to reg-A
 int ld_a_n(void) { return load_8bit_reg(read_byte(registers.PC++), &registers.A, 8); }
@@ -1023,196 +1002,196 @@ int ld_a_hl(void) { return load_8bit_reg(read_byte(registers.HL), &registers.A, 
 int ld_a_a(void) { return 4; }
 
 // 0x80: Add reg-B to reg-A
-int add_a_b(void) { return add_8bit_vp(registers.B, &registers.A, 4); }
+int add_a_b(void) { return add_8bit_reg(registers.B, &registers.A, 4); }
 
 // 0x81: Add reg-C to reg-A
-int add_a_c(void) { return add_8bit_vp(registers.C, &registers.A, 4); }
+int add_a_c(void) { return add_8bit_reg(registers.C, &registers.A, 4); }
 
 // 0x82: Add reg-D to reg-A
-int add_a_d(void) { return add_8bit_vp(registers.D, &registers.A, 4); }
+int add_a_d(void) { return add_8bit_reg(registers.D, &registers.A, 4); }
 
 // 0x83: Add reg-E to reg-A
-int add_a_e(void) { return add_8bit_vp(registers.E, &registers.A, 4); }
+int add_a_e(void) { return add_8bit_reg(registers.E, &registers.A, 4); }
 
 // 0x84: Add reg-H to reg-A
-int add_a_h(void) { return add_8bit_vp(registers.H, &registers.A, 4); }
+int add_a_h(void) { return add_8bit_reg(registers.H, &registers.A, 4); }
 
 // 0x85: Add reg-L to reg-A
-int add_a_l(void) { return add_8bit_vp(registers.L, &registers.A, 4); }
+int add_a_l(void) { return add_8bit_reg(registers.L, &registers.A, 4); }
 
 // 0x86: Add memory(HL) to reg-A
-int add_a_hl(void) { return add_8bit_vp(read_byte(registers.HL), &registers.A, 8); }
+int add_a_hl(void) { return add_8bit_reg(read_byte(registers.HL), &registers.A, 8); }
 
 // 0x87: Add reg-A to reg-A
-int add_a_a(void) { return add_8bit_vp(registers.A, &registers.A, 4); }
+int add_a_a(void) { return add_8bit_reg(registers.A, &registers.A, 4); }
 
 // 0x88: Add reg-B (+ C-flag) to reg-A
-int adc_a_b(void) { return adc_8bit_vp(registers.B, &registers.A, 4); }
+int adc_a_b(void) { return adc_8bit_reg(registers.B, &registers.A, 4); }
 
 // 0x89: Add reg-C (+ C-flag) to reg-A
-int adc_a_c(void) { return adc_8bit_vp(registers.C, &registers.A, 4); }
+int adc_a_c(void) { return adc_8bit_reg(registers.C, &registers.A, 4); }
 
 // 0x8A: Add reg-D (+ C-flag) to reg-A
-int adc_a_d(void) { return adc_8bit_vp(registers.D, &registers.A, 4); }
+int adc_a_d(void) { return adc_8bit_reg(registers.D, &registers.A, 4); }
 
 // 0x8B: Add reg-E (+ C-flag) to reg-A
-int adc_a_e(void) { return adc_8bit_vp(registers.E, &registers.A, 4); }
+int adc_a_e(void) { return adc_8bit_reg(registers.E, &registers.A, 4); }
 
 // 0x8C: Add reg-H (+ C-flag) to reg-A
-int adc_a_h(void) { return adc_8bit_vp(registers.H, &registers.A, 4); }
+int adc_a_h(void) { return adc_8bit_reg(registers.H, &registers.A, 4); }
 
 // 0x8D: Add reg-L (+ C-flag) to reg-A
-int adc_a_l(void) { return adc_8bit_vp(registers.L, &registers.A, 4); }
+int adc_a_l(void) { return adc_8bit_reg(registers.L, &registers.A, 4); }
 
 // 0x8E: Add memory(HL) (+ C-flag) to reg-A
-int adc_a_hl(void) { return adc_8bit_vp(read_byte(registers.HL), &registers.A, 8); }
+int adc_a_hl(void) { return adc_8bit_reg(read_byte(registers.HL), &registers.A, 8); }
 
 // 0x8F: Add reg-A (+ C-flag) to reg-A
-int adc_a_a(void) { return adc_8bit_vp(registers.A, &registers.A, 4); }
+int adc_a_a(void) { return adc_8bit_reg(registers.A, &registers.A, 4); }
 
 // 0x90: Subtract reg-B from reg-A
-int sub_a_b(void) { return sub_8bit_vp(registers.B, &registers.A, 4); }
+int sub_a_b(void) { return sub_reg(registers.B, &registers.A, 4); }
 
 // 0x91: Subtract reg-C from reg-A
-int sub_a_c(void) { return sub_8bit_vp(registers.C, &registers.A, 4); }
+int sub_a_c(void) { return sub_reg(registers.C, &registers.A, 4); }
 
 // 0x92: Subtract reg-D from reg-A
-int sub_a_d(void) { return sub_8bit_vp(registers.D, &registers.A, 4); }
+int sub_a_d(void) { return sub_reg(registers.D, &registers.A, 4); }
 
 // 0x93: Subtract reg-E from reg-A
-int sub_a_e(void) { return sub_8bit_vp(registers.E, &registers.A, 4); }
+int sub_a_e(void) { return sub_reg(registers.E, &registers.A, 4); }
 
 // 0x94: Subtract reg-H from reg-A
-int sub_a_h(void) { return sub_8bit_vp(registers.H, &registers.A, 4); }
+int sub_a_h(void) { return sub_reg(registers.H, &registers.A, 4); }
 
 // 0x95: Subtract reg-L from reg-A
-int sub_a_l(void) { return sub_8bit_vp(registers.L, &registers.A, 4); }
+int sub_a_l(void) { return sub_reg(registers.L, &registers.A, 4); }
 
 // 0x96: Subtract memory(HL) from reg-A
-int sub_a_hl(void) { return sub_8bit_vp(read_byte(registers.HL), &registers.A, 8); }
+int sub_a_hl(void) { return sub_reg(read_byte(registers.HL), &registers.A, 8); }
 
 // 0x97: Subtract reg-A from reg-A
-int sub_a_a(void) { return sub_8bit_vp(registers.A, &registers.A, 4); }
+int sub_a_a(void) { return sub_reg(registers.A, &registers.A, 4); }
 
 // 0x98: Subtract reg-B (+ C-flag) from reg-A
-int sbc_a_b(void) { return sbc_8bit_vp(registers.B, &registers.A, 4); }
+int sbc_a_b(void) { return sbc_reg(registers.B, &registers.A, 4); }
 
 // 0x99: Subtract reg-C (+ C-flag) from reg-A
-int sbc_a_c(void) { return sbc_8bit_vp(registers.C, &registers.A, 4); }
+int sbc_a_c(void) { return sbc_reg(registers.C, &registers.A, 4); }
 
 // 0x9A: Subtract reg-D (+ C-flag) from reg-A
-int sbc_a_d(void) { return sbc_8bit_vp(registers.D, &registers.A, 4); }
+int sbc_a_d(void) { return sbc_reg(registers.D, &registers.A, 4); }
 
 // 0x9B: Subtract reg-E (+ C-flag) from reg-A
-int sbc_a_e(void) { return sbc_8bit_vp(registers.E, &registers.A, 4); }
+int sbc_a_e(void) { return sbc_reg(registers.E, &registers.A, 4); }
 
 // 0x9C: Subtract reg-H (+ C-flag) from reg-A
-int sbc_a_h(void) { return sbc_8bit_vp(registers.H, &registers.A, 4); }
+int sbc_a_h(void) { return sbc_reg(registers.H, &registers.A, 4); }
 
 // 0x9D: Subtract reg-L (+ C-flag) from reg-A
-int sbc_a_l(void) { return sbc_8bit_vp(registers.L, &registers.A, 4); }
+int sbc_a_l(void) { return sbc_reg(registers.L, &registers.A, 4); }
 
 // 0x9E: Subtract memory(HL) (+ C-flag) from reg-A
-int sbc_a_hl(void) { return sbc_8bit_vp(read_byte(registers.HL), &registers.A, 8); }
+int sbc_a_hl(void) { return sbc_reg(read_byte(registers.HL), &registers.A, 8); }
 
 // 0x9F: Subtract reg-A (+ C-flag) from reg-A
-int sbc_a_a(void) { return sbc_8bit_vp(registers.A, &registers.A, 4); }
+int sbc_a_a(void) { return sbc_reg(registers.A, &registers.A, 4); }
 
 // 0xA0: Logical AND, reg-B & reg-A, result in reg-A
-int and_a_b(void) { return and_8bit_vp(registers.B, &registers.A, 4); }
+int and_a_b(void) { return and_reg(registers.B, &registers.A, 4); }
 
 // 0xA1: Logical AND, reg-C & reg-A, result in reg-A
-int and_a_c(void) { return and_8bit_vp(registers.C, &registers.A, 4); }
+int and_a_c(void) { return and_reg(registers.C, &registers.A, 4); }
 
 // 0xA2: Logical AND, reg-D & reg-A, result in reg-A
-int and_a_d(void) { return and_8bit_vp(registers.D, &registers.A, 4); }
+int and_a_d(void) { return and_reg(registers.D, &registers.A, 4); }
 
 // 0xA3: Logical AND, reg-E & reg-A, result in reg-A
-int and_a_e(void) { return and_8bit_vp(registers.E, &registers.A, 4); }
+int and_a_e(void) { return and_reg(registers.E, &registers.A, 4); }
 
 // 0xA4: Logical AND, reg-H & reg-A, result in reg-A
-int and_a_h(void) { return and_8bit_vp(registers.H, &registers.A, 4); }
+int and_a_h(void) { return and_reg(registers.H, &registers.A, 4); }
 
 // 0xA5: Logical AND, reg-L & reg-A, result in reg-A
-int and_a_l(void) { return and_8bit_vp(registers.L, &registers.A, 4); }
+int and_a_l(void) { return and_reg(registers.L, &registers.A, 4); }
 
 // 0xA6: Logical AND, memory(HL) & reg-A, result in reg-A
-int and_a_hl(void) { return and_8bit_vp(read_byte(registers.HL), &registers.A, 8); }
+int and_a_hl(void) { return and_reg(read_byte(registers.HL), &registers.A, 8); }
 
 // 0xA7: Logical AND, reg-A & reg-A, result in reg-A
-int and_a_a(void) { return and_8bit_vp(registers.A, &registers.A, 4); }
+int and_a_a(void) { return and_reg(registers.A, &registers.A, 4); }
 
 // 0xA8: Logical XOR, reg-B ^ reg-A, result in reg-A
-int xor_a_b(void) { return xor_8bit_vp(registers.B, &registers.A, 4); }
+int xor_a_b(void) { return xor_reg(registers.B, &registers.A, 4); }
 
 // 0xA9: Logical XOR, reg-C ^ reg-A, result in reg-A
-int xor_a_c(void) { return xor_8bit_vp(registers.C, &registers.A, 4); }
+int xor_a_c(void) { return xor_reg(registers.C, &registers.A, 4); }
 
 // 0xAA: Logical XOR, reg-D ^ reg-A, result in reg-A
-int xor_a_d(void) { return xor_8bit_vp(registers.D, &registers.A, 4); }
+int xor_a_d(void) { return xor_reg(registers.D, &registers.A, 4); }
 
 // 0xAB: Logical XOR, reg-E ^ reg-A, result in reg-A
-int xor_a_e(void) { return xor_8bit_vp(registers.E, &registers.A, 4); }
+int xor_a_e(void) { return xor_reg(registers.E, &registers.A, 4); }
 
 // 0xAC: Logical XOR, reg-H ^ reg-A, result in reg-A
-int xor_a_h(void) { return xor_8bit_vp(registers.H, &registers.A, 4); }
+int xor_a_h(void) { return xor_reg(registers.H, &registers.A, 4); }
 
 // 0xAD: Logical XOR, reg-L ^ reg-A, result in reg-A
-int xor_a_l(void) { return xor_8bit_vp(registers.L, &registers.A, 4); }
+int xor_a_l(void) { return xor_reg(registers.L, &registers.A, 4); }
 
 // 0xAE: Logical XOR, memory(HL) ^ reg-A, result in reg-A
-int xor_a_hl(void) { return xor_8bit_vp(read_byte(registers.HL), &registers.A, 8); }
+int xor_a_hl(void) { return xor_reg(read_byte(registers.HL), &registers.A, 8); }
 
 // 0xAF: Logical XOR, reg-A ^ reg-A, result in reg-A
-int xor_a_a(void) { return xor_8bit_vp(registers.A, &registers.A, 4); }
+int xor_a_a(void) { return xor_reg(registers.A, &registers.A, 4); }
 
 // 0xB0: Logical OR, reg-B | reg-A, result in reg-A
-int or_a_b(void) { return or_8bit_vp(registers.B, &registers.A, 4); }
+int or_a_b(void) { return or_reg(registers.B, &registers.A, 4); }
 
 // 0xB1: Logical OR, reg-C | reg-A, result in reg-A
-int or_a_c(void) { return or_8bit_vp(registers.C, &registers.A, 4); }
+int or_a_c(void) { return or_reg(registers.C, &registers.A, 4); }
 
 // 0xB2: Logical OR, reg-D | reg-A, result in reg-A
-int or_a_d(void) { return or_8bit_vp(registers.D, &registers.A, 4); }
+int or_a_d(void) { return or_reg(registers.D, &registers.A, 4); }
 
 // 0xB3: Logical OR, reg-E | reg-A, result in reg-A
-int or_a_e(void) { return or_8bit_vp(registers.E, &registers.A, 4); }
+int or_a_e(void) { return or_reg(registers.E, &registers.A, 4); }
 
 // 0xB4: Logical OR, reg-H | reg-A, result in reg-A
-int or_a_h(void) { return or_8bit_vp(registers.H, &registers.A, 4); }
+int or_a_h(void) { return or_reg(registers.H, &registers.A, 4); }
 
 // 0xB5: Logical OR, reg-L | reg-A, result in reg-A
-int or_a_l(void) { return or_8bit_vp(registers.L, &registers.A, 4); }
+int or_a_l(void) { return or_reg(registers.L, &registers.A, 4); }
 
 // 0xB6: Logical OR, memory(HL) | reg-A, result in reg-A
-int or_a_hl(void) { return or_8bit_vp(read_byte(registers.HL), &registers.A, 8); }
+int or_a_hl(void) { return or_reg(read_byte(registers.HL), &registers.A, 8); }
 
 // 0xB7: Logical OR, reg-A | reg-A, result in reg-A
-int or_a_a(void) { return or_8bit_vp(registers.A, &registers.A, 4); }
+int or_a_a(void) { return or_reg(registers.A, &registers.A, 4); }
 
 // 0xB8: Compare reg-B with reg-A
-int cp_a_b(void) { return cp_8bit_vp(registers.B, &registers.A, 4); }
+int cp_a_b(void) { return cp_reg(registers.B, &registers.A, 4); }
 
 // 0xB9: Compare reg-C with reg-A
-int cp_a_c(void) { return cp_8bit_vp(registers.C, &registers.A, 4); }
+int cp_a_c(void) { return cp_reg(registers.C, &registers.A, 4); }
 
 // 0xBA: Compare reg-D with reg-A
-int cp_a_d(void) { return cp_8bit_vp(registers.D, &registers.A, 4); }
+int cp_a_d(void) { return cp_reg(registers.D, &registers.A, 4); }
 
 // 0xBB: Compare reg-E with reg-A
-int cp_a_e(void) { return cp_8bit_vp(registers.E, &registers.A, 4); }
+int cp_a_e(void) { return cp_reg(registers.E, &registers.A, 4); }
 
 // 0xBC: Compare reg-H with reg-A
-int cp_a_h(void) { return cp_8bit_vp(registers.H, &registers.A, 4); }
+int cp_a_h(void) { return cp_reg(registers.H, &registers.A, 4); }
 
 // 0xBD: Compare reg-L with reg-A
-int cp_a_l(void) { return cp_8bit_vp(registers.L, &registers.A, 4); }
+int cp_a_l(void) { return cp_reg(registers.L, &registers.A, 4); }
 
 // 0xBE: Compare memory(HL) with reg-A
-int cp_a_hl(void) { return cp_8bit_vp(read_byte(registers.HL), &registers.A, 8); }
+int cp_a_hl(void) { return cp_reg(read_byte(registers.HL), &registers.A, 8); }
 
 // 0xBF: Compare reg-A with reg-A
-int cp_a_a(void) { return cp_8bit_vp(registers.A, &registers.A, 4); }
+int cp_a_a(void) { return cp_reg(registers.A, &registers.A, 4); }
 
 // 0xC0: Pop two bytes from stack and jump to that address if Z-flag is not set
 int ret_nz(void) {
@@ -1258,7 +1237,7 @@ int push_bc(void) {
 }
 
 // 0xC6: Add memory(n) to reg-A
-int add_a_n(void) { return add_8bit_vp(read_byte(registers.PC++), &registers.A, 8); }
+int add_a_n(void) { return add_8bit_reg(read_byte(registers.PC++), &registers.A, 8); }
 
 // 0xC7: Push current address to stack and jump to address 0x0000
 int rst_0(void) { return restart(0x0000); }
@@ -1314,7 +1293,7 @@ int call_nn(void) {
 }
 
 // 0xCE: Add memory(n) (+ C-flag) to reg-A
-int adc_a_n(void) { return adc_8bit_vp(read_byte(registers.PC++), &registers.A, 8); }
+int adc_a_n(void) { return adc_8bit_reg(read_byte(registers.PC++), &registers.A, 8); }
 
 // 0xCF: Push current address to stack and jump to address 0x0008
 int rst_8(void) { return restart(0x0008); }
@@ -1360,7 +1339,7 @@ int push_de(void) {
 }
 
 // 0xD6: Subtract memory(n) from reg-A
-int sub_a_n(void) { return sub_8bit_vp(read_byte(registers.PC++), &registers.A, 8); }
+int sub_a_n(void) { return sub_reg(read_byte(registers.PC++), &registers.A, 8); }
 
 // 0xD7: Push current address to stack and jump to address 0x0010
 int rst_10(void) { return restart(0x0010); }
@@ -1403,7 +1382,7 @@ int call_c_nn(void) {
 }
 
 // 0xDE: Subtract memory(n) (+ C-flag) from reg-A
-int sbc_a_n(void) { return sbc_8bit_vp(read_byte(registers.PC++), &registers.A, 8); }
+int sbc_a_n(void) { return sbc_reg(read_byte(registers.PC++), &registers.A, 8); }
 
 // 0xDF: Push current address to stack and jump to address 0x0018
 int rst_18(void) { return restart(0x0018); }
@@ -1427,7 +1406,7 @@ int push_hl(void) {
 }
 
 // 0xE6: Logical AND, memory(n) & reg-A, result in reg-A
-int and_a_n(void) { return and_8bit_vp(read_byte(registers.PC++), &registers.A, 8); }
+int and_a_n(void) { return and_reg(read_byte(registers.PC++), &registers.A, 8); }
 
 // 0xE7: Push current address to stack and jump to address 0x0020
 int rst_20(void) { return restart(0x0020); }
@@ -1461,7 +1440,7 @@ int jp_hl(void) {
 	return 4;
 }
 
-// 0xEA: Load from reg-A to memory address pointed in(nn)
+// 0xEA: Load from reg-A to memory address pointed in memory(nn)
 int ld_nnp_a(void) {
 	write_byte(read_short(registers.PC), registers.A);
 	registers.PC += 2;
@@ -1469,7 +1448,7 @@ int ld_nnp_a(void) {
 }
 
 // OxEE: Logical XOR, memory(n) ^ reg-A, result in reg-A
-int xor_a_n(void) { return xor_8bit_vp(read_byte(registers.PC++), &registers.A, 8); }
+int xor_a_n(void) { return xor_reg(read_byte(registers.PC++), &registers.A, 8); }
 
 // 0xEF: Push current address to stack and jump to address 0x0028
 int rst_28(void) { return restart(0x0028); }
@@ -1501,7 +1480,7 @@ int push_af(void) {
 }
 
 // 0xF6: Logical OR, memory(n) | reg-A, result in reg-A
-int or_a_n(void) { return or_8bit_vp(read_byte(registers.PC++), &registers.A, 8); }
+int or_a_n(void) { return or_reg(read_byte(registers.PC++), &registers.A, 8); }
 
 // 0xF7: Push current address to stack and jump to address 0x0030
 int rst_30(void) { return restart(0x0030); }
@@ -1536,7 +1515,7 @@ int ld_sp_hl(void) {
 	return 8;
 }
 
-// 0xFA: Load from memory address pointed in(nn) to reg-A
+// 0xFA: Load from memory address pointed in memory(nn) to reg-A
 int ld_a_nnp(void) {
 	registers.A = read_byte(read_short(registers.PC));
 	registers.PC += 2;
@@ -1550,7 +1529,7 @@ int ei(void) {
 }
 
 // 0xFE: Compare memory(n) with reg-A
-int cp_a_n(void) { return cp_8bit_vp(read_byte(registers.PC++), &registers.A, 8); }
+int cp_a_n(void) { return cp_reg(read_byte(registers.PC++), &registers.A, 8); }
 
 // 0xFF: Push current address to stack and jump to address 0x0038
 int rst_38(void) { return restart(0x0038); }
