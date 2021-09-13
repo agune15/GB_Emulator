@@ -2,6 +2,7 @@
 #include "display.h"
 #include "memory.h"
 #include "interrupts.h"
+#include "gpu.h"
 
 //TODO: Make them static?
 int cycles_counter = SCANLINE_CYCLES;
