@@ -3,6 +3,8 @@
 #include "memory.h"
 #include "display.h"
 
+SDL_Color screen_pixels[144][160];
+
 static void render_tiles(void);
 
 // Helpers
@@ -11,6 +13,7 @@ static bool is_tile_display_enabled(void);
 static unsigned short get_bg_tiledata_addr(void);
 static unsigned short get_bg_tilemap_addr(void);
 
+// Draw current scanline pixels on screen
 void draw_scanline(void)
 {
 	//if (is_sprite_display_enabled())
@@ -34,6 +37,9 @@ static void render_tiles(void)
 	bool unsign = (bg_data_addr == 0x8000) ? true : false; //TODO: change to something more clear, like unsigned_tile_data_pos
 
 	unsigned char pixel_relative_addr, pixel_lsB, pixel_msB, pixel_color_id, pixel_palette_id;
+	SDL_Color pixel_color;
+
+	unsigned char bg_palette = read_byte(0xFF47);
 
 	for (int pixel_num = 0; pixel_num < 160; pixel_num++) {
 		// Find position of current tile
@@ -59,9 +65,40 @@ static void render_tiles(void)
 		pixel_lsB = read_byte(tile_data_addr + pixel_relative_addr);
 		pixel_msB = read_byte(tile_data_addr + pixel_relative_addr + 1);
 
-		// Get pixel color id
+		// Get pixel color ID
 		pixel_color_id = (pixel_lsB >> (tile_col % 8)) & 1;
 		pixel_color_id |= ((pixel_msB >> (tile_col % 8)) & 1) << 1;
+
+		// Get pixel palette ID from color ID
+		switch (pixel_color_id) {
+			case 0:
+				pixel_palette_id = bg_palette & 3;
+			case 1:
+				pixel_palette_id = (bg_palette >> 2) & 3;
+			case 2:
+				pixel_palette_id = (bg_palette >> 4) & 3;
+			case 3:
+				pixel_palette_id = (bg_palette >> 6) & 3;
+			default:
+				break;
+		}
+
+		// Get RGB from palette ID
+		switch (pixel_palette_id) {
+			case 0:
+				pixel_color = (SDL_Color){155, 188, 15, 255};
+			case 1:
+				pixel_color = (SDL_Color){139, 172, 15, 255};
+			case 2:
+				pixel_color = (SDL_Color){48, 98, 48, 255};
+			case 3:
+				pixel_color = (SDL_Color){15, 56, 15, 255};
+			default:
+				break;
+		}
+
+		// Add pixel RGB to screen pixels array
+		screen_pixels[current_scanline][pixel_num] = pixel_color;
 	}
 }
 

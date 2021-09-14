@@ -5,7 +5,6 @@
 
 typedef enum {CARRY = 4, HALFCARRY, NEGATIVE, ZERO} flags_t;
 
-
 void init_registers(void);
 int execute_next_instruction(void);
 void resume_cpu(void);

@@ -8,11 +8,13 @@
 #include "memory.h"	// init_memory
 #include "timer.h"	// update_timer
 #include "input.h"	// joypad functions
+#include "gpu.h"	// screen_pixels
 
 // Window related
 #define WINDOW_WIDTH 	160
 #define WINDOW_LENGTH 	144
 static SDL_Window *init_SDL_window(void);
+static SDL_Renderer *init_SDL_renderer(SDL_Window *window);
 
 // Event handling
 static void handle_events(void);
@@ -30,7 +32,7 @@ int main(int argc, char *argv[])
 	SDL_Window *window = NULL;
 	SDL_Renderer *renderer = NULL;
 
-	if(read_cartridge(argc - 1, *(argv + 1)) != 0) {
+	if (read_cartridge(argc - 1, *(argv + 1)) != 0) {
 		printf("main: ROM couldn't loaded");
 		//return 1;	//Enable when not debugging. If enabled, the console will disappear
 	}
@@ -39,18 +41,26 @@ int main(int argc, char *argv[])
 	init_memory();
 	init_random_seed();
 
-	if(SDL_Init(SDL_INIT_VIDEO) != 0) {
+	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
 		printf("main: Unable to initialize SDL: %s\n", SDL_GetError());
 		return 1;
 	}
 
-	if((window = init_SDL_window()) == NULL) {
+	//TODO: This IF could be removed (?)
+	if ((window = init_SDL_window()) == NULL) {
 		printf("main: Unable to initialize window: %s\n", SDL_GetError());
 		SDL_Quit();
 		return 1;
 	}
 
-	while(!close_window) {
+	//TODO: This IF could be removed (?)
+	if ((renderer = init_SDL_renderer(window)) == NULL) {
+		printf("main: Unable to initialize renderer: %s\n", SDL_GetError());
+		SDL_Quit();
+		return 1;
+	}
+
+	while (!close_window) {
 		handle_events();
 
 		//TODO: udpate_timer(instruction_cycles) <- Better add it in the execute_next_instruction routine of the CPU
@@ -58,6 +68,7 @@ int main(int argc, char *argv[])
 		//TODO: update_display
 	}
 
+	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
 
@@ -79,14 +90,24 @@ static SDL_Window *init_SDL_window(void)
 	return window;
 }
 
+// Initialize an SDL_Renderer
+static SDL_Renderer *init_SDL_renderer(SDL_Window *window)
+{
+	SDL_Renderer *renderer = NULL;
+	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 1);
+	SDL_RenderClear(renderer);
+	return renderer;
+}
+
 //region Event handling
 
 // Handle all SDL events
 static void handle_events(void)
 {
 	SDL_Event event;
-	while(SDL_PollEvent(&event)) {
-		switch(event.type) {
+	while (SDL_PollEvent(&event)) {
+		switch (event.type) {
 			case SDL_QUIT:
 				close_window = true;
 				break;
@@ -178,7 +199,7 @@ static void handle_key_up(SDL_Keysym *keysym)
 //TODO: Function description
 static int read_cartridge(int argc, char *path)
 {
-	if(argc != 1) {
+	if (argc != 1) {
 		if(argc < 1)
 			printf("main: No file provided\n");
 		if(argc > 1)
@@ -186,7 +207,7 @@ static int read_cartridge(int argc, char *path)
 		return 1;
 	}
 
-	if(strcmp(strrchr(path, '.'), ".gb") != 0) {
+	if (strcmp(strrchr(path, '.'), ".gb") != 0) {
 		printf("main: The file provided is not a Game Boy ROM: %s\n", path);
 		return 1;
 	}
