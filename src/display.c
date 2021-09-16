@@ -73,8 +73,8 @@ static void update_LCD_mode(void)
 		else if(cycles_counter >= SCANLINE_CYCLES - LCD_MODE_2_CYCLES - LCD_MODE_3_CYCLES)
 			new_mode = 3;
 		else {
-			//if(last_mode == 3)
-				//TODO: DrawScanline
+			if(last_mode == 3)
+				draw_scanline();
 			new_mode = 0;
 		}
 	}

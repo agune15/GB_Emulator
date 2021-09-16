@@ -11,14 +11,6 @@ unsigned short interrupt_addresses[5] = { 0x0040,
 
 bool interrupt_master_enable = false;	//TODO: Include in init() method in the future
 
-// Set desired interrupt flag in IF
-void request_interrupt(interrupts_t interrupt)
-{
-	unsigned char interrupt_flags = read_byte(IF_ADDRESS);
-	interrupt_flags |= (1 << interrupt);
-	write_byte(IF_ADDRESS, interrupt_flags);
-}
-
 // Verify state of interrupt flags and perform any pending interrupts
 void check_interrupts_state(void)
 {
@@ -37,6 +29,14 @@ void check_interrupts_state(void)
 		current_IE = current_IE >> 1;
 		current_IF = current_IF >> 1;
 	}
+}
+
+// Set desired interrupt flag in IF
+void request_interrupt(interrupts_t interrupt)
+{
+	unsigned char interrupt_flags = read_byte(IF_ADDRESS);
+	interrupt_flags |= (1 << interrupt);
+	write_byte(IF_ADDRESS, interrupt_flags);
 }
 
 // Jump to instruction routine of desired interrupt

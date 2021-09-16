@@ -1,14 +1,18 @@
 #include <SDL2/SDL.h>	// SDL stuff
-#include <stdio.h>	// printf
-#include <string.h>	// strrchr
-#include <stdbool.h>
+#include <stdio.h>		// printf
+#include <string.h>		// strrchr
+#include <stdbool.h>	// bool
+#include <math.h>		// floor
 
-#include "rom.h"	// loadROM
-#include "cpu.h"	// init_registers
-#include "memory.h"	// init_memory
-#include "timer.h"	// update_timer
-#include "input.h"	// joypad functions
-#include "gpu.h"	// screen_pixels
+#include "rom.h"		// loadROM
+#include "cpu.h"		// init_registers, execute_next_instruction
+#include "memory.h"		// init_memory
+#include "timer.h"		// update_timer
+#include "input.h"		// joypad functions
+#include "interrupts.h"	// check_interrupts_state
+#include "display.h"	// update_display
+#include "gpu.h"		// screen_pixels
+#include "registers.h"	// registers (DEBUG)
 
 // Window related
 #define WINDOW_WIDTH 	160
@@ -25,7 +29,15 @@ static void handle_key_up(SDL_Keysym *keysym);
 static bool close_window = false;
 
 // Emulator related
+int frame_cycles = CYCLES_FRAME;
+int op_cycles = 0;
 static int read_cartridge(int argc, char *path);
+static void render_frame(SDL_Renderer *renderer);
+
+// Update related
+unsigned long frame_start;
+unsigned long frame_end;
+float elapsed_time;
 
 int main(int argc, char *argv[])
 {
@@ -46,14 +58,12 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	//TODO: This IF could be removed (?)
 	if ((window = init_SDL_window()) == NULL) {
 		printf("main: Unable to initialize window: %s\n", SDL_GetError());
 		SDL_Quit();
 		return 1;
 	}
 
-	//TODO: This IF could be removed (?)
 	if ((renderer = init_SDL_renderer(window)) == NULL) {
 		printf("main: Unable to initialize renderer: %s\n", SDL_GetError());
 		SDL_Quit();
@@ -61,11 +71,29 @@ int main(int argc, char *argv[])
 	}
 
 	while (!close_window) {
+		// Frame cap
+		frame_start = SDL_GetPerformanceCounter();
+
 		handle_events();
 
-		//TODO: udpate_timer(instruction_cycles) <- Better add it in the execute_next_instruction routine of the CPU
-		//TODO: check_interrupts_state
-		//TODO: update_display
+		while (frame_cycles > 0) {
+			op_cycles = execute_next_instruction();
+			frame_cycles -= op_cycles;
+			update_timer(op_cycles);
+			update_display(op_cycles);
+			check_interrupts_state();
+		}
+
+		render_frame(renderer);
+		frame_cycles += CYCLES_FRAME;
+
+		//DEBUG
+		printf("AF: %x, BC: %x, DE: %x, HL: %x, SP: %x, PC: %x /n", registers.AF, registers.BC, registers.DE, registers.HL, registers.SP, registers.PC);
+
+		// Frame cap
+		frame_end = SDL_GetPerformanceCounter();
+		elapsed_time = (frame_end - frame_start) / SDL_GetPerformanceFrequency();
+		SDL_Delay(floor(16.666f - elapsed_time));
 	}
 
 	SDL_DestroyRenderer(renderer);
@@ -95,7 +123,7 @@ static SDL_Renderer *init_SDL_renderer(SDL_Window *window)
 {
 	SDL_Renderer *renderer = NULL;
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 1);
+	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 	SDL_RenderClear(renderer);
 	return renderer;
 }
@@ -197,6 +225,7 @@ static void handle_key_up(SDL_Keysym *keysym)
 //endregion
 
 //TODO: Function description
+//TODO: Can this be moved into rom.c?
 static int read_cartridge(int argc, char *path)
 {
 	if (argc != 1) {
@@ -215,4 +244,19 @@ static int read_cartridge(int argc, char *path)
 	printf("main: Loading \"%s\"\n", strrchr(path, '\\') + 1);
 
 	return loadROM(path);
+}
+
+static void render_frame(SDL_Renderer *renderer)
+{
+	for (int scanline = 0; scanline < WINDOW_LENGTH; scanline++) {
+		for (int pixel = 0; pixel < WINDOW_WIDTH; pixel++) {
+			SDL_SetRenderDrawColor(renderer, screen_pixels[scanline][pixel].r,
+								   			 screen_pixels[scanline][pixel].g,
+								   			 screen_pixels[scanline][pixel].b,
+								   			 screen_pixels[scanline][pixel].a);
+			SDL_RenderDrawPoint(renderer, pixel, scanline);
+		}
+	}
+
+	SDL_RenderPresent(renderer);
 }

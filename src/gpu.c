@@ -135,6 +135,4 @@ static unsigned short get_bg_tilemap_addr(void)
 		return 0x9C00;
 }
 
-
-
 //endregion
