@@ -88,7 +88,8 @@ int main(int argc, char *argv[])
 		frame_cycles += CYCLES_FRAME;
 
 		//DEBUG
-		printf("AF: %x, BC: %x, DE: %x, HL: %x, SP: %x, PC: %x /n", registers.AF, registers.BC, registers.DE, registers.HL, registers.SP, registers.PC);
+		//printf("AF: %#x, BC: %#x, DE: %#x, HL: %#x, SP: %#x, PC: %#x \n", registers.AF, registers.BC, registers.DE, registers.HL, registers.SP, registers.PC);
+		//printf("PC: %x \n", registers.PC);
 
 		// Frame cap
 		frame_end = SDL_GetPerformanceCounter();

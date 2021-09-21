@@ -88,7 +88,7 @@ unsigned char read_byte(unsigned short address)
 	else if (address == 0xFFFF)
 		return interrupt_enable_reg;
 	else
-		printf("memory: Address unreachable %#x\n", address);
+		printf("memory: Address unreachable %#x \n", address);
 
 	return 0;
 }
@@ -117,8 +117,12 @@ void write_byte(unsigned short address, unsigned char byte)
 
 	if (address >= 0x0000 && address <= 0x7FFF)
 		printf("memory: Read-only memory area: %#x\n", address);
-	else if (address >= 0x8000 && address <= 0x9FFF)
+	else if (address >= 0x8000 && address <= 0x9FFF) {
+		//printf("memory: VRAM write: %#x\n", address);
 		VRAM[address - 0x8000] = byte;
+		if (address >= 0x9800)
+			printf("memory: BG tile write: %#x\n", address);
+	}
 	else if (address >= 0xA000 && address <= 0xBFFF)
 		exRAM[address - 0xA000] = byte;
 	else if (address >= 0xC000 && address <= 0xFDFF) {
@@ -141,8 +145,8 @@ void write_byte(unsigned short address, unsigned char byte)
 		HRAM[address - 0xFF80] = byte;
 	else if (address == 0xFFFF)
 		interrupt_enable_reg = byte;
-	else
-		printf("memory: Address unreachable: %#x", address);
+	//else
+		//printf("memory: Address unreachable: %#x", address);
 }
 
 // Override byte value from address and subsequent address (address + 1)
