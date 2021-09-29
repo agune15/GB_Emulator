@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 	SDL_Renderer *renderer = NULL;
 
 	if (read_cartridge(argc - 1, *(argv + 1)) != 0) {
-		printf("main: ROM couldn't loaded");
+		printf("main: ROM couldn't be loaded");
 		//return 1;	//Enable when not debugging. If enabled, the console will disappear
 	}
 

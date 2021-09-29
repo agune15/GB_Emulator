@@ -9,59 +9,74 @@ SDL_Color screen_pixels[144][160];
 static void render_tiles(void);
 
 // Helpers
-static bool is_sprite_display_enabled(void);
 static bool is_tile_display_enabled(void);
-static unsigned short get_bg_tiledata_addr(void);
+static bool is_sprite_display_enabled(void);
 static unsigned short get_bg_tilemap_addr(void);
+static unsigned short get_bg_tiledata_addr(void);
+static bool is_window_enabled(void);
+static bool get_window_tilemap_addr(void);
 
 // Draw current scanline pixels on screen
 void draw_scanline(void)
 {
-	//if (is_sprite_display_enabled())
-		//Render sprites
-
 	if (is_tile_display_enabled())	//TODO: Maybe this should go before render_sprites
 		render_tiles();
+
+	//if (is_sprite_display_enabled())
+		//Render sprites
 }
 
 //TODO:
 static void render_tiles(void)
 {
-	unsigned char current_scanline = read_byte(LY_ADDRESS);
-	unsigned char scrollY = read_byte(SCY_ADDRESS);
-	unsigned char scrollX = read_byte(SCX_ADDRESS);
-
+	unsigned char pixel_relative_addr, pixel_lsB, pixel_msB, pixel_color_id, pixel_palette_id;
+	SDL_Color pixel_color;
 	unsigned short tile_col, tile_row, tile_map_addr, tile_data_addr;
 	short tile_relative_pos;
 
-	unsigned short bg_map_addr = get_bg_tilemap_addr();
-	unsigned short bg_data_addr = get_bg_tiledata_addr();
-	bool unsign = (bg_data_addr == 0x8000) ? true : false; //TODO: change to something more clear, like unsigned_tile_data_pos
+	unsigned char current_scanline = read_byte(LY_ADDRESS);
+	unsigned char scrollY = read_byte(SCY_ADDRESS);
+	unsigned char scrollX = read_byte(SCX_ADDRESS);
+	unsigned char windowY = read_byte(WY_ADDRESS);
+	unsigned char windowX = read_byte(WX_ADDRESS) - 7;
 
-	unsigned char pixel_relative_addr, pixel_lsB, pixel_msB, pixel_color_id, pixel_palette_id;
-	SDL_Color pixel_color;
+	bool is_using_window = false;
+	if (is_window_enabled() && windowY <= current_scanline)
+		is_using_window = true;
+
+	unsigned short map_addr = (is_using_window) ? get_window_tilemap_addr() : get_bg_tilemap_addr();
+	unsigned short data_addr = get_bg_tiledata_addr();
+	bool unsign = (data_addr == 0x8000) ? true : false; //TODO: change to something more clear, like unsigned_tile_data_pos
+	//bool unsign = (map_addr == 0x9C00) ? true : false;
 
 	unsigned char bg_palette = read_byte(0xFF47);
 
-	for (int pixel_num = 0; pixel_num < 160; pixel_num++) {
-		// Find position of current tile
-		tile_row = (scrollY + current_scanline) / 8;
-		if (tile_row > 32)
-			tile_row -= 32;
+	// Find row of current tile
+	tile_row = (is_using_window) ? current_scanline - windowY : (scrollY + current_scanline);
+	tile_row /= 8;
 
-		tile_col = (scrollX + pixel_num) / 8;
+	//TODO: Needed?
+	if (tile_row > 32)
+		tile_row -= 32;
+
+	for (int pixel_num = 0; pixel_num < 160; pixel_num++) {
+		// Find column of current tile
+		tile_col = scrollX + pixel_num;
+		if (is_using_window && pixel_num >= windowX)	//TODO: Why?
+			tile_col -= windowX;
+		tile_col /= 8;
 
 		// Get tile address in tile map from position
-		tile_map_addr = bg_map_addr + (tile_row * 32) + tile_col;
+		tile_map_addr = map_addr + (tile_row * 32) + tile_col;
 		//printf("GPU: Tile map address: %#x\n", tile_map_addr);
 
 		// Get tile data relative position from tile address
 		tile_relative_pos = (unsign) ? read_byte(tile_map_addr) : (signed char) read_byte(tile_map_addr);
-		//printf("GPU: Tile relative pos: %d\n", tile_relative_pos);
+		printf("GPU: Tile relative pos: %d\n", tile_relative_pos);
 		//TODO: Error somewhere here
 
 		// Get tile data address from tile relative position
-		tile_data_addr = bg_data_addr + (tile_relative_pos * 16);
+		tile_data_addr = data_addr + (tile_relative_pos * 16);
 
 		// Get pixel relative addr
 		pixel_relative_addr = (tile_row % 8) * 2;
@@ -141,6 +156,21 @@ static unsigned short get_bg_tiledata_addr(void)
 		return 0x8000;
 	else
 		return 0x9000;
+}
+
+// LCDC-5: Check if Window is enabled
+static bool is_window_enabled(void)
+{
+	return (read_byte(LCDC_ADDRESS) >> 5) & 1;
+}
+
+// LCDC-6: Get Window tile map area address
+static bool get_window_tilemap_addr(void)
+{
+	if (read_byte(LCDC_ADDRESS >> 6) & 1)
+		return 0x9C00;
+	else
+		return 0x9800;
 }
 
 //endregion
