@@ -26,7 +26,8 @@ void draw_scanline(void)
 		//Render sprites
 }
 
-//TODO:
+//TODO: Description
+//TODO: Split function in many smaller ones
 static void render_tiles(void)
 {
 	unsigned char pixel_relative_addr, pixel_lsB, pixel_msB, pixel_color_id, pixel_palette_id, pixel_col, pixel_row, pixel_bit_num;
