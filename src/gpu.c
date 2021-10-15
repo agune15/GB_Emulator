@@ -19,7 +19,7 @@ static bool get_window_tilemap_addr(void);
 // Draw current scanline pixels on screen
 void draw_scanline(void)
 {
-	if (is_tile_display_enabled())	//TODO: Maybe this should go before render_sprites
+	if (is_tile_display_enabled())
 		render_tiles();
 
 	//if (is_sprite_display_enabled())
@@ -29,7 +29,7 @@ void draw_scanline(void)
 //TODO:
 static void render_tiles(void)
 {
-	unsigned char pixel_relative_addr, pixel_lsB, pixel_msB, pixel_color_id, pixel_palette_id;
+	unsigned char pixel_relative_addr, pixel_lsB, pixel_msB, pixel_color_id, pixel_palette_id, pixel_col, pixel_row, pixel_bit_num;
 	SDL_Color pixel_color;
 	unsigned short tile_col, tile_row, tile_map_addr, tile_data_addr;
 	short tile_relative_pos;
@@ -51,57 +51,60 @@ static void render_tiles(void)
 
 	unsigned char bg_palette = read_byte(0xFF47);
 
+	// Find row of current pixel
+	pixel_row = (is_using_window) ? current_scanline - windowY : (scrollY + current_scanline);
+
 	// Find row of current tile
-	tile_row = (is_using_window) ? current_scanline - windowY : (scrollY + current_scanline);
-	tile_row /= 8;
+	tile_row = pixel_row / 8;
 
 	//TODO: Needed?
-	if (tile_row > 32)
-		tile_row -= 32;
+	//if (tile_row > 32)
+	//	tile_row -= 32;
 
 	for (int pixel_num = 0; pixel_num < 160; pixel_num++) {
-		// Find column of current tile
-		tile_col = scrollX + pixel_num;
+		// Find column of current pixel
+		pixel_col = scrollX + pixel_num;
 		if (is_using_window && pixel_num >= windowX)	//TODO: Why?
-			tile_col -= windowX;
-		tile_col /= 8;
+			pixel_col -= windowX;
+
+		// Find column of current tile
+		tile_col = pixel_col / 8;
 
 		// Get tile address in tile map from position
 		tile_map_addr = map_addr + (tile_row * 32) + tile_col;
-		//printf("GPU: Tile map address: %#x\n", tile_map_addr);
 
 		// Get tile data relative position from tile address
 		tile_relative_pos = (unsign) ? read_byte(tile_map_addr) : (signed char) read_byte(tile_map_addr);
-		printf("GPU: Tile relative pos: %d\n", tile_relative_pos);
-		//TODO: Error somewhere here
 
 		// Get tile data address from tile relative position
 		tile_data_addr = data_addr + (tile_relative_pos * 16);
 
 		// Get pixel relative addr
-		pixel_relative_addr = (tile_row % 8) * 2;
+		pixel_relative_addr = (pixel_row % 8) * 2;
 
 		// Get pixel data
 		pixel_lsB = read_byte(tile_data_addr + pixel_relative_addr);
 		pixel_msB = read_byte(tile_data_addr + pixel_relative_addr + 1);
 
-		//printf("GPU: Pixel LSB address: %x \n", tile_data_addr + pixel_relative_addr);
-		//printf("GPU: Pixel LSB: %x \n", pixel_lsB);
-
 		// Get pixel color ID
-		pixel_color_id = (pixel_lsB >> ((7 - tile_col) % 8)) & 1;
-		pixel_color_id |= ((pixel_msB >> ((7 - tile_col) % 8)) & 1) << 1;
+		pixel_bit_num = 7 - (pixel_col % 8);
+		pixel_color_id = (pixel_lsB >> pixel_bit_num) & 1;
+		pixel_color_id |= ((pixel_msB >> pixel_bit_num) & 1) << 1;
 
 		// Get pixel palette ID from color ID
 		switch (pixel_color_id) {
 			case 0:
 				pixel_palette_id = bg_palette & 3;
+				break;
 			case 1:
 				pixel_palette_id = (bg_palette >> 2) & 3;
+				break;
 			case 2:
 				pixel_palette_id = (bg_palette >> 4) & 3;
+				break;
 			case 3:
 				pixel_palette_id = (bg_palette >> 6) & 3;
+				break;
 			default:
 				break;
 		}
@@ -110,12 +113,16 @@ static void render_tiles(void)
 		switch (pixel_palette_id) {
 			case 0:
 				pixel_color = (SDL_Color){155, 188, 15, 255};
+				break;
 			case 1:
 				pixel_color = (SDL_Color){139, 172, 15, 255};
+				break;
 			case 2:
 				pixel_color = (SDL_Color){48, 98, 48, 255};
+				break;
 			case 3:
 				pixel_color = (SDL_Color){15, 56, 15, 255};
+				break;
 			default:
 				break;
 		}

@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include "cpu.h"
 #include "registers.h"
 #include "instructions.h"
