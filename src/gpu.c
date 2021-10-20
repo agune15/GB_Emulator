@@ -4,13 +4,15 @@
 #include "memory.h"
 #include "display.h"
 
-SDL_Color screen_pixels[144][160];
+SDL_Color screen_pixels[VISIBLE_SCANLINES][160];
 
 static void render_tiles(void);
+static void render_sprites(void);
 
 // Helpers
 static bool is_tile_display_enabled(void);
 static bool is_sprite_display_enabled(void);
+static bool is_using_8x16_sprites(void);
 static unsigned short get_bg_tilemap_addr(void);
 static unsigned short get_bg_tiledata_addr(void);
 static bool is_window_enabled(void);
@@ -22,7 +24,7 @@ void draw_scanline(void)
 	if (is_tile_display_enabled())
 		render_tiles();
 
-	//if (is_sprite_display_enabled())
+	if (is_sprite_display_enabled())
 		//Render sprites
 }
 
@@ -133,6 +135,35 @@ static void render_tiles(void)
 	}
 }
 
+//TODO: Description
+//TODO: Split in many smaller functions
+// Iterates through every sprite in every scanline, not very efficient. Could maybe be executed everytime scanline 144 is reached
+static void render_sprites(void)
+{
+	unsigned char sprite_table_index, sprite_col, sprite_row, sprite_relative_pos, sprite_attribs;
+	unsigned short sprite_table_addr;
+	bool sprite_Y_flipped, sprite_X_flipped;
+
+	unsigned char current_scanline = read_byte(LY_ADDRESS);
+	bool using_8x16_sprites = is_using_8x16_sprites();
+
+	for (int sprite_num = 0; sprite_num < 40; sprite_num++) {
+		// Get sprite index in the sprite attributes table
+		sprite_table_index = sprite_num * 4;
+
+		// Get sprite table address of sprite
+		sprite_table_addr = SPRITE_ATTRIBUTES + sprite_table_index;
+
+		// Get sprite data from the attributes table
+		sprite_row = read_byte(sprite_table_addr) - 16;
+		sprite_col = read_byte(sprite_table_addr + 1) - 8;
+		sprite_relative_pos = read_byte(sprite_table_addr + 2);
+		sprite_attribs = read_byte(sprite_table_addr + 3);
+
+		// Check if sprite is flipped vertically or horizontally
+	}
+}
+
 //region Helpers
 
 // LCDC-0: Check if tiles need to be displayed
@@ -145,6 +176,12 @@ static bool is_tile_display_enabled(void)
 static bool is_sprite_display_enabled(void)
 {
 	return (read_byte(LCDC_ADDRESS) >> 1) & 1;
+}
+
+// LCDC-2: Check if the game is using 8x16 sprites
+static bool is_using_8x16_sprites(void)
+{
+	return (read_byte(LCDC_ADDRESS) >> 2) & 1;
 }
 
 // LCDC-3: Get BG tile map area address
