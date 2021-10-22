@@ -25,10 +25,10 @@ void draw_scanline(void)
 		render_tiles();
 
 	if (is_sprite_display_enabled())
-		//Render sprites
+		render_sprites();
 }
 
-//TODO: Description
+// Render BG and Window tiles
 //TODO: Split function in many smaller ones
 static void render_tiles(void)
 {
@@ -50,7 +50,6 @@ static void render_tiles(void)
 	unsigned short map_addr = (is_using_window) ? get_window_tilemap_addr() : get_bg_tilemap_addr();
 	unsigned short data_addr = get_bg_tiledata_addr();
 	bool unsign = (data_addr == 0x8000) ? true : false; //TODO: change to something more clear, like unsigned_tile_data_pos
-	//bool unsign = (map_addr == 0x9C00) ? true : false;
 
 	unsigned char bg_palette = read_byte(0xFF47);
 
@@ -135,17 +134,19 @@ static void render_tiles(void)
 	}
 }
 
-//TODO: Description
+// Render sprites
 //TODO: Split in many smaller functions
 // Iterates through every sprite in every scanline, not very efficient. Could maybe be executed everytime scanline 144 is reached
 static void render_sprites(void)
 {
-	unsigned char sprite_table_index, sprite_col, sprite_row, sprite_relative_pos, sprite_attribs;
-	unsigned short sprite_table_addr;
+	unsigned char sprite_table_index, sprite_col, sprite_row, sprite_relative_pos, sprite_attribs, sprite_Y_size;
+	unsigned char pixel_row, pixel_lsB, pixel_msB;
+	unsigned short sprite_table_addr, pixel_data_addr;
 	bool sprite_Y_flipped, sprite_X_flipped;
 
 	unsigned char current_scanline = read_byte(LY_ADDRESS);
 	bool using_8x16_sprites = is_using_8x16_sprites();
+	sprite_Y_size = (using_8x16_sprites) ? 16 : 8;
 
 	for (int sprite_num = 0; sprite_num < 40; sprite_num++) {
 		// Get sprite index in the sprite attributes table
@@ -161,6 +162,23 @@ static void render_sprites(void)
 		sprite_attribs = read_byte(sprite_table_addr + 3);
 
 		// Check if sprite is flipped vertically or horizontally
+		sprite_Y_flipped = (sprite_attribs >> 6) & 1;
+		sprite_X_flipped = (sprite_attribs >> 5) & 1;
+
+		if (current_scanline >= sprite_row && current_scanline <= (sprite_row + sprite_Y_size)) {
+			// Pixel row to render
+			pixel_row = current_scanline - sprite_row;
+
+			if (sprite_Y_flipped)
+				pixel_row = sprite_Y_size - pixel_row;
+
+			// Pixel data
+			pixel_data_addr = 0x8000 + (sprite_relative_pos * 16) + (pixel_row * 2);
+			pixel_lsB = read_byte(pixel_data_addr);
+			pixel_msB = read_byte(pixel_data_addr + 1);
+
+			
+		}
 	}
 }
 
