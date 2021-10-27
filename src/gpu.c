@@ -139,15 +139,17 @@ static void render_tiles(void)
 // Iterates through every sprite in every scanline, not very efficient. Could maybe be executed everytime scanline 144 is reached
 static void render_sprites(void)
 {
-	unsigned char sprite_table_index, sprite_col, sprite_row, sprite_relative_pos, sprite_attribs, sprite_Y_size;
-	unsigned char pixel_row, pixel_lsB, pixel_msB;
-	unsigned short sprite_table_addr, pixel_data_addr;
+	unsigned char sprite_table_index, sprite_col, sprite_row, sprite_relative_pos, sprite_attribs, sprite_height, sprite_palette;
+	unsigned char pixel_row, pixel_lsB, pixel_msB, pixel_color_id, pixel_palette_id, pixel_screen_X;
+	unsigned short sprite_table_addr, pixel_data_addr, pixel_palette_addr;
 	bool sprite_Y_flipped, sprite_X_flipped;
+	SDL_Color pixel_color;
 
 	unsigned char current_scanline = read_byte(LY_ADDRESS);
 	bool using_8x16_sprites = is_using_8x16_sprites();
-	sprite_Y_size = (using_8x16_sprites) ? 16 : 8;
+	sprite_height = (using_8x16_sprites) ? 16 : 8;
 
+	// Loop through sprites
 	for (int sprite_num = 0; sprite_num < 40; sprite_num++) {
 		// Get sprite index in the sprite attributes table
 		sprite_table_index = sprite_num * 4;
@@ -165,19 +167,89 @@ static void render_sprites(void)
 		sprite_Y_flipped = (sprite_attribs >> 6) & 1;
 		sprite_X_flipped = (sprite_attribs >> 5) & 1;
 
-		if (current_scanline >= sprite_row && current_scanline <= (sprite_row + sprite_Y_size)) {
+		// Check if scanline intercepts with sprite
+		if (current_scanline >= sprite_row && current_scanline <= (sprite_row + sprite_height)) {
 			// Pixel row to render
 			pixel_row = current_scanline - sprite_row;
 
 			if (sprite_Y_flipped)
-				pixel_row = sprite_Y_size - pixel_row;
+				pixel_row = sprite_height - pixel_row;
 
 			// Pixel data
 			pixel_data_addr = 0x8000 + (sprite_relative_pos * 16) + (pixel_row * 2);
 			pixel_lsB = read_byte(pixel_data_addr);
 			pixel_msB = read_byte(pixel_data_addr + 1);
 
-			
+			// Loop through pixel row to render
+			for (int pixel_num = 0; pixel_num <= 7; pixel_num++) {
+				int pixel_bit_num = 7 - pixel_num;
+
+				// Read pixel bits backwards if sprite is X flipped
+				if (sprite_X_flipped)
+					pixel_bit_num = 7 - pixel_bit_num;
+
+				// Get pixel color ID
+				pixel_color_id = (pixel_lsB >> pixel_bit_num) & 1;
+				pixel_color_id |= ((pixel_msB >> pixel_bit_num) & 1) << 1;
+
+				// Get pixel palette
+				pixel_palette_addr = ((sprite_attribs >> 4) & 1) ? 0xFF49 : 0xFF48;
+				sprite_palette = read_byte(pixel_palette_addr);
+
+				// Get pixel palette ID from color ID
+				switch (pixel_color_id) {
+					case 0:
+						pixel_palette_id = sprite_palette & 3;
+						break;
+					case 1:
+						pixel_palette_id = (sprite_palette >> 2) & 3;
+						break;
+					case 2:
+						pixel_palette_id = (sprite_palette >> 4) & 3;
+						break;
+					case 3:
+						pixel_palette_id = (sprite_palette >> 6) & 3;
+						break;
+					default:
+						break;
+				}
+
+				// White is transparent for sprites
+				if (pixel_palette_id == 0)
+					continue;
+
+				// Get RGB from palette ID
+				switch (pixel_palette_id) {
+					case 1:
+						pixel_color = (SDL_Color){139, 172, 15, 255};
+						break;
+					case 2:
+						pixel_color = (SDL_Color){48, 98, 48, 255};
+						break;
+					case 3:
+						pixel_color = (SDL_Color){15, 56, 15, 255};
+						break;
+					default:
+						break;
+				}
+
+				// Get pixel screen X pos
+				pixel_screen_X = sprite_col + pixel_num;
+
+				// Check if pixel is out of screen bounds
+				if (current_scanline < 0 || current_scanline > 143 || pixel_screen_X < 0 || pixel_screen_X > 159)
+					continue;
+
+				// Check if sprite should be rendered behind BG
+				if (sprite_attribs >> 7 & 1) {
+					// Check if current pixel is not white
+					if (screen_pixels[current_scanline][pixel_screen_X].r != 155)
+						continue;
+				}
+
+				// Add pixel RGB to screen pixels array
+				screen_pixels[current_scanline][pixel_screen_X] = pixel_color;
+			}
 		}
 	}
 }
