@@ -15,8 +15,8 @@
 #include "registers.h"	// registers (DEBUG)
 
 // Window related
-#define WINDOW_WIDTH 	160
-#define WINDOW_LENGTH 	144
+#define WINDOW_BASE_WIDTH 	160
+#define WINDOW_BASE_LENGTH 	144
 static SDL_Window *init_SDL_window(void);
 static SDL_Renderer *init_SDL_renderer(SDL_Window *window);
 
@@ -28,13 +28,13 @@ static void handle_key_up(SDL_Keysym *keysym);
 // Program state
 static bool close_window = false;
 
-// Emulator related
+// Gameboy params
 int frame_cycles = CYCLES_FRAME;
 int op_cycles = 0;
 static int read_cartridge(int argc, char *path);
 static void render_frame(SDL_Renderer *renderer);
 
-// Update related
+// Update cycle params
 unsigned long frame_start;
 unsigned long frame_end;
 float elapsed_time;
@@ -87,10 +87,6 @@ int main(int argc, char *argv[])
 		render_frame(renderer);
 		frame_cycles += CYCLES_FRAME;
 
-		//DEBUG
-		//printf("AF: %#x, BC: %#x, DE: %#x, HL: %#x, SP: %#x, PC: %#x \n", registers.AF, registers.BC, registers.DE, registers.HL, registers.SP, registers.PC);
-		//printf("PC: %x \n", registers.PC);
-
 		// Frame cap
 		frame_end = SDL_GetPerformanceCounter();
 		elapsed_time = (frame_end - frame_start) / SDL_GetPerformanceFrequency();
@@ -110,11 +106,11 @@ static SDL_Window *init_SDL_window(void)
 	SDL_Window *window = NULL;
 
 	window = SDL_CreateWindow("GB Emulator",
-				  SDL_WINDOWPOS_CENTERED,
-				  SDL_WINDOWPOS_CENTERED,
-				  WINDOW_WIDTH,
-				  WINDOW_LENGTH,
-				  0);
+							  SDL_WINDOWPOS_CENTERED,
+							  SDL_WINDOWPOS_CENTERED,
+							  WINDOW_BASE_WIDTH * 2,
+							  WINDOW_BASE_LENGTH * 2,
+							  0);
 
 	return window;
 }
@@ -122,8 +118,7 @@ static SDL_Window *init_SDL_window(void)
 // Initialize an SDL_Renderer
 static SDL_Renderer *init_SDL_renderer(SDL_Window *window)
 {
-	SDL_Renderer *renderer = NULL;
-	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+	SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 	SDL_RenderClear(renderer);
 	return renderer;
@@ -249,13 +244,16 @@ static int read_cartridge(int argc, char *path)
 
 static void render_frame(SDL_Renderer *renderer)
 {
-	for (int scanline = 0; scanline < WINDOW_LENGTH; scanline++) {
-		for (int pixel = 0; pixel < WINDOW_WIDTH; pixel++) {
+	for (int scanline = 0; scanline < WINDOW_BASE_LENGTH; scanline++) {
+		for (int pixel = 0; pixel < WINDOW_BASE_WIDTH; pixel++) {
 			SDL_SetRenderDrawColor(renderer, screen_pixels[scanline][pixel].r,
 								   			 screen_pixels[scanline][pixel].g,
 								   			 screen_pixels[scanline][pixel].b,
 								   			 screen_pixels[scanline][pixel].a);
-			SDL_RenderDrawPoint(renderer, pixel, scanline);
+
+			for (int pixel_Y = scanline*2; pixel_Y < scanline*2+2; pixel_Y++)
+				for (int pixel_X = pixel*2; pixel_X < pixel*2+2; pixel_X++)
+					SDL_RenderDrawPoint(renderer, pixel_X, pixel_Y);
 		}
 	}
 
