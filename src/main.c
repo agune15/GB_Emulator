@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
 		// Frame cap
 		frame_end = SDL_GetPerformanceCounter();
 		elapsed_time = (frame_end - frame_start) / SDL_GetPerformanceFrequency();
-		SDL_Delay(floor(16.666f - elapsed_time));
+		SDL_Delay(floor((16.666f/2) - elapsed_time));	//TODO: Not enough to make the games faster, need to tweak something else, maybe rendering
 	}
 
 	SDL_DestroyRenderer(renderer);

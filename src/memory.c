@@ -67,18 +67,14 @@ unsigned char read_byte(unsigned short address)
 		return VRAM[address - 0x8000];
 	else if (address >= 0xA000 && address <= 0xBFFF)
 		return exRAM[address - 0xA000];
-	else if (address >= 0xC000 && address <= 0xFDFF) {
-		if (address < 0xE000)
-			return WRAM[address - 0xC000];
-		else
-			return WRAM[address - 0xE000];
-	}
+	else if (address >= 0xC000 && address <= 0xFDFF)
+		return WRAM[address - 0xC000];
 	else if (address >= 0xFE00 && address <= 0xFE9F)
 		return OAM[address - 0xFE00];
 	else if (address >= 0xFF00 && address <= 0xFF7F) {
-		if (address == 0xFF00)
+		if (address == 0xFF00)		//TODO: This address to a macro
 			return get_joypad_state(IO[0]);
-		else if (address == 0xFF04)
+		else if (address == 0xFF04)		//TODO: This address to a macro
 			return (unsigned char)rand();
 		else
 			return IO[address - 0xFF00];
@@ -87,9 +83,6 @@ unsigned char read_byte(unsigned short address)
 		return HRAM[address - 0xFF80];
 	else if (address == 0xFFFF)
 		return interrupt_enable_reg;
-	//else
-		//printf("memory: Address unreachable %#x \n", address);
-		//TODO: Uncomment
 
 	return 0;
 }

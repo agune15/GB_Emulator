@@ -168,7 +168,7 @@ static void render_sprites(void)
 		sprite_X_flipped = (sprite_attribs >> 5) & 1;
 
 		// Check if scanline intercepts with sprite
-		if (current_scanline >= sprite_row && current_scanline <= (sprite_row + sprite_height)) {
+		if (current_scanline >= sprite_row && current_scanline <= (sprite_row + sprite_height-1)) {
 			// Pixel row to render
 			pixel_row = current_scanline - sprite_row;
 
