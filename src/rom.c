@@ -3,6 +3,14 @@
 #include "rom.h"
 #include "memory.h"
 
+unsigned char rom_type_byte;
+rom_type_t rom_type;
+unsigned char current_ROM_bank = 1;
+unsigned char current_RAM_bank = 0;
+
+unsigned char cartridge[0x200000] = {0};
+unsigned char cartridge_RAM_banks[0x8000] = {0};
+
 // Load a ROM from rom_path
 int loadROM(char *rom_path)
 {
@@ -19,7 +27,15 @@ int loadROM(char *rom_path)
 	file_size = ftell(pfile);
 
 	fseek(pfile, ROM_OFFSET_TYPE, SEEK_SET);
-	if(fgetc(pfile) != 0x00) {
+	rom_type_byte = fgetc(pfile);
+
+	if (rom_type_byte == 0)
+		rom_type = ROM_ONLY;
+	else if (rom_type_byte >= 1 && rom_type_byte <= 3)
+		rom_type = MBC1;
+	else if (rom_type_byte >= 5 && rom_type_byte <= 6)
+		rom_type = MBC2;
+	if(rom_type_byte > 6) {
 		printf("rom: Unsupported cartridge type");
 		return 1;
 	}
@@ -31,7 +47,9 @@ int loadROM(char *rom_path)
 	}
 	rewind(pfile);
 
-	fread(ROM_banks, 1, file_size, pfile);
+	fread(cartridge, 1, file_size, pfile);
+	for(int i = 0; i < 0x8000; i++)
+		ROM_banks[i] = cartridge[i];
 
 	fclose(pfile);
 

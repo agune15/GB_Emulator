@@ -62,11 +62,11 @@ void init_random_seed(void)
 unsigned char read_byte(unsigned short address)
 {
 	if (address <= 0x7FFF)
-		return ROM_banks[address];
+		return ROM_banks[address];	//TODO: Change logic to support MBC1-2
 	else if (address >= 0x8000 && address <= 0x9FFF)
 		return VRAM[address - 0x8000];
 	else if (address >= 0xA000 && address <= 0xBFFF)
-		return exRAM[address - 0xA000];
+		return exRAM[address - 0xA000];	//TODO: Change logic to support MBC1-2
 	else if (address >= 0xC000 && address <= 0xFDFF)
 		return WRAM[address - 0xC000];
 	else if (address >= 0xFE00 && address <= 0xFE9F)
