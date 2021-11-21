@@ -1,19 +1,32 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
 #include "memory.h"
+#include "rom.h"
 #include "input.h"
 #include "registers.h"
 #include "time.h"
-#include "stdlib.h"
 
 unsigned char ROM_banks[0x8000];	//0000-7FFF
-unsigned char VRAM[0x2000];		//8000-9FFF
+unsigned char VRAM[0x2000];			//8000-9FFF
 unsigned char exRAM[0x2000];		//A000-BFFF
-unsigned char WRAM[0x2000];		//C000-DFFF (& E000-FDFF, same as C000-DDFF)
-unsigned char OAM[0xA0];		//FE00-FE9F
-unsigned char IO[0x80];			//FF00-FF7F
-unsigned char HRAM[0x7F];		//FF80-FFFE
+unsigned char WRAM[0x2000];			//C000-DFFF (& E000-FDFF, same as C000-DDFF)
+unsigned char OAM[0xA0];			//FE00-FE9F
+unsigned char IO[0x80];				//FF00-FF7F
+unsigned char HRAM[0x7F];			//FF80-FFFE
 unsigned char interrupt_enable_reg;	//FFFF
 
+// ROM/RAM banking related
+bool is_RAM_w_enabled = false;
+void handle_banking(unsigned short address, unsigned char byte);
+// MBC1
+void handle_MBC1_banking(unsigned short address, unsigned char byte);
+void set_MBC1_RAM_writes(unsigned char byte);
+// MBC2
+void handle_MBC2_banking(unsigned short address, unsigned char byte);
+void set_MBC2_RAM_writes(unsigned short address, unsigned char byte);
+
+// DMA related
 static void perform_DMA_transfer(unsigned short address);
 
 // Assign the required initial value for a set of specific memory addresses (GB requirement)
@@ -61,20 +74,31 @@ void init_random_seed(void)
 // Read byte from address
 unsigned char read_byte(unsigned short address)
 {
-	if (address <= 0x7FFF)
-		return ROM_banks[address];	//TODO: Change logic to support MBC1-2
+	if (address <= 0x7FFF) {
+		if (rom_type == ROM_ONLY || address < ROM_BANK_SIZE)
+			return ROM_banks[address];	//TODO: Change logic to support MBC1-2
+		else {
+			address -= ROM_BANK_SIZE;
+			return cartridge[address + current_ROM_bank*ROM_BANK_SIZE];
+		}
+	}
 	else if (address >= 0x8000 && address <= 0x9FFF)
 		return VRAM[address - 0x8000];
-	else if (address >= 0xA000 && address <= 0xBFFF)
-		return exRAM[address - 0xA000];	//TODO: Change logic to support MBC1-2
+	else if (address >= 0xA000 && address <= 0xBFFF) {
+		address -= 0xA000;
+		if (rom_type == ROM_ONLY)
+			return exRAM[address - 0xA000];
+		else
+			return cartridge_RAM_banks[address + current_RAM_bank*RAM_BANK_SIZE];
+	}
 	else if (address >= 0xC000 && address <= 0xFDFF)
 		return WRAM[address - 0xC000];
 	else if (address >= 0xFE00 && address <= 0xFE9F)
 		return OAM[address - 0xFE00];
 	else if (address >= 0xFF00 && address <= 0xFF7F) {
-		if (address == 0xFF00)		//TODO: This address to a macro
+		if (address == 0xFF00)		//TODO: This address to a constant
 			return get_joypad_state(IO[0]);
-		else if (address == 0xFF04)		//TODO: This address to a macro
+		else if (address == 0xFF04)		//TODO: This address to a constant
 			return (unsigned char)rand();
 		else
 			return IO[address - 0xFF00];
@@ -110,13 +134,17 @@ void write_byte(unsigned short address, unsigned char byte)
 		return;
 	}
 
-	//if (address >= 0x0000 && address <= 0x7FFF)
-		//printf("memory: Read-only memory area: %#x\n", address);
-		//TODO: Uncomment
+	if (address >= 0x0000 && address <= 0x7FFF)
+		handle_banking(address, byte);
 	else if (address >= 0x8000 && address <= 0x9FFF)
 		VRAM[address - 0x8000] = byte;
-	else if (address >= 0xA000 && address <= 0xBFFF)
-		exRAM[address - 0xA000] = byte;
+	else if (address >= 0xA000 && address <= 0xBFFF) {
+		address -= 0xA000;
+		if (rom_type == ROM_ONLY)
+			exRAM[address - 0xA000] = byte;
+		else if (is_RAM_w_enabled)
+			cartridge_RAM_banks[address + current_RAM_bank*RAM_BANK_SIZE] = byte;
+	}
 	else if (address >= 0xC000 && address <= 0xFDFF) {
 		if (address < 0xE000)
 			WRAM[address - 0xC000] = byte;
@@ -163,3 +191,62 @@ static void perform_DMA_transfer(unsigned short address)
 	for (int i = 0; i < 0xA0; i++)
 		write_byte(0xFE00+i, read_byte(address + i));
 }
+
+//region Banking
+
+// Handle ROM/RAM baking
+void handle_banking(unsigned short address, unsigned char byte)
+{
+	switch (rom_type) {
+		case ROM_ONLY:
+			printf("memory: Read-only memory area: %#x\n", address);
+			break;
+		case MBC1:
+			handle_MBC1_banking(address, byte);
+			break;
+		case MBC2:
+			handle_MBC2_banking(address, byte);
+			break;
+		default:
+			break;
+	}
+}
+
+// MBC1
+
+// Handle MBC1 banking
+void handle_MBC1_banking(unsigned short address, unsigned char byte)
+{
+	if (address <= 0x1FFF)
+		set_MBC1_RAM_writes(byte);
+	//else if (address <= 0x2000 && address >= 0x3FFF)
+		//TODO: Continue here
+}
+
+// Enable/disable RAM writes
+void set_MBC1_RAM_writes(unsigned char byte)
+{
+	byte &= 0x0F;
+	is_RAM_w_enabled = (byte == 0xA) ? true : false;
+}
+
+//void change_ROM_bank_low_bits
+
+
+// MBC2
+
+// Handle MBC2 baking
+void handle_MBC2_banking(unsigned short address, unsigned char byte)
+{
+	if (address <= 0x1FFF)
+		set_MBC2_RAM_writes(address, byte);
+}
+
+// Enable/disable RAM writes
+void set_MBC2_RAM_writes(unsigned short address, unsigned char byte)
+{
+	if ((address >> 4) & 1)
+		set_MBC1_RAM_writes(byte);
+}
+
+//endregion

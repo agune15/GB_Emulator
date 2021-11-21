@@ -3,7 +3,6 @@
 #include "rom.h"
 #include "memory.h"
 
-unsigned char rom_type_byte;
 rom_type_t rom_type;
 unsigned char current_ROM_bank = 1;
 unsigned char current_RAM_bank = 0;
@@ -17,6 +16,7 @@ int loadROM(char *rom_path)
 	FILE *pfile;
 	size_t file_size;
 	unsigned char rom_size;
+	unsigned char rom_type_byte;
 
 	if((pfile = fopen(rom_path, "rb")) == NULL) {
 		printf("rom: File couldn't be opened");
