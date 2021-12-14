@@ -18,13 +18,19 @@ unsigned char interrupt_enable_reg;	//FFFF
 
 // ROM/RAM banking related
 bool is_RAM_w_enabled = false;
+bool is_ROM_banking_enabled = true;
 void handle_banking(unsigned short address, unsigned char byte);
-// MBC1
+// MBC1 TODO: Move to separate file
 void handle_MBC1_banking(unsigned short address, unsigned char byte);
 void set_MBC1_RAM_writes(unsigned char byte);
+void change_ROM_bank_low_bits_MBC1(unsigned char byte);
+void change_ROM_bank_high_bits_MBC1(unsigned char byte);
+void change_RAM_bank_MBC1(unsigned char byte);
+void select_banking_mode_MBC1(unsigned char byte);
 // MBC2
 void handle_MBC2_banking(unsigned short address, unsigned char byte);
 void set_MBC2_RAM_writes(unsigned short address, unsigned char byte);
+void change_ROM_bank_low_bits_MBC2(unsigned char byte);
 
 // DMA related
 static void perform_DMA_transfer(unsigned short address);
@@ -219,8 +225,16 @@ void handle_MBC1_banking(unsigned short address, unsigned char byte)
 {
 	if (address <= 0x1FFF)
 		set_MBC1_RAM_writes(byte);
-	//else if (address <= 0x2000 && address >= 0x3FFF)
-		//TODO: Continue here
+	else if (address >= 0x2000 && address <= 0x3FFF)
+        change_ROM_bank_low_bits_MBC1(byte);
+    else if (address >= 0x4000 && address <= 0x5FFF) {
+        if (is_ROM_banking_enabled)
+            change_ROM_bank_high_bits_MBC1(byte);
+        else
+            change_RAM_bank_MBC1(byte);
+    }
+    else if (address >= 0x6000 && address <= 0x7FFF)
+        select_banking_mode_MBC1(byte);
 }
 
 // Enable/disable RAM writes
@@ -230,8 +244,42 @@ void set_MBC1_RAM_writes(unsigned char byte)
 	is_RAM_w_enabled = (byte == 0xA) ? true : false;
 }
 
-//void change_ROM_bank_low_bits
+// Change ROM bank 0-4 bits
+void change_ROM_bank_low_bits_MBC1(unsigned char byte)
+{
+    current_ROM_bank &= 0xE0;
+    current_ROM_bank |= byte & 0x1F;
 
+    if (current_ROM_bank == 0)
+        current_ROM_bank++;
+}
+
+// Change ROM bank 5-7 bits
+void change_ROM_bank_high_bits_MBC1(unsigned char byte)
+{
+    current_ROM_bank &= 0x1F;
+    current_ROM_bank |= byte & 0xE0;
+
+    if (current_ROM_bank == 0)
+        current_ROM_bank++;
+}
+
+// Change RAM bank
+void change_RAM_bank_MBC1(unsigned char byte)
+{
+    current_RAM_bank = byte & 0x03;
+}
+
+// Select ROM/RAM banking mode
+void select_banking_mode_MBC1(unsigned char byte)
+{
+    if (!(byte & 1)) {
+        is_ROM_banking_enabled = true;
+        current_RAM_bank = 0;
+    }
+    else
+        is_ROM_banking_enabled = false;
+}
 
 // MBC2
 
@@ -240,13 +288,24 @@ void handle_MBC2_banking(unsigned short address, unsigned char byte)
 {
 	if (address <= 0x1FFF)
 		set_MBC2_RAM_writes(address, byte);
+    else if (address >= 0x2000 && address <= 0x3FFF)
+        change_ROM_bank_low_bits_MBC2(byte);
 }
 
 // Enable/disable RAM writes
 void set_MBC2_RAM_writes(unsigned short address, unsigned char byte)
 {
-	if ((address >> 4) & 1)
+	if (!((address >> 4) & 1))
 		set_MBC1_RAM_writes(byte);
+}
+
+// Change ROM bank 0-3 bits
+void change_ROM_bank_low_bits_MBC2(unsigned char byte)
+{
+    current_ROM_bank = byte & 0x0F;
+
+    if (current_ROM_bank == 0)
+        current_ROM_bank++;
 }
 
 //endregion
