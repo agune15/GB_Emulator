@@ -1675,7 +1675,7 @@ TEST_CASE("CB 0xBD: Reset bit 7 of reg-L", "[cpu][cb][bit]") {
 	reset_bit_test(7, &registers.L);
 }
 
-TEST_CASE("FB 0xBE: Reset bit 7 of memory(HL)", "[cpu][cb][bit]") {
+TEST_CASE("CB 0xBE: Reset bit 7 of memory(HL)", "[cpu][cb][bit]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0xBE;
 	registers.HL = GENERATE(take(5, random(0x8000, 0xFE9F)));
@@ -1685,7 +1685,7 @@ TEST_CASE("FB 0xBE: Reset bit 7 of memory(HL)", "[cpu][cb][bit]") {
 	reset_bit_hl_test(7);
 }
 
-TEST_CASE("FB 0xBF: Reset bit 7 of reg-A", "[cpu][cb][bit]") {
+TEST_CASE("CB 0xBF: Reset bit 7 of reg-A", "[cpu][cb][bit]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0xBF;
 	registers.A = GENERATE(take(5, random(0, 0xFF)));
@@ -2203,7 +2203,7 @@ TEST_CASE("CB 0xFD: Set bit 7 of reg-L", "[cpu][cb][bit]") {
 	set_bit_test(7, &registers.L);
 }
 
-TEST_CASE("FB 0xFE: Set bit 7 of memory(HL)", "[cpu][cb][bit]") {
+TEST_CASE("CB 0xFE: Set bit 7 of memory(HL)", "[cpu][cb][bit]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0xFE;
 	registers.HL = GENERATE(take(5, random(0x8000, 0xFE9F)));
@@ -2213,7 +2213,7 @@ TEST_CASE("FB 0xFE: Set bit 7 of memory(HL)", "[cpu][cb][bit]") {
 	set_bit_hl_test(7);
 }
 
-TEST_CASE("FB 0xFF: Set bit 7 of reg-A", "[cpu][cb][bit]") {
+TEST_CASE("CB 0xFF: Set bit 7 of reg-A", "[cpu][cb][bit]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0xFF;
 	registers.A = GENERATE(take(5, random(0, 0xFF)));

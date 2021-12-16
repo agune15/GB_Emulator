@@ -7,6 +7,7 @@ extern "C" {
 //TODO: Modularize tests, create functions for repeated code, like the "Corner Cases" sections
 
 void MBC1_RAM_enable_test(unsigned short address);
+void read_ROM_banks_MBC1_test();
 
 //region Read from memory
 
@@ -24,22 +25,14 @@ TEST_CASE("Read ROM banks - MBC1", "[memory][read][byte]") {
     rom_type = MBC1;
     current_ROM_bank = GENERATE(take(10, random(1, 0x7F)));
 
-    unsigned short address = GENERATE(take(10, random(ROM_BANK_SIZE, 0x7FFF)));
-    unsigned char value = cartridge[address - ROM_BANK_SIZE + current_ROM_bank*ROM_BANK_SIZE] = GENERATE(take(1, random(0x00, 0xFF)));
-    DYNAMIC_SECTION("Read 0x" << std::hex << address) {
-        CHECK(value == read_byte(address));
-    }
+    read_ROM_banks_MBC1_test();
 }
 
 TEST_CASE("Read ROM banks - MBC2", "[memory][read][byte]") {
     rom_type = MBC2;
     current_ROM_bank = GENERATE(take(10, random(1, 0x0F)));
 
-    unsigned short address = GENERATE(take(10, random(ROM_BANK_SIZE, 0x7FFF)));
-    unsigned char value = cartridge[address - ROM_BANK_SIZE + current_ROM_bank*ROM_BANK_SIZE] = GENERATE(take(1, random(0x00, 0xFF)));
-    DYNAMIC_SECTION("Read 0x" << std::hex << address) {
-        CHECK(value == read_byte(address));
-    }
+    read_ROM_banks_MBC1_test();
 }
 
 TEST_CASE("Read VRAM", "[memory][read][byte]") {
@@ -314,7 +307,39 @@ TEST_CASE("Change ROM bank 5-7 bits - MBC1", "[memory][write][byte][banking]") {
         CHECK(current_ROM_bank == c_ROM_bank);
 }
 
+TEST_CASE("Change RAM bank - MBC1", "[memory][write][byte][banking]") {
+    rom_type = MBC1;
+    is_ROM_banking_enabled = false;
+    current_RAM_bank = GENERATE(take(2, random(0, 3)));
+
+    unsigned short address = GENERATE(take(5, random(0x4000, 0x5FFF)));
+    unsigned char value = GENERATE(take(5, random(0x00, 0xFF)));
+
+    write_byte(address, value);
+
+    CHECK(current_RAM_bank == (value & 3));
+}
+
+TEST_CASE("Select banking mode - MBC1", "[memory][write][byte][banking]") {
+    rom_type = MBC1;
+    current_RAM_bank = GENERATE(take(2, random(1, 3)));
+
+    unsigned short address = GENERATE(take(5, random(0x6000, 0x7FFF)));
+    unsigned char value = GENERATE(take(5, random(0x00, 0xFF)));
+
+    write_byte(address, value);
+
+    if (!(value & 1)) {
+        CHECK(is_ROM_banking_enabled == true);
+        CHECK(current_RAM_bank == 0);
+    }
+    else
+        CHECK(is_ROM_banking_enabled == false);
+}
+
 TEST_CASE("Write byte - memory", "[memory][write][byte]") {
+    rom_type = ROM_ONLY;
+
 	unsigned short address = GENERATE(take(10, random(0x8000, 0xFE9F)),
 				   	  take(5, random(0xFF00, 0xFFFF)));
 	unsigned char value = GENERATE(take(1, random(0x00, 0xFF)));
@@ -329,6 +354,20 @@ TEST_CASE("Write byte - memory", "[memory][write][byte]") {
 	}
 }
 
+TEST_CASE("Write byte - exRAM - MBC1-2", "[memory][write][byte]") {
+    rom_type = MBC1;
+    current_RAM_bank = GENERATE(take(2, random(0, 3)));
+
+    unsigned short address = GENERATE(take(10, random(0xA000, 0xBFFF)));
+    unsigned char value = GENERATE(take(1, random(0x00, 0xFF)));
+    cartridge_RAM_banks[address - 0xA000 + current_RAM_bank*RAM_BANK_SIZE];
+
+    write_byte(address, value);
+    DYNAMIC_SECTION("Write to 0x" << std::hex << address) {
+        CHECK(read_byte(address) == value);
+    }
+}
+
 TEST_CASE("Write byte - restricted area", "[memory][write][byte]") {
 	unsigned short address = GENERATE(take(10, random(0xFEA0, 0xFEFF)));
 	unsigned char value = GENERATE(take(1, random(0x01, 0xFF)));
@@ -339,6 +378,8 @@ TEST_CASE("Write byte - restricted area", "[memory][write][byte]") {
 }
 
 TEST_CASE("Write short - read-only memory", "[memory][write][short]") {
+    rom_type = ROM_ONLY;
+
 	unsigned short address = GENERATE(take(100, random(0x0000, 0x7FFE)));
 	unsigned short word = GENERATE(take(1, random(0x0001, 0xFFFF)));
 	ROM_banks[address] = 0x00;
@@ -350,6 +391,8 @@ TEST_CASE("Write short - read-only memory", "[memory][write][short]") {
 }
 
 TEST_CASE("Write short - memory", "[memory][write][short]") {
+    rom_type = ROM_ONLY;
+
 	unsigned short address = GENERATE(take(95, random(0x8000, 0xFE9F)),
 					  take(5, random(0xFF00, 0xFFFE)));
 	unsigned short word = GENERATE(take(1, random(0x0000, 0xFFFF)));
@@ -396,7 +439,8 @@ TEST_CASE("Perform DMA transfer", "[memory][write][DMA]") {
 
 // Helpers
 
-void MBC1_RAM_enable_test(unsigned short address) {
+void MBC1_RAM_enable_test(unsigned short address)
+{
     unsigned char value = 0x0A;
     write_byte(address, value);
     SECTION("Enable RAM writes") {
@@ -407,5 +451,14 @@ void MBC1_RAM_enable_test(unsigned short address) {
     write_byte(address, value);
     SECTION("Disable RAM writes") {
         CHECK(is_RAM_w_enabled == false);
+    }
+}
+
+void read_ROM_banks_MBC1_test()
+{
+    unsigned short address = GENERATE(take(10, random(ROM_BANK_SIZE, 0x7FFF)));
+    unsigned char value = cartridge[address - ROM_BANK_SIZE + current_ROM_bank*ROM_BANK_SIZE] = GENERATE(take(1, random(0x00, 0xFF)));
+    DYNAMIC_SECTION("Read 0x" << std::hex << address) {
+        CHECK(value == read_byte(address));
     }
 }
