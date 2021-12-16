@@ -20,7 +20,8 @@ unsigned char interrupt_enable_reg;	//FFFF
 bool is_RAM_w_enabled = false;
 bool is_ROM_banking_enabled = true;
 void handle_banking(unsigned short address, unsigned char byte);
-// MBC1 TODO: Move to separate file
+// TODO: Move to separate file
+// MBC1
 void handle_MBC1_banking(unsigned short address, unsigned char byte);
 void set_MBC1_RAM_writes(unsigned char byte);
 void change_ROM_bank_low_bits_MBC1(unsigned char byte);
@@ -82,7 +83,7 @@ unsigned char read_byte(unsigned short address)
 {
 	if (address <= 0x7FFF) {
 		if (rom_type == ROM_ONLY || address < ROM_BANK_SIZE)
-			return ROM_banks[address];	//TODO: Change logic to support MBC1-2
+			return ROM_banks[address];
 		else {
 			address -= ROM_BANK_SIZE;
 			return cartridge[address + current_ROM_bank*ROM_BANK_SIZE];
@@ -93,16 +94,20 @@ unsigned char read_byte(unsigned short address)
 	else if (address >= 0xA000 && address <= 0xBFFF) {
 		address -= 0xA000;
 		if (rom_type == ROM_ONLY)
-			return exRAM[address - 0xA000];
+			return exRAM[address];
 		else
 			return cartridge_RAM_banks[address + current_RAM_bank*RAM_BANK_SIZE];
 	}
-	else if (address >= 0xC000 && address <= 0xFDFF)
-		return WRAM[address - 0xC000];
+	else if (address >= 0xC000 && address <= 0xFDFF) {
+        if (address < 0xE000)
+            return WRAM[address - 0xC000];
+        else
+            return WRAM[address - 0xE000];
+    }
 	else if (address >= 0xFE00 && address <= 0xFE9F)
 		return OAM[address - 0xFE00];
 	else if (address >= 0xFF00 && address <= 0xFF7F) {
-		if (address == 0xFF00)		//TODO: This address to a constant
+		if (address == JOYPAD_STATE_ADDR)
 			return get_joypad_state(IO[0]);
 		else if (address == 0xFF04)		//TODO: This address to a constant
 			return (unsigned char)rand();
@@ -147,7 +152,7 @@ void write_byte(unsigned short address, unsigned char byte)
 	else if (address >= 0xA000 && address <= 0xBFFF) {
 		address -= 0xA000;
 		if (rom_type == ROM_ONLY)
-			exRAM[address - 0xA000] = byte;
+			exRAM[address] = byte;
 		else if (is_RAM_w_enabled)
 			cartridge_RAM_banks[address + current_RAM_bank*RAM_BANK_SIZE] = byte;
 	}

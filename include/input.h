@@ -1,5 +1,7 @@
 #pragma once
 
+#define JOYPAD_STATE_ADDR   0xFF00
+
 typedef enum {RIGHT, LEFT, UP, DOWN, A, B, SELECT, START} buttons_t;
 
 void joypad_button_down(buttons_t button);
