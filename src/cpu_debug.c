@@ -4,7 +4,11 @@
 #include "registers.h"
 #include "memory.h"
 
+<<<<<<< HEAD
 bool is_debugging_CPU = true;
+=======
+bool is_debugging_CPU = false;
+>>>>>>> commit-fixes
 bool debug_next_instruction = false;
 int current_opcode;
 registers_t regs_before_op;

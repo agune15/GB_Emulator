@@ -2024,7 +2024,11 @@ TEST_CASE("0xCD: Push next instruction address to stack and jump to address in m
 
 	int cycles = execute_next_instruction();
 	CHECK(registers.PC == jump_address);
+<<<<<<< HEAD
 	CHECK(pop_short_stack() == 0x0101);
+=======
+	CHECK(pop_short_stack() == 0x0103);
+>>>>>>> commit-fixes
 	CHECK(cycles == 24);
 }
 
