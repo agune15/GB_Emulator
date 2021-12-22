@@ -33,7 +33,7 @@ static bool close_window = false;
 int frame_cycles = CYCLES_FRAME;
 int op_cycles = 0;
 static int read_cartridge(int argc, char *path);
-static void render_frame(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *texture);
+static void render_frame(SDL_Renderer *renderer, SDL_Texture *texture);
 
 // Update cycle params
 unsigned long frame_start;
@@ -87,11 +87,15 @@ int main(int argc, char *argv[])
 
 		while (frame_cycles > 0) {
             // CPU debugging
-            if (is_debugging_CPU && !debug_next_instruction) {
-                handle_events();
-                continue;
+            /*
+            if (is_debugging_CPU) {
+                if (!debug_next_instruction) {
+                    handle_events();
+                    continue;
+                }
+                store_cpu_state_before_opcode();
             }
-            store_cpu_state_before_opcode();
+             */
 
             op_cycles = execute_next_instruction();
 			frame_cycles -= op_cycles;
@@ -100,14 +104,15 @@ int main(int argc, char *argv[])
 			check_interrupts_state();
 
             // CPU debugging
+            /*
             if (is_debugging_CPU) {
                 print_cpu_info();
                 if (debug_next_instruction)
                     debug_next_instruction = false;
-            }
+            }*/
 		}
 
-        render_frame(window, renderer, texture);
+        render_frame(renderer, texture);
 		frame_cycles += CYCLES_FRAME;
 
 		// Frame cap
@@ -274,7 +279,7 @@ static int read_cartridge(int argc, char *path)
 	return loadROM(path);
 }
 
-static void render_frame(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *texture)
+static void render_frame(SDL_Renderer *renderer, SDL_Texture *texture)
 {
     int texture_pitch = 0;
     void *texture_pixels = NULL;
