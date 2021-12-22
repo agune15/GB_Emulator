@@ -19,6 +19,7 @@
 #define WINDOW_BASE_LENGTH 	144
 static SDL_Window *init_SDL_window(void);
 static SDL_Renderer *init_SDL_renderer(SDL_Window *window);
+static SDL_Texture *init_SDL_texture(SDL_Renderer *renderer);
 
 // Event handling
 static void handle_events(void);
@@ -32,7 +33,7 @@ static bool close_window = false;
 int frame_cycles = CYCLES_FRAME;
 int op_cycles = 0;
 static int read_cartridge(int argc, char *path);
-static void render_frame(SDL_Renderer *renderer);
+static void render_frame(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *texture);
 
 // Update cycle params
 unsigned long frame_start;
@@ -43,6 +44,7 @@ int main(int argc, char *argv[])
 {
 	SDL_Window *window = NULL;
 	SDL_Renderer *renderer = NULL;
+    SDL_Texture *texture = NULL;
 
 	if (read_cartridge(argc - 1, *(argv + 1)) != 0) {
 		printf("main: ROM couldn't be loaded");
@@ -70,6 +72,12 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
+    if ((texture = init_SDL_texture(renderer)) == NULL) {
+        printf("main: Unable to initialize texture: %s\n", SDL_GetError());
+        SDL_Quit();
+        return 1;
+    }
+
 	while (!close_window) {
 		// Frame cap
 		frame_start = SDL_GetPerformanceCounter();
@@ -84,15 +92,16 @@ int main(int argc, char *argv[])
 			check_interrupts_state();
 		}
 
-		render_frame(renderer);
+        render_frame(window, renderer, texture);
 		frame_cycles += CYCLES_FRAME;
 
 		// Frame cap
 		frame_end = SDL_GetPerformanceCounter();
 		elapsed_time = (frame_end - frame_start) / SDL_GetPerformanceFrequency();
-		SDL_Delay(floor((16.666f/2) - elapsed_time));	//TODO: Not enough to make the games faster, need to tweak something else, maybe rendering
+		SDL_Delay(floor((16.666f/1.5f) - elapsed_time));
 	}
 
+    SDL_DestroyTexture(texture);
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
@@ -103,16 +112,12 @@ int main(int argc, char *argv[])
 // Initialize an SDL_Window
 static SDL_Window *init_SDL_window(void)
 {
-	SDL_Window *window = NULL;
-
-	window = SDL_CreateWindow("GB Emulator",
+	return SDL_CreateWindow("GB Emulator",
 							  SDL_WINDOWPOS_CENTERED,
 							  SDL_WINDOWPOS_CENTERED,
-							  WINDOW_BASE_WIDTH * 2,
-							  WINDOW_BASE_LENGTH * 2,
+							  WINDOW_BASE_WIDTH * 3,
+							  WINDOW_BASE_LENGTH * 3,
 							  0);
-
-	return window;
 }
 
 // Initialize an SDL_Renderer
@@ -122,6 +127,13 @@ static SDL_Renderer *init_SDL_renderer(SDL_Window *window)
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 	SDL_RenderClear(renderer);
 	return renderer;
+}
+
+// Initialize an SDL_Texture
+static SDL_Texture *init_SDL_texture(SDL_Renderer *renderer)
+{
+    return SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING,
+                             WINDOW_BASE_WIDTH, WINDOW_BASE_LENGTH);
 }
 
 //region Event handling
@@ -242,20 +254,21 @@ static int read_cartridge(int argc, char *path)
 	return loadROM(path);
 }
 
-static void render_frame(SDL_Renderer *renderer)
+static void render_frame(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *texture)
 {
-	for (int scanline = 0; scanline < WINDOW_BASE_LENGTH; scanline++) {
-		for (int pixel = 0; pixel < WINDOW_BASE_WIDTH; pixel++) {
-			SDL_SetRenderDrawColor(renderer, screen_pixels[scanline][pixel].r,
-								   			 screen_pixels[scanline][pixel].g,
-								   			 screen_pixels[scanline][pixel].b,
-								   			 screen_pixels[scanline][pixel].a);
+    int texture_pitch = 0;
+    void *texture_pixels = NULL;
 
-			for (int pixel_Y = scanline*2; pixel_Y < scanline*2+2; pixel_Y++)
-				for (int pixel_X = pixel*2; pixel_X < pixel*2+2; pixel_X++)
-					SDL_RenderDrawPoint(renderer, pixel_X, pixel_Y);
-		}
-	}
+    if (SDL_LockTexture(texture, NULL, &texture_pixels, &texture_pitch)) {
+        printf("main: Unable to lock texture: %s\n", SDL_GetError());
+        SDL_Quit();
+        return;
+    }
 
+    memcpy(texture_pixels, screen_pixels, WINDOW_BASE_WIDTH * WINDOW_BASE_LENGTH * 4);
+    SDL_UnlockTexture(texture);
+
+    SDL_RenderClear(renderer);
+    SDL_RenderCopy(renderer, texture, NULL, NULL);
 	SDL_RenderPresent(renderer);
 }

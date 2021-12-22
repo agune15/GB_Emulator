@@ -12,4 +12,5 @@
 
 extern SDL_Color screen_pixels[144][160];
 
+
 void draw_scanline(void);
