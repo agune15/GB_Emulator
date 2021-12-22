@@ -1901,7 +1901,7 @@ TEST_CASE("0xC4: Push next instruction address to stack and jump to address in m
 
 	if (!zero_flag_set) {
 		CHECK(registers.PC == jump_address);
-		CHECK(pop_short_stack() == 0x0101);
+		CHECK(pop_short_stack() == 0x0103);
 		CHECK(cycles == 24);
 	}
 	else
@@ -2006,7 +2006,7 @@ TEST_CASE("0xCC: Push next instruction address to stack and jump to address in m
 
 	if (zero_flag_set) {
 		CHECK(registers.PC == jump_address);
-		CHECK(pop_short_stack() == 0x0101);
+		CHECK(pop_short_stack() == 0x0103);
 		CHECK(cycles == 24);
 	}
 	else
@@ -2024,11 +2024,7 @@ TEST_CASE("0xCD: Push next instruction address to stack and jump to address in m
 
 	int cycles = execute_next_instruction();
 	CHECK(registers.PC == jump_address);
-<<<<<<< HEAD
-	CHECK(pop_short_stack() == 0x0101);
-=======
 	CHECK(pop_short_stack() == 0x0103);
->>>>>>> commit-fixes
 	CHECK(cycles == 24);
 }
 
@@ -2117,7 +2113,7 @@ TEST_CASE("0xD4: Push next instruction address to stack and jump to address in m
 
 	if (!carry_flag_state) {
 		CHECK(registers.PC == jump_address);
-		CHECK(pop_short_stack() == 0x0101);
+		CHECK(pop_short_stack() == 0x0103);
 		CHECK(cycles == 24);
 	}
 	else
@@ -2223,7 +2219,7 @@ TEST_CASE("0xDC: Push next instruction address to stack and jump to address in m
 
 	if (carry_flag_state) {
 		CHECK(registers.PC == jump_address);
-		CHECK(pop_short_stack() == 0x0101);
+		CHECK(pop_short_stack() == 0x0103);
 		CHECK(cycles == 24);
 	}
 	else

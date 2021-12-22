@@ -88,47 +88,26 @@ int main(int argc, char *argv[])
         //TODO: Dissect logic into sub-functions
 		while (frame_cycles > 0) {
             // CPU debugging
-<<<<<<< HEAD
-            /*
-=======
->>>>>>> commit-fixes
             if (is_debugging_CPU) {
                 if (!debug_next_instruction) {
                     handle_events();
                     continue;
                 }
-<<<<<<< HEAD
                 store_cpu_state_before_opcode();
-            }
-             */
-
-            op_cycles = execute_next_instruction();
-=======
-                else
-                    store_cpu_state_before_opcode();
             }
 
 			op_cycles = execute_next_instruction();
->>>>>>> commit-fixes
 			frame_cycles -= op_cycles;
 			update_timer(op_cycles);
 			update_display(op_cycles);
 			check_interrupts_state();
 
             // CPU debugging
-<<<<<<< HEAD
-            /*
-=======
->>>>>>> commit-fixes
             if (is_debugging_CPU) {
                 print_cpu_info();
                 if (debug_next_instruction)
                     debug_next_instruction = false;
-<<<<<<< HEAD
-            }*/
-=======
             }
->>>>>>> commit-fixes
 		}
 
         render_frame(renderer, texture);
@@ -236,10 +215,7 @@ static void handle_key_down(SDL_Keysym *keysym)
             break;
         case SDLK_m:
             debug_next_instruction = true;
-<<<<<<< HEAD
-=======
             break;
->>>>>>> commit-fixes
 		default:
 			break;
 	}

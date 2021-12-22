@@ -1253,10 +1253,6 @@ int ret_z(void) {
 // 0xC9: Pop two bytes from stack and jump to that address
 int ret(void) {
 	registers.PC = pop_short_stack();
-<<<<<<< HEAD
-
-=======
->>>>>>> commit-fixes
 	return 16;
 }
 
@@ -1286,10 +1282,7 @@ int call_z_nn(void) {
 // 0xCD: Push next instruction address to stack and jump to address in memory(nn)
 int call_nn(void) {
 	unsigned short address = read_short(registers.PC);
-<<<<<<< HEAD
-=======
 	registers.PC += 2;
->>>>>>> commit-fixes
 	push_short_stack(registers.PC);
 	registers.PC = address;
 	return 24;
