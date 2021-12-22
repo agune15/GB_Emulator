@@ -12,7 +12,7 @@
 #include "interrupts.h"	// check_interrupts_state
 #include "display.h"	// update_display
 #include "gpu.h"		// screen_pixels
-#include "registers.h"	// registers (DEBUG)
+#include "cpu_debug.h"  // CPU debugging
 
 // Window related
 #define WINDOW_BASE_WIDTH 	160
@@ -84,12 +84,30 @@ int main(int argc, char *argv[])
 
 		handle_events();
 
+        //TODO: Dissect logic into sub-functions
 		while (frame_cycles > 0) {
+            // CPU debugging
+            if (is_debugging_CPU) {
+                if (!debug_next_instruction) {
+                    handle_events();
+                    continue;
+                }
+                else
+                    store_cpu_state_before_opcode();
+            }
+
 			op_cycles = execute_next_instruction();
 			frame_cycles -= op_cycles;
 			update_timer(op_cycles);
 			update_display(op_cycles);
 			check_interrupts_state();
+
+            // CPU debugging
+            if (is_debugging_CPU) {
+                print_cpu_info();
+                if (debug_next_instruction)
+                    debug_next_instruction = false;
+            }
 		}
 
         render_frame(window, renderer, texture);
@@ -192,6 +210,12 @@ static void handle_key_down(SDL_Keysym *keysym)
 		case SDLK_DOWN:
 			joypad_button_down(DOWN);
 			break;
+        case SDLK_F1:
+            is_debugging_CPU = !is_debugging_CPU;
+            break;
+        case SDLK_m:
+            debug_next_instruction = true;
+            break;
 		default:
 			break;
 	}

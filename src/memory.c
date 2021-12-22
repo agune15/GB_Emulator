@@ -210,7 +210,7 @@ void handle_banking(unsigned short address, unsigned char byte)
 {
 	switch (rom_type) {
 		case ROM_ONLY:
-			printf("memory: Read-only memory area: %#x\n", address);
+			//printf("memory: Read-only memory area: %#x\n", address);
 			break;
 		case MBC1:
 			handle_MBC1_banking(address, byte);

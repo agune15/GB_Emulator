@@ -1967,7 +1967,7 @@ TEST_CASE("0xC9: Pop two bytes from stack and jump to that address", "[cpu][retu
 
 	int cycles = execute_next_instruction();
 	CHECK(registers.PC == jump_address);
-	CHECK(cycles == 8);
+	CHECK(cycles == 16);
 }
 
 TEST_CASE("0xCA: Jump to address in memory(nn) if Z-flag is set", "[cpu][jump]") {
@@ -2025,7 +2025,7 @@ TEST_CASE("0xCD: Push next instruction address to stack and jump to address in m
 	int cycles = execute_next_instruction();
 	CHECK(registers.PC == jump_address);
 	CHECK(pop_short_stack() == 0x0103);
-	CHECK(cycles == 12);
+	CHECK(cycles == 24);
 }
 
 TEST_CASE("0xCE: Add memory(n) (+ C-flag) to reg-A", "[cpu][add]") {

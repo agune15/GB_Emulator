@@ -1196,7 +1196,7 @@ int cp_a_a(void) { return cp_reg(registers.A, &registers.A, 4); }
 // 0xC0: Pop two bytes from stack and jump to that address if Z-flag is not set
 int ret_nz(void) {
 	if (!is_flag_set(ZERO))
-		return ret() + 12;
+		return ret() + 4;
 	else
 		return 8;
 }
@@ -1223,7 +1223,7 @@ int jp_nn(void) { return jump_nn(); }
 // 0xC4: Push next instruction address to stack and jump to address in memory(nn) if Z-flag is not set
 int call_nz_nn(void) {
 	if (!is_flag_set(ZERO))
-		return call_nn() + 12;
+		return call_nn();
 	else {
 		registers.PC += 2;
 		return 12;
@@ -1245,7 +1245,7 @@ int rst_0(void) { return restart(0x0000); }
 // 0xC8: Pop two bytes from stack and jump to that address if Z-flag is set
 int ret_z(void) {
 	if (is_flag_set(ZERO))
-		return ret() + 12;
+		return ret() + 4;
 	else
 		return 8;
 }
@@ -1253,8 +1253,7 @@ int ret_z(void) {
 // 0xC9: Pop two bytes from stack and jump to that address
 int ret(void) {
 	registers.PC = pop_short_stack();
-
-	return 8;
+	return 16;
 }
 
 // 0xCA: Jump to address in memory(nn) if Z-flag is set
@@ -1273,7 +1272,7 @@ int cb(void) { return execute_cb_instruction(); }
 // 0xCC: Push next instruction address to stack and jump to address in memory(nn) if Z-flag is set
 int call_z_nn(void) {
 	if (is_flag_set(ZERO))
-		return call_nn() + 12;
+		return call_nn();
 	else {
 		registers.PC += 2;
 		return 12;
@@ -1284,12 +1283,9 @@ int call_z_nn(void) {
 int call_nn(void) {
 	unsigned short address = read_short(registers.PC);
 	registers.PC += 2;
-
 	push_short_stack(registers.PC);
-
 	registers.PC = address;
-
-	return 12;
+	return 24;
 }
 
 // 0xCE: Add memory(n) (+ C-flag) to reg-A
@@ -1301,7 +1297,7 @@ int rst_8(void) { return restart(0x0008); }
 // 0xD0: Pop two bytes from stack and jump to that address if C-flag is not set
 int ret_nc(void) {
 	if (!is_flag_set(CARRY))
-		return ret() + 12;
+		return ret() + 4;
 	else
 		return 8;
 }
@@ -1325,7 +1321,7 @@ int jp_nc_nn(void) {
 // 0xD4: Push next instruction address to stack and jump to address in memory(nn) if C-flag is not set
 int call_nc_nn(void) {
 	if (!is_flag_set(CARRY))
-		return call_nn() + 12;
+		return call_nn();
 	else {
 		registers.PC += 2;
 		return 12;
@@ -1347,7 +1343,7 @@ int rst_10(void) { return restart(0x0010); }
 // 0xD8: Pop two bytes from stack and jump to that address if C-flag is set
 int ret_c(void) {
 	if (is_flag_set(CARRY))
-		return ret() + 12;
+		return ret() + 4;
 	else
 		return 8;
 }
@@ -1374,7 +1370,7 @@ int jp_c_nn(void) {
 // 0xDC: Push next instruction address to stack and jump to address in memory(nn) if C-flag is set
 int call_c_nn(void) {
 	if (is_flag_set(CARRY))
-		return call_nn() + 12;
+		return call_nn();
 	else {
 		registers.PC += 2;
 		return 12;
