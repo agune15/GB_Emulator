@@ -88,26 +88,30 @@ int main(int argc, char *argv[])
         //TODO: Dissect logic into sub-functions
 		while (frame_cycles > 0) {
             // CPU debugging
+            /*
             if (is_debugging_CPU) {
                 if (!debug_next_instruction) {
                     handle_events();
                     continue;
                 }
                 store_cpu_state_before_opcode();
-            }
+            }*/
+            store_cpu_state_before_opcode();
 
-			op_cycles = execute_next_instruction();
+            op_cycles = execute_next_instruction();
 			frame_cycles -= op_cycles;
 			update_timer(op_cycles);
 			update_display(op_cycles);
 			check_interrupts_state();
 
+            print_cpu_info();
             // CPU debugging
+            /*
             if (is_debugging_CPU) {
                 print_cpu_info();
                 if (debug_next_instruction)
                     debug_next_instruction = false;
-            }
+            }*/
 		}
 
         render_frame(renderer, texture);
