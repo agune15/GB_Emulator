@@ -18,7 +18,9 @@ static void store_regs_before_opcode(void);
 // Print last ran opcode and registers state before-after opcode
 void print_cpu_info(void)
 {
-    if (instruction_count < 41000)
+    return;
+
+    if (instruction_count < 1000000)
         return;
 
     printf("Opcode: %X   Instruction count: %d\n"

@@ -6,6 +6,7 @@
 #include "memory.h"
 #include "cb.h"
 #include "interrupts.h"
+#include "cpu_debug.h"
 
 int (*instructions[256])(void) = {
 /*0x0*/	nop, ld_bc_nn, ld_bc_a, inc_bc, inc_b, dec_b, ld_b_n, rlca, ld_nnp_sp, add_hl_bc, ld_a_bc, dec_bc, inc_c, dec_c, ld_c_n, rrca,
@@ -662,20 +663,24 @@ int ld_h_n(void) { return load_8bit_reg(read_byte(registers.PC++), &registers.H,
 
 // 0x27: Decimal Adjust reg-A
 int daa(void) {
-	if (!is_flag_set(NEGATIVE)) {
-		if (is_flag_set(CARRY) || registers.A > 0x99) {
-			registers.A += 0x60;
-			set_flag(CARRY);
-		}
-		if (is_flag_set(HALFCARRY) || (registers.A & 0x09) > 0x09)
-			registers.A += 0x06;
-	}
-	else {
-		if (is_flag_set(CARRY))
-			registers.A -= 0x60;
-		if (is_flag_set(HALFCARRY))
-			registers.A -= 0x06;
-	}
+    unsigned short value = registers.A;
+
+    if(!is_flag_set(NEGATIVE)) {
+        if(is_flag_set(HALFCARRY) || (value & 0xF) > 9)
+            value += 0x06;
+        if(is_flag_set(CARRY) || value > 0x9F)
+            value += 0x60;
+    }
+    else {
+        if(is_flag_set(HALFCARRY))
+            value = (value - 0x06) & 0xFF;
+        if(is_flag_set(CARRY))
+            value -= 0x60;
+    }
+
+    registers.A = value & 0xFF;
+
+    if(value >= 0x100) set_flag(CARRY);
 
 	if (registers.A)
 		reset_flag(ZERO);
@@ -1454,9 +1459,9 @@ int ld_a_ff_n(void) {
 	return load_8bit_reg(read_byte(0xFF00 + read_byte(registers.PC++)), &registers.A, 12);
 }
 
-// 0xF1: Pop from stack to reg-AF, increment SP twice
+// 0xF1: Pop from stack to reg-AF (w/o modifying lower nibble reg-F bits), increment SP twice
 int pop_af(void) {
-	registers.AF = pop_short_stack();
+	registers.AF = pop_short_stack() & 0xFFF0;
 	return 12;
 }
 

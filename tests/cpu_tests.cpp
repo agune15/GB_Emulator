@@ -2364,7 +2364,7 @@ TEST_CASE("0xF0: Load from memory(0xFF00 + n) to reg-A", "[cpu][load]") {
 	load_8bit_toReg_test(value, &registers.A, 12);
 }
 
-TEST_CASE("0xF1: Pop from stack to reg-AF, increment SP twice", "[cpu][load]") {
+TEST_CASE("0xF1: Pop from stack to reg-AF (w/o modifying lower nibble reg-F bits), increment SP twice", "[cpu][load]") {
 	registers.PC = 0x0100;
 	ROM_banks[registers.PC] = 0xF1;
 	registers.SP = GENERATE(take(5, random(0xFF82, 0xFFFF)));
@@ -2372,7 +2372,7 @@ TEST_CASE("0xF1: Pop from stack to reg-AF, increment SP twice", "[cpu][load]") {
 	push_short_stack(word);
 
 	int cycles = execute_next_instruction();
-	CHECK(registers.AF == word);
+	CHECK(registers.AF == (word & 0xFFF0));
 	CHECK(cycles == 12);
 }
 

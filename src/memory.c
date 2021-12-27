@@ -165,6 +165,12 @@ void write_byte(unsigned short address, unsigned char byte)
 	else if (address >= 0xFE00 && address <= 0xFE9F)
 		OAM[address - 0xFE00] = byte;
 	else if (address >= 0xFF00 && address <= 0xFF7F) {
+        if (address == 0xFF02) {    //Blargg's test output TODO: Remove
+            if (byte == 0x81) {
+                printf("%c", read_byte(0xFF01));
+                IO[address - 0xFF02] = 0;
+            }
+        }
 		if (address == 0xFF44)
 			IO[address - 0xFF00] = 0;
 		else if (address == 0xFF46)
