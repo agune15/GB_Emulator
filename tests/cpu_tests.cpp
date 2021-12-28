@@ -2806,27 +2806,29 @@ int daa_test_previousBCDoperation(void)
 
 void daa_test_run(int bcdOpResult)
 {
-	bool carry_status = is_flag_set(CARRY), zero_status;
+	bool carry_status = is_flag_set(CARRY);
+    bool zero_status;
 
 	bcdOpResult = registers.A;
 
 	if (!is_flag_set(NEGATIVE)) {
-		if (is_flag_set(CARRY) || bcdOpResult > 0x99) {
+        if (is_flag_set(HALFCARRY) || (bcdOpResult & 0xF) > 9)
+            bcdOpResult += 0x06;
+		if (is_flag_set(CARRY) || bcdOpResult > 0x9F) {
 			bcdOpResult += 0x60;
-			carry_status = true;
 		}
-		if (is_flag_set(HALFCARRY) || (bcdOpResult & 0x09) > 0x09)
-			bcdOpResult += 0x06;
 	}
 	else {
+        if (is_flag_set(HALFCARRY))
+            bcdOpResult = (bcdOpResult - 0x06) & 0xFF;
 		if (is_flag_set(CARRY))
 			bcdOpResult -= 0x60;
-		if (is_flag_set(HALFCARRY))
-			bcdOpResult -= 0x06;
 	}
 
 	bcdOpResult &= 0xFF;
 	zero_status = bcdOpResult == 0;
+    if (bcdOpResult >= 0x100)
+        carry_status = true;
 
 	int cycles = execute_next_instruction();
 	CHECK(registers.A == bcdOpResult);
