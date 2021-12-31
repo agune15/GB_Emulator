@@ -49,3 +49,25 @@ void perform_interrupt(interrupts_t interrupt)
 	push_short_stack(registers.PC);
 	registers.PC = interrupt_addresses[interrupt];
 }
+
+// Check if an interrupt is pending
+bool is_interrupt_pending(void)
+{
+    bool is_pending = false;
+
+    unsigned char current_IE = read_byte(IE_ADDRESS);
+    unsigned char current_IF = read_byte(IF_ADDRESS);
+
+    for(int i = 0; i <= JOYPAD; i++) {
+        if(current_IF & 0x01) {
+            if(current_IE & 0x01) {
+                is_pending = true;
+                break;
+            }
+        }
+        current_IE = current_IE >> 1;
+        current_IF = current_IF >> 1;
+    }
+
+    return is_pending;
+}

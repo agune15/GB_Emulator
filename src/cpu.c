@@ -28,6 +28,7 @@ int (*instructions[256])(void) = {
 };
 
 bool cpu_stopped = false;
+bool halt_bug = false;
 registers_t registers;
 
 // Assign the required initial value for each register
@@ -47,8 +48,16 @@ int execute_next_instruction(void)
 	if (cpu_stopped)
 		return 0;
 
-	unsigned char instruction = read_byte(registers.PC++);
-	return (*instructions[instruction])();
+	unsigned char instruction;
+    if (halt_bug) {
+        instruction = read_byte(registers.PC);
+        halt_bug = false;
+    }
+    else
+        instruction = read_byte(registers.PC++);
+
+
+    return (*instructions[instruction])();
 }
 
 // Resume the CPU if stopped
@@ -973,8 +982,12 @@ int ld_hl_l(void) { return load_8bit_mem(registers.L, registers.HL, 8); }
 
 // 0x76: HALT Interrupt
 int halt(void) {
-	if (!interrupt_master_enable)
-		registers.PC++;
+    if (!interrupt_master_enable)
+        registers.PC++;
+    else
+        halt_bug = true;
+
+    //if (is_interrupt_pending())
 
 	return 4;
 }
