@@ -157,7 +157,7 @@ int adc_8bit_reg(unsigned char value, unsigned char *reg, int cycles)
 // Add short to reg-HL
 int add_16bit_hl(unsigned short value, int cycles)
 {
-	unsigned long result = value + registers.HL;
+	unsigned long result = value + registers.HL;    //TODO: Can be unsigned int
 
 	if ((registers.HL & 0x0FFF + result & 0x0FFF) > 0x0FFF)
 		set_flag(HALFCARRY);
@@ -166,12 +166,10 @@ int add_16bit_hl(unsigned short value, int cycles)
 
 	registers.HL = (unsigned short)(result & 0xFFFF);
 
-	if (result > 0xFFFF) {
+	if (result > 0xFFFF)
 		set_flag(CARRY);
-	}
-	else {
+	else
 		reset_flag(CARRY);
-	}
 
 	reset_flag(NEGATIVE);
 
@@ -1426,15 +1424,15 @@ int rst_20(void) { return restart(0x0020); }
 
 // 0xE8: Add memory(n) to reg-SP
 int add_sp_n(void) {
-	unsigned char value = read_byte(registers.PC++);
-	unsigned long result = registers.SP + value;
+	unsigned char unsigned_value = read_byte(registers.PC);
+	unsigned long result = registers.SP + (signed char)read_byte(registers.PC);
 
-	if ((registers.SP & 0xFF + value) > 0xFF)
+	if ((registers.SP & 0xFF + unsigned_value) > 0xFF)
 		set_flag(CARRY);
 	else
 		reset_flag(CARRY);
 
-	if ((registers.SP & 0x0F + value & 0x0F) > 0x0F)
+	if ((registers.SP & 0x0F + unsigned_value & 0x0F) > 0x0F)
 		set_flag(HALFCARRY);
 	else
 		reset_flag(HALFCARRY);
