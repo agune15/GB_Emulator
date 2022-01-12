@@ -49,13 +49,11 @@ int execute_next_instruction(void)
 		return 0;
 
 	unsigned char instruction;
-    if (is_halt_bug) {
-        instruction = read_byte(registers.PC);
+    instruction = read_byte(registers.PC);
+    if (is_halt_bug)
         is_halt_bug = false;
-    }
     else
-        instruction = read_byte(registers.PC++);
-
+        registers.PC++;
 
     return (*instructions[instruction])();
 }
@@ -157,9 +155,9 @@ int adc_8bit_reg(unsigned char value, unsigned char *reg, int cycles)
 // Add short to reg-HL
 int add_16bit_hl(unsigned short value, int cycles)
 {
-	unsigned long result = value + registers.HL;    //TODO: Can be unsigned int
+	unsigned int result = value + registers.HL;
 
-	if ((registers.HL & 0x0FFF + result & 0x0FFF) > 0x0FFF)
+	if (((registers.HL ^ value ^ result) & 0x1000) != 0)
 		set_flag(HALFCARRY);
 	else
 		reset_flag(HALFCARRY);
@@ -1427,12 +1425,12 @@ int add_sp_n(void) {
 	unsigned char unsigned_value = read_byte(registers.PC);
 	unsigned long result = registers.SP + (signed char)read_byte(registers.PC);
 
-	if ((registers.SP & 0xFF + unsigned_value) > 0xFF)
+	if (((registers.SP & 0xFF) + unsigned_value) > 0xFF)
 		set_flag(CARRY);
 	else
 		reset_flag(CARRY);
 
-	if ((registers.SP & 0x0F + unsigned_value & 0x0F) > 0x0F)
+	if (((registers.SP & 0x0F) + (unsigned_value & 0x0F)) > 0x0F)
 		set_flag(HALFCARRY);
 	else
 		reset_flag(HALFCARRY);
