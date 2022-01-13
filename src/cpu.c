@@ -126,8 +126,7 @@ int add_8bit_reg(unsigned char value, unsigned char *reg, int cycles)
 	else
 		reset_flag(CARRY);
 
-	int low_nibble_add = (*reg & 0x0F) + (value & 0x0F);
-	if (low_nibble_add > 0x0F)
+	if ((*reg ^ value ^ result) & 0x10)
 		set_flag(HALFCARRY);
 	else
 		reset_flag(HALFCARRY);
@@ -147,9 +146,31 @@ int add_8bit_reg(unsigned char value, unsigned char *reg, int cycles)
 // Add byte (+ C-flag) to register
 int adc_8bit_reg(unsigned char value, unsigned char *reg, int cycles)
 {
-	value += (is_flag_set(CARRY)) ? 1 : 0;
+	unsigned char carry = (is_flag_set(CARRY)) ? 1 : 0;
 
-	return add_8bit_reg(value, reg, cycles);
+    unsigned int result = *reg + value + carry;
+
+    if (result > 0xFF)
+        set_flag(CARRY);
+    else
+        reset_flag(CARRY);
+
+    int low_nibble_add = (*reg & 0x0F) + (value & 0x0F) + carry;
+    if (low_nibble_add > 0x0F)
+        set_flag(HALFCARRY);
+    else
+        reset_flag(HALFCARRY);
+
+    *reg = (unsigned char)(result & 0xFF);
+
+    if (*reg)
+        reset_flag(ZERO);
+    else
+        set_flag(ZERO);
+
+    reset_flag(NEGATIVE);
+
+    return cycles;
 }
 
 // Add short to reg-HL
@@ -157,7 +178,7 @@ int add_16bit_hl(unsigned short value, int cycles)
 {
 	unsigned int result = value + registers.HL;
 
-	if (((registers.HL ^ value ^ result) & 0x1000) != 0)
+	if ((registers.HL ^ value ^ result) & 0x1000)
 		set_flag(HALFCARRY);
 	else
 		reset_flag(HALFCARRY);
@@ -206,9 +227,28 @@ int sub_reg(unsigned char value, unsigned char *reg, int cycles)
 // Subtract byte (+ C-flag) from register
 int sbc_reg(unsigned char value, unsigned char *reg, int cycles)
 {
-	value += (is_flag_set(CARRY)) ? 1 : 0;
+	unsigned char carry = (is_flag_set(CARRY)) ? 1 : 0;
 
-	return sub_reg(value, reg, cycles);
+    set_flag(NEGATIVE);
+
+    if (value + carry > *reg)
+        set_flag(CARRY);
+    else
+        reset_flag(CARRY);
+
+    if ((value & 0x0F) + carry > (*reg & 0x0F))
+        set_flag(HALFCARRY);
+    else
+        reset_flag(HALFCARRY);
+
+    *reg -= value + carry;
+
+    if (*reg)
+        reset_flag(ZERO);
+    else
+        set_flag(ZERO);
+
+    return cycles;
 }
 
 //end region

@@ -20,7 +20,7 @@ void print_cpu_info(void)
 {
     return;
 
-    if (current_opcode != 0x39)
+    if (registers.PC < 0x8000)
         return;
 
     printf("Opcode: %X   Instruction count: %d\n"
