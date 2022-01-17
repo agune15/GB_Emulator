@@ -1462,15 +1462,15 @@ int rst_20(void) { return restart(0x0020); }
 
 // 0xE8: Add memory(n) to reg-SP
 int add_sp_n(void) {
-	unsigned char unsigned_value = read_byte(registers.PC);
-	unsigned long result = registers.SP + (signed char)read_byte(registers.PC);
+	unsigned char value = read_byte(registers.PC);
+	unsigned long result = registers.SP + (signed char)value;
 
-	if (((registers.SP & 0xFF) + unsigned_value) > 0xFF)
+	if (((registers.SP & 0xFF) + value) > 0xFF)
 		set_flag(CARRY);
 	else
 		reset_flag(CARRY);
 
-	if (((registers.SP & 0x0F) + (unsigned_value & 0x0F)) > 0x0F)
+	if (((registers.SP & 0x0F) + (value & 0x0F)) > 0x0F)
 		set_flag(HALFCARRY);
 	else
 		reset_flag(HALFCARRY);

@@ -6,6 +6,7 @@
 #include "input.h"
 #include "registers.h"
 #include "time.h"
+#include "cpu_debug.h"
 
 unsigned char ROM_banks[0x8000];	//0000-7FFF
 unsigned char VRAM[0x2000];			//8000-9FFF
@@ -174,7 +175,7 @@ void write_byte(unsigned short address, unsigned char byte)
 		if (address == 0xFF44)
 			IO[address - 0xFF00] = 0;
 		else if (address == 0xFF46)
-			perform_DMA_transfer(byte);
+            perform_DMA_transfer(byte);
 		else
 			IO[address - 0xFF00] = byte;
 	}

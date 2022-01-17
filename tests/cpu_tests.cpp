@@ -1154,9 +1154,13 @@ TEST_CASE("0x76: HALT Interrupt", "[cpu][interrupt]") {
 	int cycles = execute_next_instruction();
 
 	if (!interrupt_master_enable)
-		CHECK(read_byte(registers.PC-2) == 0x76);
-	else
-		CHECK(read_byte(registers.PC-1) == 0x76);
+        if (is_interrupt_pending()) {
+            CHECK(read_byte(registers.PC-1) == 0x76);
+            CHECK(is_halt_bug == true);
+        }
+	else {
+            CHECK(read_byte(registers.PC) == 0x76);
+    }
 
 	CHECK(cycles == 4);
 }
@@ -1901,7 +1905,7 @@ TEST_CASE("0xC4: Push next instruction address to stack and jump to address in m
 
 	if (!zero_flag_set) {
 		CHECK(registers.PC == jump_address);
-		CHECK(pop_short_stack() == 0x0103);
+		CHECK(read_short(registers.SP) == 0x0103);
 		CHECK(cycles == 24);
 	}
 	else
@@ -2006,7 +2010,7 @@ TEST_CASE("0xCC: Push next instruction address to stack and jump to address in m
 
 	if (zero_flag_set) {
 		CHECK(registers.PC == jump_address);
-		CHECK(pop_short_stack() == 0x0103);
+		CHECK(read_short(registers.SP) == 0x0103);
 		CHECK(cycles == 24);
 	}
 	else
@@ -2020,11 +2024,9 @@ TEST_CASE("0xCD: Push next instruction address to stack and jump to address in m
 	ROM_banks[registers.PC+1] = jump_address & 0x00FF;
 	ROM_banks[registers.PC+2] = (jump_address & 0xFF00) >> 8;
 
-	registers.SP = 0xFFFE;
-
 	int cycles = execute_next_instruction();
 	CHECK(registers.PC == jump_address);
-	CHECK(pop_short_stack() == 0x0103);
+	CHECK(read_short(registers.SP) == 0x0103);
 	CHECK(cycles == 24);
 }
 
@@ -2113,7 +2115,7 @@ TEST_CASE("0xD4: Push next instruction address to stack and jump to address in m
 
 	if (!carry_flag_state) {
 		CHECK(registers.PC == jump_address);
-		CHECK(pop_short_stack() == 0x0103);
+		CHECK(read_short(registers.SP) == 0x0103);
 		CHECK(cycles == 24);
 	}
 	else
@@ -2219,7 +2221,7 @@ TEST_CASE("0xDC: Push next instruction address to stack and jump to address in m
 
 	if (carry_flag_state) {
 		CHECK(registers.PC == jump_address);
-		CHECK(pop_short_stack() == 0x0103);
+        CHECK(read_short(registers.SP) == 0x0103);
 		CHECK(cycles == 24);
 	}
 	else
@@ -2672,9 +2674,9 @@ void dec_test(unsigned char valueToDec, int opCycles)
 
 void add_hl_test(unsigned short valueToAdd, int opCycles)
 {
-	unsigned long result = valueToAdd + registers.HL;
+	unsigned int result = valueToAdd + registers.HL;
 
-	bool halfcarry_state = (valueToAdd & 0x0FFF + registers.HL & 0x0FFF) > 0x0FFF;
+	bool halfcarry_state = (valueToAdd ^ registers.HL ^ result) & 0x1000;
 	bool carry_state = result > 0xFFFF;
 
 	result &= 0xFFFF;
@@ -2691,10 +2693,10 @@ void add_hl_test(unsigned short valueToAdd, int opCycles)
 void add_sp_test(void)
 {
 	unsigned char value = read_byte(registers.PC+1);
-	unsigned long result = registers.SP + value;
+	unsigned long result = registers.SP + (signed char)value;
 
-	bool carry_state = (registers.SP & 0xFF + value) > 0xFF;
-	bool halfcarry_state = (registers.SP & 0x0F + value & 0xF) > 0x0F;
+	bool carry_state = ((registers.SP & 0xFF) + value) > 0xFF;
+	bool halfcarry_state = ((registers.SP & 0xF) + (value & 0xF)) > 0x0F;
 
 	result &= 0xFFFF;
 

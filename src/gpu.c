@@ -3,6 +3,7 @@
 #include "gpu.h"
 #include "memory.h"
 #include "display.h"
+#include "palette.h"
 
 SDL_Color screen_pixels[VISIBLE_SCANLINES][160];
 
@@ -114,16 +115,16 @@ static void render_tiles(void)
 		// Get RGB from palette ID
 		switch (pixel_palette_id) {
 			case 0:
-				pixel_color = (SDL_Color){155, 188, 15, 255};
+				pixel_color = get_palette_color(WHITE);
 				break;
 			case 1:
-				pixel_color = (SDL_Color){139, 172, 15, 255};
+				pixel_color = get_palette_color(LIGHT_GREY);
 				break;
 			case 2:
-				pixel_color = (SDL_Color){48, 98, 48, 255};
+				pixel_color = get_palette_color(DARK_GREY);
 				break;
 			case 3:
-				pixel_color = (SDL_Color){15, 56, 15, 255};
+				pixel_color = get_palette_color(BLACK);
 				break;
 			default:
 				break;
@@ -221,13 +222,13 @@ static void render_sprites(void)
 				// Get RGB from palette ID
 				switch (pixel_palette_id) {
 					case 1:
-						pixel_color = (SDL_Color){139, 172, 15, 255};
+						pixel_color = get_palette_color(LIGHT_GREY);
 						break;
 					case 2:
-						pixel_color = (SDL_Color){48, 98, 48, 255};
+						pixel_color = get_palette_color(DARK_GREY);
 						break;
 					case 3:
-						pixel_color = (SDL_Color){15, 56, 15, 255};
+						pixel_color = get_palette_color(BLACK);
 						break;
 					default:
 						break;
@@ -243,7 +244,7 @@ static void render_sprites(void)
 				// Check if sprite should be rendered behind BG
 				if (sprite_attribs >> 7 & 1) {
 					// Check if current pixel is not white
-					if (screen_pixels[current_scanline][pixel_screen_X].r != 155)
+					if (screen_pixels[current_scanline][pixel_screen_X].r != 161)
 						continue;
 				}
 

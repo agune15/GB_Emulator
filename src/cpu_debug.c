@@ -20,8 +20,11 @@ void print_cpu_info(void)
 {
     return;
 
-    if (registers.PC < 0x8000)
-        return;
+    /*if (instruction_count < 638600 || instruction_count > 638604)
+        return;*/
+
+    /*if (registers.PC > 0x100)
+        return;*/
 
     printf("Opcode: %X   Instruction count: %d\n"
            "Operand 1: %X   Operand 2: %X\n"
