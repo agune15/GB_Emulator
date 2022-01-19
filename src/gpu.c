@@ -278,7 +278,7 @@ static bool is_using_8x16_sprites(void)
 // LCDC-3: Get BG tile map area address
 static unsigned short get_bg_tilemap_addr(void)
 {
-	if (read_byte(LCDC_ADDRESS >> 3) & 1)
+	if ((read_byte(LCDC_ADDRESS) >> 3) & 1)
 		return 0x9C00;
 	else
 		return 0x9800;
@@ -288,7 +288,7 @@ static unsigned short get_bg_tilemap_addr(void)
 //TODO: If 0x8000, stored is unsigned (set) or signed (reset)
 static unsigned short get_bg_tiledata_addr(void)
 {
-	if (read_byte(LCDC_ADDRESS >> 4) & 1)
+	if ((read_byte(LCDC_ADDRESS) >> 4) & 1)
 		return 0x8000;
 	else
 		return 0x9000;
@@ -303,7 +303,7 @@ static bool is_window_enabled(void)
 // LCDC-6: Get Window tile map area address
 static bool get_window_tilemap_addr(void)
 {
-	if (read_byte(LCDC_ADDRESS >> 6) & 1)
+	if ((read_byte(LCDC_ADDRESS) >> 6) & 1)
 		return 0x9C00;
 	else
 		return 0x9800;
