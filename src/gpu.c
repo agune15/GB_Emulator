@@ -46,7 +46,7 @@ static void render_tiles(void)
 
 	bool is_using_window = false;
 	if (is_window_enabled() && windowY <= current_scanline)
-		is_using_window = true;
+        is_using_window = true;
 
 	unsigned short map_addr = (is_using_window) ? get_window_tilemap_addr() : get_bg_tilemap_addr();
 	unsigned short data_addr = get_bg_tiledata_addr();
@@ -55,7 +55,7 @@ static void render_tiles(void)
 	unsigned char bg_palette = read_byte(0xFF47);
 
 	// Find row of current pixel
-	pixel_row = (is_using_window) ? current_scanline - windowY : (scrollY + current_scanline);
+	pixel_row = (is_using_window) ? current_scanline - windowY : scrollY + current_scanline;
 
 	// Find row of current tile
 	tile_row = pixel_row / 8;
@@ -88,6 +88,19 @@ static void render_tiles(void)
 		// Get pixel data
 		pixel_lsB = read_byte(tile_data_addr + pixel_relative_addr);
 		pixel_msB = read_byte(tile_data_addr + pixel_relative_addr + 1);
+
+        ///DEBUG tile row = 16, tile col = 12
+        if (is_using_window) {
+            printf("Tile column: %d, tile row: %d\n"
+                   "Current scanline: %d\n"
+                   "WindowY: %d\n"
+                   "LCDC reg: %02X\n"
+                   "Tile map address: %X\n"
+                   "Tile data address: %X\n", tile_col, tile_row, current_scanline, windowY, read_byte(LCDC_ADDRESS),
+                   tile_map_addr, tile_data_addr);
+        }
+
+        ///DEBUG
 
 		// Get pixel color ID
 		pixel_bit_num = 7 - (pixel_col % 8);

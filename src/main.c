@@ -13,6 +13,7 @@
 #include "display.h"	// update_display
 #include "gpu.h"		// screen_pixels
 #include "cpu_debug.h"  // CPU debugging
+#include "gpu_debug.h"  // GPU debugging
 
 // Window related
 #define WINDOW_BASE_WIDTH 	160
@@ -87,7 +88,7 @@ int main(int argc, char *argv[])
 
         //TODO: Dissect logic into sub-functions
 		while (frame_cycles > 0) {
-            // CPU debugging
+            // CPU debugging    //TODO: Clean up CPU debug logic
             /*
             if (is_debugging_CPU) {
                 if (!debug_next_instruction) {
@@ -219,6 +220,9 @@ static void handle_key_down(SDL_Keysym *keysym)
             break;
         case SDLK_m:
             debug_next_instruction = true;
+            break;
+        case SDLK_F2:
+            print_VRAM_content();
             break;
 		default:
 			break;
