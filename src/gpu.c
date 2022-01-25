@@ -17,7 +17,7 @@ static bool is_using_8x16_sprites(void);
 static unsigned short get_bg_tilemap_addr(void);
 static unsigned short get_bg_tiledata_addr(void);
 static bool is_window_enabled(void);
-static bool get_window_tilemap_addr(void);
+static unsigned short get_window_tilemap_addr(void);
 
 // Draw current scanline pixels on screen
 void draw_scanline(void)
@@ -60,14 +60,10 @@ static void render_tiles(void)
 	// Find row of current tile
 	tile_row = pixel_row / 8;
 
-	//TODO: Needed?
-	//if (tile_row > 32)
-	//	tile_row -= 32;
-
 	for (int pixel_num = 0; pixel_num < 160; pixel_num++) {
 		// Find column of current pixel
 		pixel_col = scrollX + pixel_num;
-		if (is_using_window && pixel_num >= windowX)	//TODO: Why?
+		if (is_using_window && pixel_num >= windowX)
 			pixel_col -= windowX;
 
 		// Find column of current tile
@@ -88,19 +84,6 @@ static void render_tiles(void)
 		// Get pixel data
 		pixel_lsB = read_byte(tile_data_addr + pixel_relative_addr);
 		pixel_msB = read_byte(tile_data_addr + pixel_relative_addr + 1);
-
-        ///DEBUG tile row = 16, tile col = 12
-        if (is_using_window) {
-            printf("Tile column: %d, tile row: %d\n"
-                   "Current scanline: %d\n"
-                   "WindowY: %d\n"
-                   "LCDC reg: %02X\n"
-                   "Tile map address: %X\n"
-                   "Tile data address: %X\n", tile_col, tile_row, current_scanline, windowY, read_byte(LCDC_ADDRESS),
-                   tile_map_addr, tile_data_addr);
-        }
-
-        ///DEBUG
 
 		// Get pixel color ID
 		pixel_bit_num = 7 - (pixel_col % 8);
@@ -314,7 +297,7 @@ static bool is_window_enabled(void)
 }
 
 // LCDC-6: Get Window tile map area address
-static bool get_window_tilemap_addr(void)
+static unsigned short get_window_tilemap_addr(void)
 {
 	if ((read_byte(LCDC_ADDRESS) >> 6) & 1)
 		return 0x9C00;
