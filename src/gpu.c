@@ -48,6 +48,8 @@ static void render_tiles(void)
 	if (is_window_enabled() && windowY <= current_scanline)
         is_using_window = true;
 
+    bool is_using_bg_tilemap = !is_using_window;
+
 	unsigned short map_addr = (is_using_window) ? get_window_tilemap_addr() : get_bg_tilemap_addr();
 	unsigned short data_addr = get_bg_tiledata_addr();
 	bool unsign = (data_addr == 0x8000) ? true : false; //TODO: change to something more clear, like unsigned_tile_data_pos
@@ -63,8 +65,25 @@ static void render_tiles(void)
 	for (int pixel_num = 0; pixel_num < 160; pixel_num++) {
 		// Find column of current pixel
 		pixel_col = scrollX + pixel_num;
-		if (is_using_window && pixel_num >= windowX)
-			pixel_col -= windowX;
+		if (is_using_window) {
+            if (pixel_num >= windowX) {
+                pixel_col -= windowX;
+                if (is_using_bg_tilemap) {  // Using BG tilemap but should be using Window tilemap
+                    map_addr = get_window_tilemap_addr();
+                    pixel_row = current_scanline - windowY;
+                    tile_row = pixel_row / 8;
+                    is_using_bg_tilemap = false;
+                }
+            }
+            else {
+                if (!is_using_bg_tilemap) { // Using Window tilemap but should be using BG tilemap
+                    map_addr = get_bg_tilemap_addr();
+                    pixel_row = scrollY + current_scanline;
+                    tile_row = pixel_row / 8;
+                    is_using_bg_tilemap = true;
+                }
+            }
+        }
 
 		// Find column of current tile
 		tile_col = pixel_col / 8;
