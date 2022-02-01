@@ -124,6 +124,8 @@ int main(int argc, char *argv[])
 		SDL_Delay(floor((16.666f/1.5f) - elapsed_time));
 	}
 
+    save_game();
+
     SDL_DestroyTexture(texture);
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
