@@ -15,5 +15,5 @@ extern unsigned char current_RAM_bank;
 extern unsigned char cartridge[0x200000];
 extern unsigned char cartridge_RAM_banks[0x8000];
 
-int loadROM(char *rom_path);
+int load_ROM(char *rom_path);
 void save_game(void);

@@ -4,7 +4,7 @@
 #include <stdbool.h>	// bool
 #include <math.h>		// floor
 
-#include "rom.h"		// loadROM
+#include "rom.h"		// load_ROM
 #include "cpu.h"		// init_registers, execute_next_instruction
 #include "memory.h"		// init_memory
 #include "timer.h"		// update_timer
@@ -285,7 +285,7 @@ static int read_cartridge(int argc, char *path)
 
 	printf("main: Loading \"%s\"\n", strrchr(path, '\\') + 1);
 
-	return loadROM(path);
+	return load_ROM(path);
 }
 
 static void render_frame(SDL_Renderer *renderer, SDL_Texture *texture)

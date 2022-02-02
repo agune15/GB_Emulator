@@ -7,7 +7,7 @@
 
 rom_type_t rom_type;
 char rom_title[17];
-char *save_file_path;
+char *save_file_path;   //TODO: Free memory used by it when program terminates
 bool cartridge_has_battery = false;
 
 unsigned char current_ROM_bank = 1;
@@ -16,8 +16,10 @@ unsigned char current_RAM_bank = 0;
 unsigned char cartridge[0x200000] = {0};
 unsigned char cartridge_RAM_banks[RAM_BANK_SIZE*4] = {0};
 
+static void load_saved_game(void);
+
 // Load a ROM from rom_path
-int loadROM(char *rom_path)
+int load_ROM(char *rom_path)
 {
 	FILE *pfile;
 	size_t file_size;
@@ -57,9 +59,9 @@ int loadROM(char *rom_path)
     }
 
     // Get save file name
-    save_file_path = (char *) malloc(sizeof(char) * (strlen(rom_path) - strlen(strrchr(rom_path, '\\') + 1)
-            + strlen(rom_title) + strlen("_save.sg")));
+    save_file_path = (char *) malloc(sizeof(char) * (strlen(rom_path) + strlen(rom_title) + strlen("_save.sg")));
     strncpy(save_file_path, rom_path, strlen(rom_path) - strlen(strrchr(rom_path, '\\') + 1));
+    save_file_path[strlen(rom_path) - strlen(strrchr(rom_path, '\\') + 1)] = '\0';
     strcat(save_file_path, rom_title);
     strcat(save_file_path, "_save.sg");
 
@@ -93,22 +95,60 @@ int loadROM(char *rom_path)
 
 	fclose(pfile);
 
+    // Load saved game
+    if (cartridge_has_battery && fopen(save_file_path, "r") != NULL)
+        load_saved_game();
+
 	return 0;
 }
 
 // Save the content of the external RAM into disk
 void save_game(void) {
     FILE *f = fopen(save_file_path, "w");
-    char RAM_pos[6];
+    if (f == NULL) {
+        printf("rom: Save file path is invalid");
+        return;
+    }
+
+    char RAM_value[3], RAM_pos[5];
+
     for (int i = 0; i < RAM_BANK_SIZE*4; i++) {
         if (cartridge_RAM_banks[i] != 0) {
-            fwrite(&cartridge_RAM_banks[i], sizeof(char), 1, f);
-            fwrite(" ", sizeof(char), 1, f);
-            sprintf(RAM_pos, "%d", i);
+            sprintf(RAM_pos, "%04X", i);
             fwrite(RAM_pos, sizeof(char), strlen(RAM_pos), f);
+            fwrite(" ", sizeof(char), 1, f);
+            sprintf(RAM_value, "%02X", cartridge_RAM_banks[i]);
+            fwrite(RAM_value, sizeof(char), strlen(RAM_value), f);
             fwrite("\n", sizeof(char), 1, f);
         }
     }
     fclose(f);
+
+    //TODO: Move into its own method
+    free(save_file_path);
 }
 
+// Load the content of the external RAM saved in disk
+static void load_saved_game(void) {
+    printf("1\n");
+    FILE *f = fopen(save_file_path, "r");
+    if (f == NULL) {
+        printf("rom: Save file path is invalid");
+        return;
+    }
+
+    char data_line[8];
+    int index, value;
+    printf("2\n");
+    while (fgets(data_line, 8, f) != NULL) {
+        printf("3\n");
+        sscanf(data_line, "%04 %02", &index, &value);
+        printf("4\n");
+        cartridge_RAM_banks[index] = value;
+        printf("Index: %04X, value: %02X, cartridge byte: %02X\n", index, value, cartridge_RAM_banks[index]);
+    }
+
+    fclose(f);
+
+    printf("rom: Saved game loaded successfully");
+}
