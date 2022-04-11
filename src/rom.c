@@ -124,7 +124,6 @@ void save_game(void) {
     }
     fclose(f);
 
-    //TODO: Move into its own method
     free(save_file_path);
 }
 
