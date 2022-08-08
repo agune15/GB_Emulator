@@ -129,22 +129,19 @@ void save_game(void) {
 
 // Load the content of the external RAM saved in disk
 static void load_saved_game(void) {
-    printf("1\n");
     FILE *f = fopen(save_file_path, "r");
     if (f == NULL) {
         printf("rom: Save file path is invalid");
         return;
     }
+    printf("Save file path: %s\n", save_file_path); //TODO: Debug
 
     char data_line[8];
     int index, value;
-    printf("2\n");
     while (fgets(data_line, 8, f) != NULL) {
-        printf("3\n");
-        sscanf(data_line, "%04 %02", &index, &value);
-        printf("4\n");
+        sscanf(data_line, "%04X %02X", &index, &value);
         cartridge_RAM_banks[index] = value;
-        printf("Index: %04X, value: %02X, cartridge byte: %02X\n", index, value, cartridge_RAM_banks[index]);
+        printf("Index: %04X, value: %02X, cartridge byte: %02X\n", index, value, cartridge_RAM_banks[index]);   //TODO: Debug
     }
 
     fclose(f);
