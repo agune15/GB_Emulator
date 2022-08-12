@@ -134,14 +134,13 @@ static void load_saved_game(void) {
         printf("rom: Save file path is invalid");
         return;
     }
-    printf("Save file path: %s\n", save_file_path); //TODO: Debug
+    printf("rom: Save file path: %s\n", save_file_path); //TODO: Debug
 
-    char data_line[8];
+    char data_line[9];
     int index, value;
-    while (fgets(data_line, 8, f) != NULL) {
-        sscanf(data_line, "%04X %02X", &index, &value);
+    while (fgets(data_line, 9, f) != NULL) {
+        sscanf(data_line, "%04X %02X\n", &index, &value);
         cartridge_RAM_banks[index] = value;
-        printf("Index: %04X, value: %02X, cartridge byte: %02X\n", index, value, cartridge_RAM_banks[index]);   //TODO: Debug
     }
 
     fclose(f);
