@@ -4,7 +4,7 @@
 #include <stdbool.h>	// bool
 #include <math.h>		// floor
 
-#include "rom.h"		// load_ROM
+#include "rom.h"		// load_cartridge
 #include "cpu.h"		// init_registers, execute_next_instruction
 #include "memory.h"		// init_memory
 #include "timer.h"		// update_timer
@@ -33,7 +33,6 @@ static bool close_window = false;
 // Gameboy params
 int frame_cycles = CYCLES_FRAME;
 int op_cycles = 0;
-static int read_cartridge(int argc, char *path);
 static void render_frame(SDL_Renderer *renderer, SDL_Texture *texture);
 
 // Update cycle params
@@ -47,9 +46,10 @@ int main(int argc, char *argv[])
 	SDL_Renderer *renderer = NULL;
     SDL_Texture *texture = NULL;
 
-	if (read_cartridge(argc - 1, *(argv + 1)) != 0) {
+	if (load_cartridge(argc - 1, *(argv + 1)) != 0) {
 		printf("main: ROM couldn't be loaded");
 		//return 1;	//Enable when not debugging. If enabled, the console will disappear
+                    //TODO: Add debug compilation flag
 	}
 
 	init_registers();
@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
 			check_interrupts_state();
 
             print_cpu_info();
-            // CPU debugging
+            // CPU debugging    //TODO: Clean up CPU debug logic
             /*
             if (is_debugging_CPU) {
                 print_cpu_info();
@@ -265,28 +265,6 @@ static void handle_key_up(SDL_Keysym *keysym)
 }
 
 //endregion
-
-//TODO: Function description
-//TODO: Can this be moved into rom.c?
-static int read_cartridge(int argc, char *path)
-{
-	if (argc != 1) {
-		if(argc < 1)
-			printf("main: No file provided\n");
-		if(argc > 1)
-			printf("main: More than one file was provided\n");
-		return 1;
-	}
-
-	if (strcmp(strrchr(path, '.'), ".gb") != 0) {
-		printf("main: The file provided is not a Game Boy ROM: %s\n", path);
-		return 1;
-	}
-
-	printf("main: Loading \"%s\"\n", strrchr(path, '\\') + 1);
-
-	return load_ROM(path);
-}
 
 static void render_frame(SDL_Renderer *renderer, SDL_Texture *texture)
 {

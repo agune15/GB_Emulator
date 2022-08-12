@@ -8,7 +8,7 @@
 #define WX_ADDRESS   0xFF4B		// Window X position
 
 #define SPRITE_ATTRIBUTES  0xFE00   // Sprite attributes
-#define SPRITES_AMOUNT     40
+#define SPRITES_AMOUNT     40       //TODO: Needed? Never used
 
 extern SDL_Color screen_pixels[144][160];
 

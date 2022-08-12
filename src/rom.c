@@ -16,10 +16,33 @@ unsigned char current_RAM_bank = 0;
 unsigned char cartridge[0x200000] = {0};
 unsigned char cartridge_RAM_banks[RAM_BANK_SIZE*4] = {0};
 
+static int load_ROM(char *rom_path);
 static void load_saved_game(void);
 
+// Load cartridge from cartridge_path into memory
+int load_cartridge(int argc, char *cartridge_path)
+{
+    if (argc != 1) {
+        if(argc < 1)
+            printf("rom: No file provided\n");
+        else if(argc > 1)
+            printf("rom: More than one file was provided\n");
+
+        return 1;
+    }
+
+    if (strcmp(strrchr(cartridge_path, '.'), ".gb") != 0) {
+        printf("rom: The file provided is not a Game Boy ROM: %s\n", cartridge_path);
+        return 1;
+    }
+
+    printf("rom: Loading \"%s\"\n", strrchr(cartridge_path, '\\') + 1);
+
+    return load_ROM(cartridge_path);
+}
+
 // Load a ROM from rom_path
-int load_ROM(char *rom_path)
+static int load_ROM(char *rom_path)
 {
 	FILE *pfile;
 	size_t file_size;

@@ -22,9 +22,7 @@ void joypad_button_down(buttons_t button)
 
 	bool is_standard_button = (button > 3) ? true : false;
 
-	if(is_standard_button && is_standard_selected())
-		request_interrupt(JOYPAD);
-	else if(!is_standard_button && is_direction_selected())
+	if(is_standard_button && is_standard_selected() || !is_standard_button && is_direction_selected())
 		request_interrupt(JOYPAD);
 }
 
@@ -45,7 +43,7 @@ unsigned char get_joypad_state(unsigned char joypad_state)
 		joypad_state |= buttons_state & 0x0F;
 
 	return joypad_state;	/* Possible problem: If the above conditions aren't met, joypad_state
-				 * will return 0 for its 4 less signficant bits, indicating that 4
+				 * will return 0 for its 4 less significant bits, indicating that 4
 				 * buttons were pressed */ //TODO: Verify in the future
 }
 
