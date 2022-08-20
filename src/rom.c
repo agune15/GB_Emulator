@@ -18,8 +18,10 @@ unsigned char cartridge_RAM_banks[RAM_BANK_SIZE*4] = {0};
 
 static int load_ROM(char *rom_path);
 static void load_saved_game(void);
+static rom_type_t get_rom_type(unsigned char rom_type_byte);
 
 // Load cartridge from cartridge_path into memory
+// TODO: Dissect into sub-functions
 int load_cartridge(int argc, char *cartridge_path)
 {
     if (argc != 1) {
@@ -46,7 +48,6 @@ static int load_ROM(char *rom_path)
 {
 	FILE *pfile;
 	size_t file_size;
-	unsigned char rom_size;
 	unsigned char rom_type_byte;
 
     // Open ROM
@@ -91,24 +92,7 @@ static int load_ROM(char *rom_path)
     // Get type
 	fseek(pfile, ROM_TYPE_OFFSET, SEEK_SET);
 	rom_type_byte = fgetc(pfile);
-
-    //TODO: Move to separate function
-	if (rom_type_byte == 0)
-		rom_type = ROM_ONLY;
-	else if (rom_type_byte >= 1 && rom_type_byte <= 3) {
-        rom_type = MBC1;
-        if (rom_type_byte == 3)
-            cartridge_has_battery = true;
-    }
-	else if (rom_type_byte >= 5 && rom_type_byte <= 6) {
-        rom_type = MBC2;
-        if (rom_type_byte == 6)
-            cartridge_has_battery = true;
-    }
-	if(rom_type_byte > 6) {
-		printf("rom: Unsupported cartridge type");
-		return 1;
-	}
+    get_rom_type(rom_type_byte);
 
 	rewind(pfile);
 
@@ -169,4 +153,22 @@ static void load_saved_game(void) {
     fclose(f);
 
     printf("rom: Saved game loaded successfully");
+}
+
+// Get ROM type from ROM type byte
+static rom_type_t get_rom_type(unsigned char rom_type_byte) {
+    if (rom_type_byte == 0)
+        return ROM_ONLY;
+    else if (rom_type_byte >= 1 && rom_type_byte <= 3) {
+        if (rom_type_byte == 3)
+            cartridge_has_battery = true;
+        return MBC1;
+    }
+    else if (rom_type_byte >= 5 && rom_type_byte <= 6) {
+        if (rom_type_byte == 6)
+            cartridge_has_battery = true;
+        return MBC2;
+    }
+    else
+        return UNSUPPORTED;
 }

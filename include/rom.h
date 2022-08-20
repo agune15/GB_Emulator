@@ -5,7 +5,7 @@
 #define ROM_BANK_SIZE    0x4000
 #define RAM_BANK_SIZE    0x2000
 
-typedef enum {ROM_ONLY, MBC1, MBC2} rom_type_t;
+typedef enum {ROM_ONLY, MBC1, MBC2, UNSUPPORTED} rom_type_t;
 extern rom_type_t rom_type;
 extern bool cartridge_has_battery;
 
