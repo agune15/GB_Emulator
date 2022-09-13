@@ -1,4 +1,4 @@
-#include <SDL2/SDL.h>	// SDL stuff
+#include <SDL.h>        // SDL stuff
 #include <stdio.h>		// printf
 #include <string.h>		// strrchr
 #include <stdbool.h>	// bool

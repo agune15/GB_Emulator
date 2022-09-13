@@ -6,8 +6,8 @@
 #include "memory.h"
 
 rom_type_t rom_type;
-char rom_title[17];
-char *save_file_path;   //TODO: Free memory used by it when program terminates
+char rom_title[18];
+char *save_file_path;
 bool cartridge_has_battery = false;
 
 unsigned char current_ROM_bank = 1;
@@ -17,11 +17,14 @@ unsigned char cartridge[0x200000] = {0};
 unsigned char cartridge_RAM_banks[RAM_BANK_SIZE*4] = {0};
 
 static int load_ROM(char *rom_path);
+static size_t get_file_size(FILE *pfile);
+static void get_game_title(FILE *pfile);
+static void get_save_file_path(char *rom_path);
+static rom_type_t get_rom_type(FILE *pfile);
+static void load_rom_into_memory(FILE *pfile, size_t file_size);
 static void load_saved_game(void);
-static rom_type_t get_rom_type(unsigned char rom_type_byte);
 
 // Load cartridge from cartridge_path into memory
-// TODO: Dissect into sub-functions
 int load_cartridge(int argc, char *cartridge_path)
 {
     if (argc != 1) {
@@ -48,7 +51,6 @@ static int load_ROM(char *rom_path)
 {
 	FILE *pfile;
 	size_t file_size;
-	unsigned char rom_type_byte;
 
     // Open ROM
 	if((pfile = fopen(rom_path, "rb")) == NULL) {
@@ -56,55 +58,33 @@ static int load_ROM(char *rom_path)
 		return 1;
 	}
 
-    // Get size
-	fseek(pfile, 0, SEEK_END);
-	file_size = ftell(pfile);
+    // Get file size
+	file_size = get_file_size(pfile);
 
-    // Get title
-    fseek(pfile, ROM_TITLE_OFFSET, SEEK_SET);
-    while(ftell(pfile) <= 0x143) {
-        char c = fgetc(pfile);
-        if (c == 0) {
-            c = '\0';
-            strcat(rom_title, &c);
-            break;
-        }
-        else {
-            if (c == ' ')
-                c = '_';
+    // Get game title
+    get_game_title(pfile);
 
-            strcat(rom_title, &c);
-        }
-
-        if (ftell(pfile) == 0x143) {
-            c = '\0';
-            strcat(rom_title, &c);
-        }
-    }
-
-    // Get save file name
-    save_file_path = (char *) malloc(sizeof(char) * (strlen(rom_path) + strlen(rom_title) + strlen("_save.sg")));
-    strncpy(save_file_path, rom_path, strlen(rom_path) - strlen(strrchr(rom_path, '\\') + 1));
-    save_file_path[strlen(rom_path) - strlen(strrchr(rom_path, '\\') + 1)] = '\0';
-    strcat(save_file_path, rom_title);
-    strcat(save_file_path, "_save.sg");
+    // Get save file path
+    get_save_file_path(rom_path);
 
     // Get type
-	fseek(pfile, ROM_TYPE_OFFSET, SEEK_SET);
-	rom_type_byte = fgetc(pfile);
-    get_rom_type(rom_type_byte);
+    rom_type = get_rom_type(pfile);
 
-	rewind(pfile);
+    if (rom_type == UNSUPPORTED) {
+        printf("rom: Cartridge type not supported");
+        return 1;
+    }
 
-	fread(cartridge, 1, file_size, pfile);
-	for(int i = 0; i < 0x8000; i++)
-		ROM_banks[i] = cartridge[i];
+    // Load ROM into memory
+    load_rom_into_memory(pfile, file_size);
 
 	fclose(pfile);
 
     // Load saved game
     if (cartridge_has_battery && fopen(save_file_path, "r") != NULL)
         load_saved_game();
+
+    printf("rom: Cartridge loaded successfully\n");
 
 	return 0;
 }
@@ -134,6 +114,84 @@ void save_game(void) {
     free(save_file_path);
 }
 
+//region Helpers
+
+// Get file size from file pointer
+static size_t get_file_size(FILE *pfile) {
+    fseek(pfile, 0, SEEK_END);
+    size_t size = ftell(pfile);
+    rewind(pfile);
+    return size;
+}
+
+// Get game title
+static void get_game_title(FILE *pfile) {
+    fseek(pfile, ROM_TITLE_OFFSET, SEEK_SET);
+
+    for(int i = 0; ftell(pfile) <= 0x143; i++) {
+        char c = fgetc(pfile);
+
+        if (c == 0) {
+            c = '\0';
+            rom_title[i] = c;
+            break;
+        }
+        else {
+            if (c == ' ')
+                c = '_';
+
+            rom_title[i] = c;
+        }
+
+        if (ftell(pfile) == 0x143) {
+            rom_title[i] = c;
+            rom_title[i+1] = '\0';
+        }
+    }
+
+    rewind(pfile);
+}
+
+// Get save file path
+static void get_save_file_path(char *rom_path) {
+    save_file_path = (char *) malloc(sizeof(char) * (strlen(rom_path) + strlen(rom_title) + strlen("_save.sg")));
+    strncpy(save_file_path, rom_path, strlen(rom_path) - strlen(strrchr(rom_path, '\\') + 1));
+    save_file_path[strlen(rom_path) - strlen(strrchr(rom_path, '\\') + 1)] = '\0';
+    strcat(save_file_path, rom_title);
+    strcat(save_file_path, "_save.sg");
+}
+
+// Get ROM type from ROM type byte
+static rom_type_t get_rom_type(FILE *pfile) {
+    fseek(pfile, ROM_TYPE_OFFSET, SEEK_SET);
+    unsigned char rom_type_byte = fgetc(pfile);
+    rewind(pfile);
+
+    if (rom_type_byte == 0)
+        return ROM_ONLY;
+    else if (rom_type_byte >= 1 && rom_type_byte <= 3) {
+        if (rom_type_byte == 3)
+            cartridge_has_battery = true;
+        return MBC1;
+    }
+    else if (rom_type_byte >= 5 && rom_type_byte <= 6) {
+        if (rom_type_byte == 6)
+            cartridge_has_battery = true;
+        return MBC2;
+    }
+    else
+        return UNSUPPORTED;
+}
+
+// Load ROM content into memory
+static void load_rom_into_memory(FILE *pfile, size_t file_size) {
+    if (fread(cartridge, 1, file_size, pfile) != file_size)
+        printf("rom: Error loading ROM into memory");
+
+    for(int i = 0; i < 0x8000; i++)
+        ROM_banks[i] = cartridge[i];
+}
+
 // Load the content of the external RAM saved in disk
 static void load_saved_game(void) {
     FILE *f = fopen(save_file_path, "r");
@@ -152,23 +210,7 @@ static void load_saved_game(void) {
 
     fclose(f);
 
-    printf("rom: Saved game loaded successfully");
+    printf("rom: Saved game loaded successfully\n");
 }
 
-// Get ROM type from ROM type byte
-static rom_type_t get_rom_type(unsigned char rom_type_byte) {
-    if (rom_type_byte == 0)
-        return ROM_ONLY;
-    else if (rom_type_byte >= 1 && rom_type_byte <= 3) {
-        if (rom_type_byte == 3)
-            cartridge_has_battery = true;
-        return MBC1;
-    }
-    else if (rom_type_byte >= 5 && rom_type_byte <= 6) {
-        if (rom_type_byte == 6)
-            cartridge_has_battery = true;
-        return MBC2;
-    }
-    else
-        return UNSUPPORTED;
-}
+//endregion
