@@ -24,7 +24,7 @@ int (*cb_instructions[256])(void) = {
 /*0xF*/	set_6_b, set_6_c, set_6_d, set_6_e, set_6_h, set_6_l, set_6_hl, set_6_a, set_7_b, set_7_c, set_7_d, set_7_e, set_7_h, set_7_l, set_7_hl, set_7_a,
 };
 
-//TODO: Description
+// Execute CB prefix CPU instruction
 int execute_cb_instruction(void)
 {
 	unsigned char instruction = read_byte(registers.PC++);

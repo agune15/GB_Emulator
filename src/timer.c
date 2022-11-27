@@ -10,7 +10,7 @@ static bool is_clock_enabled(void);
 static void reset_timer_counter(void);
 
 // Update timer with current instruction cycles
-void update_timer(int cycles)	//TODO: Dissect function into a few smaller ones
+void update_timer(int cycles)
 {
 	if(!is_clock_enabled())
 		return;
