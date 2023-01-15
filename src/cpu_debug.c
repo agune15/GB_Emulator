@@ -18,14 +18,6 @@ static void store_regs_before_opcode(void);
 // Print last ran opcode and registers state before-after opcode
 void print_cpu_info(void)
 {
-    return;
-
-    /*if (instruction_count < 638600 || instruction_count > 638604)
-        return;*/
-
-    /*if (registers.PC > 0x100)
-        return;*/
-
     printf("Opcode: %X   Instruction count: %d\n"
            "Operand 1: %02X   Operand 2: %02X\n"
            "Registers BEFORE:              Registers AFTER:\n"
@@ -64,6 +56,7 @@ static void store_current_opcode(void)
 // Store current registers state
 static void store_regs_before_opcode(void) { regs_before_op = registers;}
 
+// Store current operands state
 static void store_operands(unsigned short pc_reg_value)
 {
     operand1 = read_byte(pc_reg_value);

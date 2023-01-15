@@ -1,6 +1,8 @@
 # GB Emulator
 Game Boy emulator written in C.
 
+![screenshots](./README_images/gb_emu_screenshots.png)
+
 ### Libraries used:
 - [SDL](https://www.libsdl.org/) - Displaying window and graphics
 - [Catch2](https://github.com/catchorg/Catch2) - Unit testing

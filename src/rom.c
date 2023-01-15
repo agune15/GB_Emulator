@@ -91,6 +91,9 @@ static int load_ROM(char *rom_path)
 
 // Save the content of the external RAM into disk
 void save_game(void) {
+    if (rom_type == ROM_ONLY)
+        return;
+
     FILE *f = fopen(save_file_path, "w");
     if (f == NULL) {
         printf("rom: Save file path is invalid");
