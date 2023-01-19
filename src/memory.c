@@ -8,6 +8,8 @@
 #include "time.h"
 #include "cpu_debug.h"
 
+#define DIVIDER_REG_ADDR 0xFF04
+
 unsigned char ROM_banks[0x8000];	//0000-7FFF
 unsigned char VRAM[0x2000];			//8000-9FFF
 unsigned char exRAM[0x2000];		//A000-BFFF
@@ -21,7 +23,7 @@ unsigned char interrupt_enable_reg;	//FFFF
 bool is_RAM_w_enabled = false;
 bool is_ROM_banking_enabled = true;
 void handle_banking(unsigned short address, unsigned char byte);
-// TODO: Move to separate file
+
 // MBC1
 void handle_MBC1_banking(unsigned short address, unsigned char byte);
 void set_MBC1_RAM_writes(unsigned char byte);
@@ -29,6 +31,7 @@ void change_ROM_bank_low_bits_MBC1(unsigned char byte);
 void change_ROM_bank_high_bits_MBC1(unsigned char byte);
 void change_RAM_bank_MBC1(unsigned char byte);
 void select_banking_mode_MBC1(unsigned char byte);
+
 // MBC2
 void handle_MBC2_banking(unsigned short address, unsigned char byte);
 void set_MBC2_RAM_writes(unsigned short address, unsigned char byte);
@@ -110,7 +113,7 @@ unsigned char read_byte(unsigned short address)
 	else if (address >= 0xFF00 && address <= 0xFF7F) {
 		if (address == JOYPAD_STATE_ADDR)
 			return get_joypad_state(IO[0]);
-		else if (address == 0xFF04)		//TODO: This address to a constant
+		else if (address == DIVIDER_REG_ADDR)
 			return (unsigned char)rand();
 		else
 			return IO[address - 0xFF00];
@@ -141,8 +144,8 @@ unsigned short pop_short_stack(void)
 void write_byte(unsigned short address, unsigned char byte)
 {
 	if (address >= 0xFEA0 && address <= 0xFEFF) {
-		//printf("memory: Restricted memory area: %#x\n", address);
-		//TODO: Uncomment
+		printf("memory: Restricted memory area: %#x\n", address);
+		//TODO: Add debug compilation flag
 		return;
 	}
 
@@ -166,12 +169,6 @@ void write_byte(unsigned short address, unsigned char byte)
 	else if (address >= 0xFE00 && address <= 0xFE9F)
 		OAM[address - 0xFE00] = byte;
 	else if (address >= 0xFF00 && address <= 0xFF7F) {
-        if (address == 0xFF02) {    //Blargg's test output TODO: Remove
-            if (byte == 0x81) {
-                printf("%c", read_byte(0xFF01));
-                IO[address - 0xFF02] = 0;
-            }
-        }
 		if (address == 0xFF44)
 			IO[address - 0xFF00] = 0;
 		else if (address == 0xFF46)
@@ -183,9 +180,9 @@ void write_byte(unsigned short address, unsigned char byte)
 		HRAM[address - 0xFF80] = byte;
 	else if (address == 0xFFFF)
 		interrupt_enable_reg = byte;
-	//else
-		//printf("memory: Address unreachable: %#x", address);
-		//TODO: Uncomment
+	else
+		printf("memory: Address unreachable: %#x", address);
+		//TODO: Add debug compilation flag
 }
 
 // Override byte value from address and subsequent address (address + 1)

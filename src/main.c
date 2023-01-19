@@ -31,6 +31,7 @@ static void handle_key_up(SDL_Keysym *keysym);
 static bool close_window = false;
 
 // Gameboy params
+#define CYCLES_FRAME 69905
 int frame_cycles = CYCLES_FRAME;
 int op_cycles = 0;
 static void render_frame(SDL_Renderer *renderer, SDL_Texture *texture);
@@ -79,16 +80,14 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    //TODO: Dissect logic into sub-functions
-	while (!close_window) {
+    while (!close_window) {
 		// Frame cap
 		frame_start = SDL_GetPerformanceCounter();
 
 		handle_events();
 
-        //TODO: Dissect logic into sub-functions
 		while (frame_cycles > 0) {
-            // CPU debugging    //TODO: Clean up CPU debug logic. Put into sub-function?
+            // CPU debugging
             if (is_debugging_CPU) {
                 if (!debug_next_instruction) {
                     handle_events();
@@ -103,7 +102,7 @@ int main(int argc, char *argv[])
 			update_display(op_cycles);
 			check_interrupts_state();
 
-            // CPU debugging    //TODO: Clean up CPU debug logic. Put into sub-function?
+            // CPU debugging
             if (is_debugging_CPU) {
                 print_cpu_info();
                 if (debug_next_instruction)

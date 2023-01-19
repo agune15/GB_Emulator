@@ -42,9 +42,7 @@ unsigned char get_joypad_state(unsigned char joypad_state)
 	else if(is_direction_selected())
 		joypad_state |= buttons_state & 0x0F;
 
-	return joypad_state;	/* Possible problem: If the above conditions aren't met, joypad_state
-				 * will return 0 for its 4 less significant bits, indicating that 4
-				 * buttons were pressed */ //TODO: Verify in the future
+	return joypad_state;
 }
 
 //region Helpers

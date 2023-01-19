@@ -4,10 +4,9 @@
 #include "interrupts.h"
 #include "gpu.h"
 
-//TODO: Make them static?
-int cycles_counter = SCANLINE_CYCLES;
-unsigned char status;
-unsigned char *pcurrent_line;
+static int cycles_counter = SCANLINE_CYCLES;
+static unsigned char status;
+static unsigned char *pcurrent_line;
 
 static void update_globals(void);
 static void update_LCD_disabled(void);

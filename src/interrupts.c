@@ -1,4 +1,4 @@
-#include <stdbool.h> //TODO: Could be removed, already in header
+#include <stdbool.h>
 #include "interrupts.h"
 #include "memory.h"
 #include "registers.h"
@@ -9,7 +9,7 @@ unsigned short interrupt_addresses[5] = { 0x0040,
 					  0x0058,
 					  0x0060 };
 
-bool interrupt_master_enable = false;	//TODO: Include in init() method in the future
+bool interrupt_master_enable = false;
 
 // Verify state of interrupt flags and perform any pending interrupts
 void check_interrupts_state(void)

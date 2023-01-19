@@ -3,7 +3,6 @@
 #include <stdbool.h>
 
 #define CLOCK_SPEED  4194304
-#define CYCLES_FRAME 69905	//TODO: Why is this here? Needed? Move elsewhere?
 
 typedef enum {CARRY = 4, HALFCARRY, NEGATIVE, ZERO} flags_t;
 
