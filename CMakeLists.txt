@@ -8,7 +8,10 @@ project(GB_Emulator)
 set(CMAKE_C_STANDARD 11)
 
 # Debug compile flags
-set(CMAKE_C_FLAGS_DEBUG "-mconsole")
+set(CMAKE_C_FLAGS_DEBUG "-mconsole -DDEBUG")
+
+# Debug compile flags
+set(CMAKE_C_FLAGS_RELEASE "-DNDEBUG")
 
 # Add SDL2 CMake modules
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
@@ -24,5 +27,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE include)
 find_package(SDL2 REQUIRED)
 target_link_libraries(${PROJECT_NAME} SDL2::Main)
 
-# Add tests directory - Remove in MAIN branch
-add_subdirectory(tests)
+# Add tests directory
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+    add_subdirectory(tests)
+endif()

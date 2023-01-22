@@ -60,7 +60,7 @@ TEST_CASE("Update timer: 4096 Hz, overflow", "[timer]") {
 	reset_timer_counter();
 	update_timer(1024);
 	CHECK(read_byte(TIMA_ADDRESS) == read_byte(TMA_ADDRESS));
-	//TODO: Check requested interrupt
+	CHECK(read_byte(IF_ADDRESS) >> 2 & 1);
 }
 
 TEST_CASE("Update timer: 262144 Hz", "[timer]") {
@@ -81,7 +81,7 @@ TEST_CASE("Update timer: 262144 Hz, overflow", "[timer]") {
 	reset_timer_counter();
 	update_timer(16);
 	CHECK(read_byte(TIMA_ADDRESS) == read_byte(TMA_ADDRESS));
-	//TODO: Check requested interrupt
+    CHECK(read_byte(IF_ADDRESS) >> 2 & 1);
 }
 
 TEST_CASE("Update timer: 65536 Hz", "[timer]") {
@@ -102,7 +102,7 @@ TEST_CASE("Update timer: 65536 Hz, overflow", "[timer]") {
 	reset_timer_counter();
 	update_timer(64);
 	CHECK(read_byte(TIMA_ADDRESS) == read_byte(TMA_ADDRESS));
-	//TODO: Check requested interrupt
+    CHECK(read_byte(IF_ADDRESS) >> 2 & 1);
 }
 
 TEST_CASE("Update timer: 16384 Hz", "[timer]") {
@@ -123,5 +123,5 @@ TEST_CASE("Update timer: 16384 Hz, overflow", "[timer]") {
 	reset_timer_counter();
 	update_timer(256);
 	CHECK(read_byte(TIMA_ADDRESS) == read_byte(TMA_ADDRESS));
-	//TODO: Check requested interrupt
+    CHECK(read_byte(IF_ADDRESS) >> 2 & 1);
 }

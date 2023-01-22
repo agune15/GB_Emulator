@@ -4,8 +4,6 @@ extern "C" {
 	#include "../src/memory.c"
 }
 
-//TODO: Modularize tests, create functions for repeated code, like the "Corner Cases" sections
-
 void MBC1_RAM_enable_test(unsigned short address);
 void read_ROM_banks_MBC1_test();
 

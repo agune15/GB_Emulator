@@ -145,7 +145,6 @@ void write_byte(unsigned short address, unsigned char byte)
 {
 	if (address >= 0xFEA0 && address <= 0xFEFF) {
 		printf("memory: Restricted memory area: %#x\n", address);
-		//TODO: Add debug compilation flag
 		return;
 	}
 
@@ -182,7 +181,6 @@ void write_byte(unsigned short address, unsigned char byte)
 		interrupt_enable_reg = byte;
 	else
 		printf("memory: Address unreachable: %#x", address);
-		//TODO: Add debug compilation flag
 }
 
 // Override byte value from address and subsequent address (address + 1)

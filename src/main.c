@@ -48,9 +48,10 @@ int main(int argc, char *argv[])
     SDL_Texture *texture = NULL;
 
 	if (load_cartridge(argc - 1, *(argv + 1)) != 0) {
-		printf("main: ROM couldn't be loaded");
-		//return 1;	//Enable when not debugging. If enabled, the console will disappear
-                    //TODO: Add debug compilation flag
+        printf("main: ROM couldn't be loaded");
+        #ifndef DEBUG
+            return 1;
+        #endif
 	}
 
 	init_registers();
@@ -58,12 +59,12 @@ int main(int argc, char *argv[])
 	init_random_seed();
 
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-		printf("main: Unable to initialize SDL: %s\n", SDL_GetError());
-		return 1;
+        printf("main: Unable to initialize SDL: %s\n", SDL_GetError());
+        return 1;
 	}
 
 	if ((window = init_SDL_window()) == NULL) {
-		printf("main: Unable to initialize window: %s\n", SDL_GetError());
+        printf("main: Unable to initialize window: %s\n", SDL_GetError());
 		SDL_Quit();
 		return 1;
 	}
@@ -213,10 +214,14 @@ static void handle_key_down(SDL_Keysym *keysym)
 			joypad_button_down(DOWN);
 			break;
         case SDLK_F1:
+            #ifdef DEBUG
             is_debugging_CPU = !is_debugging_CPU;
+            #endif
             break;
         case SDLK_m:
+            #ifdef DEBUG
             debug_next_instruction = true;
+            #endif
             break;
         case SDLK_F2:
             print_VRAM_content();

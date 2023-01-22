@@ -30,7 +30,6 @@ void draw_scanline(void)
 }
 
 // Render BG and Window tiles
-//TODO: Split function in many smaller ones
 static void render_tiles(void)
 {
 	unsigned char pixel_relative_addr, pixel_lsB, pixel_msB, pixel_color_id, pixel_palette_id, pixel_col, pixel_row, pixel_bit_num;
@@ -52,7 +51,7 @@ static void render_tiles(void)
 
 	unsigned short map_addr = (is_using_window) ? get_window_tilemap_addr() : get_bg_tilemap_addr();
 	unsigned short data_addr = get_bg_tiledata_addr();
-	bool unsign = (data_addr == 0x8000) ? true : false; //TODO: change to something more clear, like unsigned_tile_data_pos
+	bool is_unsigned_tiledata = (data_addr == 0x8000) ? true : false;
 
 	unsigned char bg_palette = read_byte(0xFF47);
 
@@ -92,7 +91,7 @@ static void render_tiles(void)
 		tile_map_addr = map_addr + (tile_row * 32) + tile_col;
 
 		// Get tile data relative position from tile address
-		tile_relative_pos = (unsign) ? read_byte(tile_map_addr) : (signed char) read_byte(tile_map_addr);
+		tile_relative_pos = (is_unsigned_tiledata) ? read_byte(tile_map_addr) : (signed char) read_byte(tile_map_addr);
 
 		// Get tile data address from tile relative position
 		tile_data_addr = data_addr + (tile_relative_pos * 16);
@@ -151,8 +150,6 @@ static void render_tiles(void)
 }
 
 // Render sprites
-//TODO: Split in many smaller functions
-// Iterates through every sprite in every scanline, not very efficient. Could maybe be executed everytime scanline 144 is reached
 static void render_sprites(void)
 {
 	unsigned char sprite_table_index, sprite_col, sprite_row, sprite_relative_pos, sprite_attribs, sprite_height, sprite_palette;
@@ -300,7 +297,6 @@ static unsigned short get_bg_tilemap_addr(void)
 }
 
 // LCDC-4: Get BG and Window tile data base address
-//TODO: If 0x8000, stored is unsigned (set) or signed (reset)
 static unsigned short get_bg_tiledata_addr(void)
 {
 	if ((read_byte(LCDC_ADDRESS) >> 4) & 1)

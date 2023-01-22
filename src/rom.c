@@ -202,7 +202,7 @@ static void load_saved_game(void) {
         printf("rom: Save file path is invalid");
         return;
     }
-    printf("rom: Save file path: %s\n", save_file_path); //TODO: Add debug compilation flag
+    printf("rom: Save file path: %s\n", save_file_path);
 
     char data_line[9];
     int index, value;

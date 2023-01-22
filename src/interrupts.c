@@ -26,8 +26,8 @@ void check_interrupts_state(void)
 				perform_interrupt((interrupts_t)i);
 			}
 		}
-		current_IE = current_IE >> 1;
-		current_IF = current_IF >> 1;
+		current_IE >>= 1;
+		current_IF >>= 1;
 	}
 }
 
