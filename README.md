@@ -15,6 +15,12 @@ Game Boy emulator written in C.
 - GPU displays tile maps, sprites and does palette swapping.
 - Cartridge RAM emulation for MBC1 and MBC2 cartridges.
 
+### Usage
+You can either drag and drop a ROM file on the executable, or run it through the command line with a command like:
+```
+.\GB_Emulator.exe \path\to\ROM
+```
+
 ### Controls
 | GameBoy button  | Keyboard   |
 | --------------- | ---------- |
