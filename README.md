@@ -9,7 +9,7 @@ Game Boy emulator written in C.
 
 ### Main features:
 - Supports the following cartridge types: ROM ONLY, MBC1, MBC1+RAM, MBC1+RAM+BATTERY, MBC2, MBC2+BATTERY.
-- Automatic game saves (*_save.sg files).
+- Automatic game saves (generates *_save.sg files).
 - All CPU instructions are implemented, it even passes some Blargg's tests.
 - CPU Halt bug emulation.
 - GPU displays tile maps, sprites and does palette swapping.
